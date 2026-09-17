@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" xml:lang="fr" version="2005-1">
+<navMap>
+<navPoint id="navpoint-1" playOrder="1"><navLabel><text>Page titre</text></navLabel><content src="001.html"/></navPoint>
+<navPoint id="navpoint-2" playOrder="2"><navLabel><text>Livre premier - Un juste</text></navLabel><content src="003.html"/>
+<navPoint id="navpoint-3" playOrder="3"><navLabel><text>Chapitre I - Monsieur Myriel</text></navLabel><content src="004.html"/></navPoint>
+</navPoint>
+</navMap>
+</ncx>

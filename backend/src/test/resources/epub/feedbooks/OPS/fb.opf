@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="uid">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:title>Le Horla</dc:title>
+    <dc:creator opf:role="aut" opf:file-as="Maupassant, Guy de">Guy de Maupassant</dc:creator>
+    <dc:identifier id="uid">fixture-feedbooks</dc:identifier>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="fb.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="title" href="title.xml" media-type="application/xhtml+xml"/>
+    <item id="about" href="about.xml" media-type="application/xhtml+xml"/>
+    <item id="main1" href="main1.xml" media-type="application/xhtml+xml"/>
+    <item id="feedbooks" href="feedbooks.xml" media-type="application/xhtml+xml"/>
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="title"/>
+    <itemref idref="about"/>
+    <itemref idref="main1"/>
+    <itemref idref="feedbooks"/>
+  </spine>
+  <guide>
+    <reference type="title-page" title="Title Page" href="title.xml"/>
+    <reference type="bibliography" title="About" href="about.xml"/>
+    <reference type="text" title="Main1" href="main1.xml"/>
+    <reference type="copyright-page" title="Feedbooks" href="feedbooks.xml"/>
+  </guide>
+</package>

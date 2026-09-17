@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="BookId">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:title>Les Misérables - Tome I - Fantine</dc:title>
+    <dc:creator opf:file-as="Hugo, Victor" opf:role="aut">Victor Hugo</dc:creator>
+    <dc:identifier id="BookId">fixture-atlantis</dc:identifier>
+    <dc:language>fr</dc:language>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="img1" href="images/img1.jpg" media-type="image/jpeg"/>
+    <item id="id001" href="001.html" media-type="application/xhtml+xml"/>
+    <item id="id002" href="002.html" media-type="application/xhtml+xml"/>
+    <item id="id003" href="003.html" media-type="application/xhtml+xml"/>
+    <item id="id004" href="004.html" media-type="application/xhtml+xml"/>
+    <item id="idnotes" href="notes.html" media-type="application/xhtml+xml"/>
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="id001" linear="no"/>
+    <itemref idref="id002"/>
+    <itemref idref="id003"/>
+    <itemref idref="id004"/>
+    <itemref idref="idnotes"/>
+  </spine>
+  <guide>
+    <reference type="cover" title="Cover image" href="001.html"/>
+  </guide>
+</package>

@@ -18,8 +18,10 @@ public class HttpCachingConfig {
      */
     @Bean
     FilterRegistrationBean<ShallowEtagHeaderFilter> etagFilter() {
-        FilterRegistrationBean<ShallowEtagHeaderFilter> registration =
-            new FilterRegistrationBean<>(new ShallowEtagHeaderFilter());
+        ShallowEtagHeaderFilter filter = new ShallowEtagHeaderFilter();
+        // Tomcat never compresses a response carrying a strong ETag.
+        filter.setWriteWeakETag(true);
+        FilterRegistrationBean<ShallowEtagHeaderFilter> registration = new FilterRegistrationBean<>(filter);
         registration.addUrlPatterns("/api/*");
         return registration;
     }

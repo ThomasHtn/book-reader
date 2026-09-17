@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader.settings;
 
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -47,7 +48,8 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     @DisplayName("Answers 304 when the reader already holds the current settings")
     void answersNotModifiedForCurrentEtag() throws Exception {
         String etag = mockMvc.perform(get("/api/settings"))
-            .andExpect(header().exists(HttpHeaders.ETAG))
+            // Weak, because Tomcat refuses to compress a response carrying a strong ETag.
+            .andExpect(header().string(HttpHeaders.ETAG, startsWith("W/")))
             .andReturn().getResponse().getHeader(HttpHeaders.ETAG);
 
         mockMvc.perform(get("/api/settings").header(HttpHeaders.IF_NONE_MATCH, etag))

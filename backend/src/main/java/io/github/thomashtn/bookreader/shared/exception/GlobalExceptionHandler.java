@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader.shared.exception;
 
+import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Instant;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -147,6 +150,70 @@ public class GlobalExceptionHandler {
             HttpStatus.BAD_REQUEST,
             "MALFORMED_REQUEST",
             "The request body is malformed or holds an unsupported value.",
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Handles an EPUB the reader cannot use; the backoffice turns the code into a message.
+     *
+     * @param exception rejection with its reason
+     * @param request current HTTP request
+     * @return standardized HTTP 422 response with code {@code EPUB_<REASON>}
+     */
+    @ExceptionHandler(EpubRejectedException.class)
+    ResponseEntity<ApiErrorResponse> handleEpubRejected(
+        EpubRejectedException exception,
+        HttpServletRequest request
+    ) {
+        LOGGER.info("EPUB rejected ({}): {}", exception.reason(), exception.getMessage());
+        return buildResponse(
+            HttpStatus.UNPROCESSABLE_CONTENT,
+            "EPUB_" + exception.reason().name(),
+            "The EPUB cannot be converted.",
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Handles an upload above the multipart limit.
+     *
+     * @param exception exception raised by the multipart resolver
+     * @param request current HTTP request
+     * @return standardized HTTP 413 response
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiErrorResponse> handleUploadTooLarge(
+        MaxUploadSizeExceededException exception,
+        HttpServletRequest request
+    ) {
+        return buildResponse(
+            HttpStatus.CONTENT_TOO_LARGE,
+            "EPUB_TOO_LARGE",
+            "The file exceeds 20 MB.",
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Handles a multipart request without its expected part.
+     *
+     * @param exception missing part exception
+     * @param request current HTTP request
+     * @return standardized HTTP 400 response
+     */
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    ResponseEntity<ApiErrorResponse> handleMissingPart(
+        MissingServletRequestPartException exception,
+        HttpServletRequest request
+    ) {
+        return buildResponse(
+            HttpStatus.BAD_REQUEST,
+            "INVALID_ARGUMENT",
+            "Part '" + exception.getRequestPartName() + "' is required.",
             request,
             Map.of()
         );

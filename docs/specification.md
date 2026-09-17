@@ -187,8 +187,10 @@ injoignable", bouton pour réessayer.
   (le corps est déjà gras, l'italique gêne en basse vision). Un bloc est un seul nœud texte, affiché
   par `textContent`.
 - Retour à la ligne forcé (`<br>`) : `\n`, rendu par `white-space: pre-line` (poésie, théâtre).
-- Espaces ordinaires réduites à une, paragraphes vides supprimés, espaces insécables (U+00A0, U+202F)
-  conservées et ajoutées devant `; : ! ?` et dans les guillemets français, règle idempotente.
+- Espaces ordinaires réduites à une, paragraphes et lignes vides supprimés, espaces insécables
+  (U+00A0, U+202F) conservées ; une espace ordinaire devant `; : ! ? »` ou après `«` devient
+  insécable (jamais ajoutée là où il n'y a pas d'espace, pour ne pas casser `10:30` ou une URL),
+  règle idempotente.
 
 ### 7.4 Conversion EPUB
 
@@ -197,12 +199,19 @@ persister.
 
 1. Décompression (`java.util.zip`) avec gardes : 20 Mo par fichier, 100 Mo décompressés, rejet des
    chemins contenant `..` ou commençant par `/` ; lecture de `container.xml` puis de l'OPF.
-2. Documents XHTML dans l'ordre du `spine`, analysés avec jsoup.
+2. Documents XHTML dans l'ordre du `spine`, analysés avec jsoup en mode XML (le mode HTML transforme
+   un `<a id="x"/>` en lien englobant la suite) ; `linear="no"` ignorés.
 3. Extraction des blocs feuilles : `h1` à `h6` vers `heading` ; `p`, `blockquote`, `li`, `div` sans
    bloc enfant vers `paragraph`. Le texte nu d'un conteneur mixte (texte, `br`, quelques `p`) devient
-   des paragraphes. Balises en ligne fondues, `br` vers `\n`.
+   des paragraphes. Balises en ligne fondues, `br` vers `\n`. Un paragraphe de 150 caractères au plus
+   visé par la table des matières (NCX ou nav EPUB 3 : début de fichier ou ancre) devient `heading` :
+   certains EPUB du catalogue (Atlantis Word Processor) n'ont que des `<p><b>`.
 4. Supprimés : images, tableaux, notes (`aside` avec `epub:type` note), appels de note (`sup` avec
-   lien), tables des matières et pages de garde (`epub:type` ou `guide`).
+   lien, `epub:type` noteref, ou lien interne dont le texte est un numéro comme `{1}`, `[2]`, `*`),
+   blocs commençant par un appel de note (corps de note avec lien retour), document fait surtout de
+   tels blocs (`notes.html`, notes sur plusieurs paragraphes comprises), tables des matières et pages
+   de garde (`epub:type` ou `guide` : cover, title-page, toc, copyright-page, bibliography, cette
+   dernière étant la page "À propos" de Feedbooks).
 5. Rejet avec message clair : chiffré (`META-INF/encryption.xml`), sans texte, trop volumineux.
 
 Titre et auteur pris dans l'OPF, modifiables dans le backoffice.
