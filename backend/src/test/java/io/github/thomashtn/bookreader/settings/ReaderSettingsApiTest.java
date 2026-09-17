@@ -57,6 +57,15 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     }
 
     @Test
+    @DisplayName("Lets the browser keep public responses but revalidate them, never admin ones")
+    void setsCacheControl() throws Exception {
+        mockMvc.perform(get("/api/settings"))
+            .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache"));
+        putSettings("{\"fontTier\": 100, \"theme\": \"dark-on-light\"}")
+            .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
+    }
+
+    @Test
     @DisplayName("Applies new settings from the backoffice and changes the ETag")
     void updatesSettings() throws Exception {
         String before = mockMvc.perform(get("/api/settings")).andReturn().getResponse().getHeader(HttpHeaders.ETAG);

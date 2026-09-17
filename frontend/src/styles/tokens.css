@@ -1,0 +1,278 @@
+/* Design tokens for the accessible reader.
+   Three layers: primitives (raw values), semantic (purpose, switched per theme), component.
+   Attributes on <html>:
+     data-theme   = dark-on-light (default) | light-on-dark | yellow-on-black
+     data-tier    = 48 | 72 | 100 | 140 (default 100), the tier value itself as served by GET /api/settings
+     data-density = admin, on backoffice routes only
+   Every text/background pair below is >= 7:1, every control edge >= 3:1 against its surroundings. */
+
+/* === PRIMITIVES ========================================================= */
+:root {
+  /* Paper theme */
+  --color-paper-50: #f4efe6;
+  --color-paper-100: #e3dccb;
+  --color-paper-200: #cfc6b0;
+  --color-ink-900: #141414;
+  --color-ink-700: #4a4a4a;
+
+  /* Night theme */
+  --color-night-950: #101010;
+  --color-night-900: #1a1a1a;
+  --color-night-800: #262626;
+  --color-night-700: #3a3a3a;
+  --color-snow-100: #f2f2f2;
+  --color-snow-300: #bdbdbd;
+
+  /* Amber theme */
+  --color-black: #000000;
+  --color-coal-900: #222222;
+  --color-amber-300: #ffd84d;
+  --color-amber-500: #cfaf3a;
+
+  /* Accent: one tangerine shared by every theme, dark text on it; the pressed state inverts */
+  --color-tangerine-300: #ffa03c;
+  --color-tangerine-400: #ff8a00;
+  --color-ember-600: #d1461e;
+  --color-ember-700: #b93d17;
+  --color-ember-800: #9e3413;
+  --color-peach-50: #ffe8dc;
+  --color-peach-100: #ffc9b8;
+  --color-peach-200: #ffb199;
+  --color-cocoa-900: #4a1f10;
+  --color-white: #ffffff;
+
+  /* Status (backoffice) */
+  --color-rust-700: #8a1c1c;
+  --color-salmon-300: #ff8a80;
+  --color-moss-700: #2f6b3a;
+  --color-moss-300: #8fd19a;
+  --color-ochre-700: #8a5a00;
+  --color-ochre-300: #f3c76b;
+
+  /* Typography */
+  --font-reading:
+    'Luciole', 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', Arial, sans-serif;
+  --font-admin:
+    'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, 'Segoe UI', Arial, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
+  /* Tiers are unitless: the size in px on any viewport of 1280px CSS or more */
+  --tier-current: 100;
+  --text-floor: 20px;
+  /* Luciole ships 400 and 700 only; headings share the body weight */
+  --weight-body: 700;
+  --weight-heading: 700;
+  --leading-body: 1.4;
+  --leading-tight: 1.15;
+  --tracking-body: 0.01em;
+
+  /* Spacing, 8px base */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+
+  /* Shape and motion for the reader: none by design */
+  --radius-none: 0;
+  --border-control: 6px;
+  --border-row: 4px;
+  --duration-none: 0ms;
+
+  /* Focus: inset double ring, gap in page colour then ring in text colour */
+  --focus-ring-width: 8px;
+  --focus-gap-width: 4px;
+
+  /* Large arrow cursor (64px), black with white outline, hotspot at the tip. Desktop only. */
+  --cursor-large:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><path d='M6 4 L6 52 L18 40 L28 60 L38 55 L28 36 L44 36 Z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>")
+      6 4,
+    auto;
+}
+
+/* === SEMANTIC ============================================================ */
+/* Default theme: dark text on warm off-white (reduces glare compared to pure white). */
+:root {
+  --color-bg: var(--color-paper-50);
+  --color-fg: var(--color-ink-900);
+  --color-fg-muted: var(--color-ink-700);
+  --color-surface-raised: var(--color-paper-100);
+  --color-marker: var(--color-tangerine-300);
+  --color-control-bg: var(--color-tangerine-300);
+  --color-control-bg-hover: var(--color-tangerine-400);
+  --color-control-bg-active: var(--color-ink-900);
+  --color-control-fg: var(--color-ink-900);
+  --color-control-fg-active: var(--color-tangerine-300);
+  --color-control-border: var(--color-ink-900);
+  --color-focus-ring: var(--color-ink-900);
+  --color-focus-gap: var(--color-paper-50);
+  --color-error: var(--color-rust-700);
+
+  /* Body size = tier on any viewport of 1280px CSS or more (covers her PC at 100% and 125% Windows
+     scaling), scaled down proportionally below, never under the floor. 100 -> 31px on a 400px phone. */
+  --text-body: clamp(
+    var(--text-floor),
+    calc(var(--tier-current) / 12.8 * 1vw),
+    calc(var(--tier-current) * 1px)
+  );
+  --text-heading: calc(var(--text-body) * 1.15);
+  --text-control: clamp(20px, calc(var(--text-body) * 0.55), 72px);
+  --text-meta: clamp(16px, calc(var(--text-body) * 0.5), 64px);
+  --gap-paragraph: 0.6em;
+}
+
+:root[data-theme='light-on-dark'] {
+  --color-bg: var(--color-night-950);
+  --color-fg: var(--color-snow-100);
+  --color-fg-muted: var(--color-snow-300);
+  --color-surface-raised: var(--color-night-800);
+  --color-focus-ring: var(--color-snow-100);
+  --color-focus-gap: var(--color-night-950);
+  --color-error: var(--color-salmon-300);
+}
+
+:root[data-theme='yellow-on-black'] {
+  --color-bg: var(--color-black);
+  --color-fg: var(--color-amber-300);
+  --color-fg-muted: var(--color-amber-500);
+  --color-surface-raised: var(--color-coal-900);
+  --color-focus-ring: var(--color-amber-300);
+  --color-focus-gap: var(--color-black);
+  --color-error: var(--color-amber-300);
+}
+
+:root[data-tier='48'] {
+  --tier-current: 48;
+}
+:root[data-tier='72'] {
+  --tier-current: 72;
+}
+:root[data-tier='100'] {
+  --tier-current: 100;
+}
+:root[data-tier='140'] {
+  --tier-current: 140;
+}
+
+/* === COMPONENT (reader) ================================================== */
+:root {
+  /* Side navigation bars (Previous / Next). Below the compact breakpoint (1100px) they become
+     a bottom row: --nav-bar-height applies instead of --nav-bar-width. */
+  --nav-bar-width: 300px;
+  --nav-bar-height: 96px;
+  /* Label sits horizontally under the chevron; sized so "Précédent" always fits on one line */
+  --nav-bar-label-size: min(var(--text-control), calc(var(--nav-bar-width) / 5.8));
+  --nav-bar-bg: var(--color-control-bg);
+  --nav-bar-bg-hover: var(--color-control-bg-hover);
+  --nav-bar-bg-active: var(--color-control-bg-active);
+  --nav-bar-fg: var(--color-control-fg);
+  --nav-bar-fg-active: var(--color-control-fg-active);
+  --nav-bar-border: var(--border-control) solid var(--color-control-border);
+  --nav-bar-disabled-bg: var(--color-bg);
+  --nav-bar-disabled-fg: var(--color-fg-muted);
+  /* Keeps the bar's silhouette on first and last page, since its fill matches the page */
+  --nav-bar-disabled-border: var(--border-control) solid var(--color-control-border);
+  --nav-bar-arrow-size: calc(var(--text-control) * 1.6);
+
+  /* Primary button ("Mes livres", "Réessayer") */
+  --button-bg: var(--color-control-bg);
+  --button-bg-hover: var(--color-control-bg-hover);
+  --button-bg-active: var(--color-control-bg-active);
+  --button-fg: var(--color-control-fg);
+  --button-fg-active: var(--color-control-fg-active);
+  --button-border: var(--border-control) solid var(--color-control-border);
+  --button-min-height: max(56px, calc(var(--text-control) * 2));
+  --button-padding-x: clamp(16px, 2.5vw, 48px);
+
+  /* Reading surface */
+  --reading-bg: var(--color-bg);
+  --reading-fg: var(--color-fg);
+  --reading-padding: clamp(16px, 2.5vw, 48px);
+  --reading-max-width: 1500px;
+
+  /* Top row: "Mes livres" button and page indicator */
+  --toolbar-height: calc(var(--button-min-height) + var(--space-4));
+  --toolbar-gap: var(--space-4);
+
+  /* Book list rows */
+  --row-min-height: calc(var(--text-body) * 1.8);
+  --row-padding-x: var(--reading-padding);
+  --row-border: var(--border-row) solid var(--color-fg-muted);
+  --row-current-bg: var(--color-marker);
+  --row-current-fg: var(--color-control-fg);
+  --row-current-stripe: var(--space-3) solid var(--color-control-border);
+  --row-hover-bg: var(--color-surface-raised);
+  --row-finished-fg: var(--color-fg-muted);
+
+  /* Status tag ("En cours", "Terminé") */
+  --tag-border: var(--border-row) solid currentColor;
+  --tag-padding: 0 var(--space-2);
+
+  /* Focus ring, applied as inset box-shadow so it works on edge-to-edge bars */
+  --focus-shadow:
+    inset 0 0 0 var(--focus-gap-width) var(--color-focus-gap),
+    inset 0 0 0 calc(var(--focus-gap-width) + var(--focus-ring-width)) var(--color-focus-ring);
+}
+
+/* === BACKOFFICE ========================================================== */
+/* A conventional, mobile-first tool for sighted helpers. Same tangerine accent and warm neutrals,
+   system colour scheme, ordinary density. Rounded corners and one shadow are allowed here. */
+:root[data-density='admin'] {
+  --admin-bg: var(--color-paper-50);
+  --admin-surface: var(--color-white);
+  --admin-surface-muted: var(--color-paper-100);
+  --admin-border: var(--color-paper-200);
+  --admin-border-strong: var(--color-ink-700);
+  --admin-fg: var(--color-ink-900);
+  --admin-fg-muted: var(--color-ink-700);
+  --admin-accent: var(--color-ember-700);
+  --admin-accent-hover: var(--color-ember-800);
+  --admin-accent-fg: var(--color-white);
+  --admin-accent-soft: var(--color-peach-50);
+  --admin-success: var(--color-moss-700);
+  --admin-warning: var(--color-ochre-700);
+  --admin-danger: var(--color-rust-700);
+  --admin-focus: var(--color-ember-600);
+
+  --admin-text-xs: 13px;
+  --admin-text-sm: 14px;
+  --admin-text-base: 16px;
+  --admin-text-lg: 18px;
+  --admin-text-xl: 22px;
+  --admin-text-2xl: 28px;
+  --admin-leading: 1.5;
+  --admin-weight: 400;
+  --admin-weight-strong: 700;
+
+  --admin-radius: 6px;
+  --admin-radius-lg: 10px;
+  --admin-shadow: 0 1px 2px rgb(20 20 20 / 0.08), 0 4px 12px rgb(20 20 20 / 0.06);
+  --admin-control-height: 44px;
+  --admin-gutter: 16px;
+  --admin-content-max: 960px;
+  --admin-nav-height: 64px;
+  --admin-rail-width: 240px;
+  --admin-duration: 120ms;
+  --admin-focus-ring: 0 0 0 2px var(--admin-bg), 0 0 0 5px var(--admin-focus);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-density='admin'] {
+    --admin-bg: var(--color-night-950);
+    --admin-surface: var(--color-night-900);
+    --admin-surface-muted: var(--color-night-800);
+    --admin-border: var(--color-night-700);
+    --admin-border-strong: var(--color-snow-300);
+    --admin-fg: var(--color-snow-100);
+    --admin-fg-muted: var(--color-snow-300);
+    --admin-accent: var(--color-peach-200);
+    --admin-accent-hover: var(--color-peach-100);
+    --admin-accent-fg: var(--color-ink-900);
+    --admin-accent-soft: var(--color-cocoa-900);
+    --admin-success: var(--color-moss-300);
+    --admin-warning: var(--color-ochre-300);
+    --admin-danger: var(--color-salmon-300);
+    --admin-focus: var(--color-peach-200);
+    --admin-shadow: none;
+  }
+}

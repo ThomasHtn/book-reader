@@ -1,0 +1,86 @@
+import { DOCUMENT, inject, InjectionToken, Service } from '@angular/core';
+import { parseProgress, ReadingProgress, TextPosition } from './reading-progress';
+
+/** Browser storage holding reading progress; `null` where it is unavailable. */
+export const READER_STORAGE = new InjectionToken<Storage | null>('READER_STORAGE', {
+  providedIn: 'root',
+  factory: () => {
+    try {
+      return inject(DOCUMENT).defaultView?.localStorage ?? null;
+    } catch {
+      return null;
+    }
+  },
+});
+
+const LAST_BOOK_KEY = 'reader.lastBookId';
+const PROGRESS_KEY_PREFIX = 'reader.progress.';
+
+/**
+ * Reading progress in `localStorage` only (specification section 8). Losing it is accepted, so every
+ * storage failure degrades to "no progress" instead of breaking the reader.
+ */
+@Service()
+export class ProgressStore {
+  private readonly storage = inject(READER_STORAGE);
+
+  /**
+   * Returns the last opened book.
+   *
+   * @returns Book identifier, or `null`.
+   */
+  public lastBookId(): string | null {
+    return this.read(LAST_BOOK_KEY);
+  }
+
+  /**
+   * Returns the stored progress of a book.
+   *
+   * @param bookId - Book identifier.
+   * @returns Progress, or `undefined` when absent or corrupt.
+   */
+  public progressOf(bookId: string): ReadingProgress | undefined {
+    return parseProgress(this.read(PROGRESS_KEY_PREFIX + bookId));
+  }
+
+  /**
+   * Records that a book was opened.
+   *
+   * @param bookId - Book identifier.
+   */
+  public markOpened(bookId: string): void {
+    this.write(LAST_BOOK_KEY, bookId);
+  }
+
+  /**
+   * Saves the first character of the displayed page.
+   *
+   * @param bookId - Book identifier.
+   * @param position - Position of the page.
+   * @param finished - Whether the last page of the book is displayed.
+   */
+  public save(bookId: string, position: TextPosition, finished: boolean): void {
+    const progress: ReadingProgress = {
+      ...position,
+      finished,
+      updatedAt: new Date().toISOString(),
+    };
+    this.write(PROGRESS_KEY_PREFIX + bookId, JSON.stringify(progress));
+  }
+
+  private read(key: string): string | null {
+    try {
+      return this.storage?.getItem(key) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  private write(key: string, value: string): void {
+    try {
+      this.storage?.setItem(key, value);
+    } catch {
+      // Quota or privacy settings: progress is best effort by design.
+    }
+  }
+}

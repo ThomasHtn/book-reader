@@ -54,6 +54,8 @@ public class SecurityConfig {
     ) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            // Cache-Control is set by HttpCachingConfig: no-store here would defeat ETag revalidation.
+            .headers(headers -> headers.cacheControl(cache -> cache.disable()))
             .cors(cors -> cors.configurationSource(
                 corsConfigurationSource(properties.frontendOrigin())
             ))

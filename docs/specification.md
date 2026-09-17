@@ -66,9 +66,11 @@ Règles :
 
 - rien d'autre dans la zone de texte : ni titre courant, ni chapitre, ni icône ; la première page
   d'un livre affiche son titre et son auteur avant le texte ;
-- clavier : flèche droite et espace pour "Suivant", flèche gauche pour "Précédent". Espace et Entrée
-  sont interceptés au niveau du document et le focus revient à la zone de lecture après tout clic,
-  pour qu'espace signifie toujours "Suivant". Aucun autre raccourci ;
+- clavier : flèche droite et espace pour "Suivant", flèche gauche pour "Précédent". Espace est
+  intercepté au niveau du document et le focus revient à la zone de lecture après tout clic, pour
+  qu'espace signifie toujours "Suivant". Entrée garde son rôle natif : après un clic le focus n'est
+  jamais sur un bouton, et au clavier seul c'est la seule façon d'activer "Mes livres" (passage
+  clavier complet, section 12). Aucun autre raccourci ;
 - anti-rebond : une commande reçue moins de 400 ms après la précédente est ignorée, la répétition
   automatique d'une touche maintenue est neutralisée ;
 - les barres réagissent sur toute leur surface, avec un changement de couleur net, sans animation ;
@@ -78,18 +80,27 @@ Règles :
 
 ### 5.2 Pagination
 
-- Multi-colonnes CSS : le livre entier coule dans un conteneur dont les colonnes ont la taille exacte
-  de la zone de texte, `column-gap: 0`. Une page est une colonne ; tourner la page décale le conteneur
-  d'une largeur de colonne ; le total de pages est largeur du contenu divisée par largeur de colonne.
-- Le navigateur recalcule tout seul à chaque changement de palier, de thème ou de fenêtre ;
-  l'application retrouve la page qui contient la position mémorisée.
+- Multi-colonnes CSS **par chapitre** : le chapitre courant coule dans un conteneur dont les colonnes
+  ont la taille exacte de la zone de texte, `column-gap: 0`. Une page est une colonne ; tourner la page
+  décale le conteneur d'une largeur de colonne ; passer la dernière page d'un chapitre affiche le
+  suivant à sa première page, reculer depuis la première affiche le précédent à sa dernière.
+- Chapitre : suite de blocs commençant à un titre (les blocs avant le premier titre forment le
+  premier chapitre), coupée entre deux paragraphes au-delà de 80 000 caractères pour les livres
+  sans titres.
+- Total de pages : un conteneur caché de même taille met en page les autres chapitres un par un,
+  sans bloquer les commandes, les chapitres précédant la position d'abord. L'indicateur affiche
+  "Page 12" dès que les chapitres précédents sont comptés, "Page 12 sur 840" quand tous le sont ;
+  vide avant. Tout changement de palier, de thème ou de taille de fenêtre relance le comptage.
 - Titres jamais séparés du paragraphe suivant (`break-after: avoid`). `lang="fr"`, `hyphens: auto`,
   `overflow-wrap: anywhere` en filet (à 140 px une ligne fait quinze caractères).
 - Premier calcul après `document.fonts.ready`.
-- Le module de pages (page d'un rectangle, décalage d'une page) est pur, sans Angular, testé seul.
-- **Essai préalable** : le plus gros EPUB du catalogue au palier 140 doit se recalculer en moins d'une
-  seconde sur un PC modeste et rester sous le plafond de largeur de Blink (environ 33 millions de
-  pixels ; 25 000 pages de 1 224 px s'en approchent). Sinon, repli : pagination par chapitre.
+- Le module de pages (découpage en chapitres, page d'un rectangle, numéro de page dans le livre,
+  page suivante et précédente) est pur, sans Angular, testé seul.
+- **Essai du 17 septembre 2026** (1920 x 1080, Luciole, 8 gros livres du catalogue, processeur ralenti
+  4 fois pour un PC modeste) : le livre entier dépasse le plafond de Blink pour Les Frères Karamazov au
+  palier 140 (34 285 pages, largeur bloquée à 2^25 px, fin illisible) et demande 2,3 s pour un tome
+  ordinaire (Les Misérables I) ; le plus long chapitre mesuré (65 000 caractères) se met en page en
+  0,22 s, le comptage de tout Karamazov prend 5 s. D'où la pagination par chapitre.
 - Ordre de grandeur au palier 100 sur 1920 x 1080 : 21 caractères par ligne, 6 lignes par page,
   plusieurs milliers de pages par roman. Accepté.
 
@@ -97,7 +108,7 @@ Règles :
 
 - Mémorisée comme (index de bloc, décalage en caractères) du premier caractère de la page, à chaque
   changement de page. Indépendante du palier et du thème.
-- Lecture : premier bloc dont le rectangle intersecte la colonne affichée, puis recherche
+- Lecture : dans le chapitre affiché, premier bloc dont le rectangle intersecte la colonne affichée, puis recherche
   dichotomique sur le décalage avec un `Range` d'un caractère comparé au bord gauche de la colonne.
   Restauration : le même `Range` donne un rectangle dont le bord gauche divisé par la largeur de
   colonne donne la page. `Range` est la seule API DOM utilisée ; le reste est arithmétique testée.
@@ -112,6 +123,8 @@ Règles :
   livres jamais ouverts, du plus récemment ajouté au plus ancien.
 - Repères : la première ligne, si elle est en cours et non terminée, a un fond tangerine ; un livre
   terminé porte l'étiquette "Terminé" en texte atténué. Rien d'autre.
+- En-tête : titre "Mes livres" et indicateur "Titres 1 à 4 sur 7" (maquette du design system) ;
+  flèches gauche et droite comme sur l'écran de lecture, espace et Entrée activent la ligne focalisée.
 - Un clic ouvre le livre à sa dernière position ; jamais ouvert ou terminé : première page.
 
 ### 5.5 Réglages d'affichage
@@ -330,7 +343,7 @@ La version 1 est livrable quand :
 | Recherche relayée en direct | copie locale du catalogue | quelques recherches par mois ne justifient ni table ni tâche |
 | Paliers globaux | loupe, Ctrl plus et moins | motricité fine, texte mobile, conflit avec le zoom Chrome |
 | Référence 1280 px | référence 1920 px | couvre la mise à l'échelle Windows à 100 % et 125 % |
-| Multi-colonnes CSS | mesure mot par mot | le navigateur pagine en une passe, recalcul gratuit |
+| Multi-colonnes CSS par chapitre, total compté en fond | livre entier en un conteneur, mesure mot par mot, pages du chapitre seul, pourcentage | essai du 17 septembre 2026 (5.2) : plafond de Blink dépassé et plus d'une seconde pour le livre entier ; le chapitre tient en 0,22 s et garde "Page 12 sur 840" |
 | Position par `Range` seul | `caretPositionFromPoint` | le coin de colonne tombe dans une marge ; une seule API |
 | Texte brut par bloc | `<i>`, `<b>` conservés | gras invisible, italique nuisible, position triviale |
 | Barres pleine hauteur | boutons en bas, moitiés d'écran | périphérie conservée, cibles impossibles à manquer |
