@@ -175,6 +175,13 @@ ignore les accents des titres mais pas ceux de la requête : le backend retire l
 avant envoi. `User-Agent` identifiant l'application. Site injoignable : "Site du catalogue
 injoignable", bouton pour réessayer.
 
+Constats du 17 septembre 2026 : une page de 100 résultats au plus (seule la première est affichée),
+auteur au format "Hugo, Victor" (affiché "Victor Hugo"), environ une entrée sur six sans EPUB (PDF ou
+Mobipocket seuls), masquée car inactivable. Le lien EPUB suit toujours
+`newsendbook.php?id=<n>&format=epub`, `<n>` étant le numéro de la fiche `details.php?book=<n>` de
+l'identifiant ; l'activation construit ce lien depuis l'URL du site configurée, sans jamais télécharger
+une adresse fournie par le client, et suit la redirection vers le fichier statique.
+
 ### 7.3 Format interne
 
 ```json

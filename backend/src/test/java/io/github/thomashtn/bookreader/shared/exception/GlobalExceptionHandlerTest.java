@@ -2,6 +2,7 @@ package io.github.thomashtn.bookreader.shared.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.thomashtn.bookreader.catalogue.client.CatalogueUnavailableException;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException.Reason;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
@@ -115,6 +117,25 @@ class GlobalExceptionHandlerTest {
             handler.handleMissingPart(new MissingServletRequestPartException("file"), request);
 
         assertError(response, HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT");
+    }
+
+    @Test
+    @DisplayName("Renders an unreachable catalogue as 503")
+    void rendersCatalogueUnavailable() {
+        ResponseEntity<ApiErrorResponse> response = handler.handleCatalogueUnavailable(
+            new CatalogueUnavailableException("timeout", new IllegalStateException()), request);
+
+        assertError(response, HttpStatus.SERVICE_UNAVAILABLE, "CATALOGUE_UNAVAILABLE");
+    }
+
+    @Test
+    @DisplayName("Renders a missing query parameter as 400 rather than a server fault")
+    void rendersMissingParameter() {
+        ResponseEntity<ApiErrorResponse> response = handler.handleMissingParameter(
+            new MissingServletRequestParameterException("query", "String"), request);
+
+        assertError(response, HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT");
+        assertThat(response.getBody().detail()).contains("query");
     }
 
     private static void assertError(ResponseEntity<ApiErrorResponse> response, HttpStatus status, String code) {

@@ -1,6 +1,7 @@
 package io.github.thomashtn.bookreader.book.repository;
 
 import io.github.thomashtn.bookreader.book.entity.Book;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,4 +33,20 @@ public interface BookRepository extends JpaRepository<Book, UUID> {
      * @return the book when it exists and is active
      */
     Optional<Book> findByIdAndActiveTrue(UUID id);
+
+    /**
+     * Finds the book imported from a catalogue entry.
+     *
+     * @param sourceId catalogue entry identifier
+     * @return the book when the entry was imported
+     */
+    Optional<Book> findBySourceId(String sourceId);
+
+    /**
+     * Returns the import state of the catalogue entries already in the library.
+     *
+     * @param sourceIds catalogue entry identifiers
+     * @return states of the imported ones
+     */
+    List<CatalogueBookState> findBySourceIdIn(Collection<String> sourceIds);
 }

@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader.shared.exception;
 
+import io.github.thomashtn.bookreader.catalogue.client.CatalogueUnavailableException;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -214,6 +216,50 @@ public class GlobalExceptionHandler {
             HttpStatus.BAD_REQUEST,
             "INVALID_ARGUMENT",
             "Part '" + exception.getRequestPartName() + "' is required.",
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Handles a catalogue site that did not answer, so the backoffice can offer to retry.
+     *
+     * @param exception unavailability with its cause
+     * @param request current HTTP request
+     * @return standardized HTTP 503 response
+     */
+    @ExceptionHandler(CatalogueUnavailableException.class)
+    ResponseEntity<ApiErrorResponse> handleCatalogueUnavailable(
+        CatalogueUnavailableException exception,
+        HttpServletRequest request
+    ) {
+        LOGGER.warn("Catalogue unavailable while processing {} {}: {}",
+            request.getMethod(), request.getRequestURI(), exception.getMessage());
+        return buildResponse(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "CATALOGUE_UNAVAILABLE",
+            "The catalogue site cannot be reached.",
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Handles a missing required query parameter.
+     *
+     * @param exception missing parameter exception
+     * @param request current HTTP request
+     * @return standardized HTTP 400 response
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    ResponseEntity<ApiErrorResponse> handleMissingParameter(
+        MissingServletRequestParameterException exception,
+        HttpServletRequest request
+    ) {
+        return buildResponse(
+            HttpStatus.BAD_REQUEST,
+            "INVALID_ARGUMENT",
+            "Parameter '" + exception.getParameterName() + "' is required.",
             request,
             Map.of()
         );

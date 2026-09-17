@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:app="http://www.w3.org/2007/app" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:opds="http://opds-spec.org/" xml:lang="fr" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:thr="http://purl.org/syndication/thread/1.0" xmlns="http://www.w3.org/2005/Atom">
+   <id>https://www.ebooksgratuits.com/opds/feed.php</id>
+   <link type="text/html" href="https://www.ebooksgratuits.com/ebooks.php" rel="alternate"/>
+   <link type="application/atom+xml" href="https://www.ebooksgratuits.com/opds/feed.php" rel="self"/>
+   <link type="application/opensearchdescription+xml" href="/opds/opensearch.xml" rel="search" title="Rechercher sur Ebooksgratuits"/>
+   <title>Liste des ebooks "zzzzqqq"</title>
+  <published>2026-09-17T07:17:40Z</published>
+  <icon>https://www.ebooksgratuits.com/favicon.png</icon>
+  <author>
+    <name>Ebooks libres et gratuits - Catalogue des livres</name>
+    <uri>https://www.ebooksgratuits.com</uri>
+    <email>contact@ebooksgratuits.com</email>
+  </author>
+  <link type="application/atom+xml" href="/opds/feed.php" rel="start" title="OPDS Catalog"/>
+
+<opensearch:totalResults>0</opensearch:totalResults>
+<opensearch:itemsPerPage>100</opensearch:itemsPerPage>
+</feed>

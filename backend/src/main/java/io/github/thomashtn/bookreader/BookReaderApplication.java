@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader;
 
+import io.github.thomashtn.bookreader.catalogue.config.CatalogueProperties;
 import io.github.thomashtn.bookreader.shared.config.ApplicationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,7 +10,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * Entry point of the book reader backend.
  */
 @SpringBootApplication
-@EnableConfigurationProperties(ApplicationProperties.class)
+@EnableConfigurationProperties({ApplicationProperties.class, CatalogueProperties.class})
 public class BookReaderApplication {
 
     /**

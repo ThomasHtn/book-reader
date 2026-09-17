@@ -87,6 +87,18 @@ public class Book {
     }
 
     /**
+     * Creates an active book from a catalogue entry.
+     *
+     * @param converted conversion result
+     * @param entryId   catalogue entry identifier, also the URL of its page
+     * @param now       import instant
+     * @return new book
+     */
+    public static Book fromCatalogue(ConvertedBook converted, String entryId, Instant now) {
+        return new Book(converted, BookSource.CATALOGUE, entryId, entryId, now);
+    }
+
+    /**
      * Renames the book.
      *
      * @param newTitle non-blank title

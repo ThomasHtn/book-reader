@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:app="http://www.w3.org/2007/app" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:opds="http://opds-spec.org/" xml:lang="fr" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:thr="http://purl.org/syndication/thread/1.0" xmlns="http://www.w3.org/2005/Atom">
+   <id>https://www.ebooksgratuits.com/opds/feed.php</id>
+   <link type="text/html" href="https://www.ebooksgratuits.com/ebooks.php" rel="alternate"/>
+   <link type="application/atom+xml" href="https://www.ebooksgratuits.com/opds/feed.php" rel="self"/>
+   <link type="application/opensearchdescription+xml" href="/opds/opensearch.xml" rel="search" title="Rechercher sur Ebooksgratuits"/>
+   <title>Liste des ebooks "miserables"</title>
+  <published>2026-09-17T06:56:22Z</published>
+  <icon>https://www.ebooksgratuits.com/favicon.png</icon>
+  <author>
+    <name>Ebooks libres et gratuits - Catalogue des livres</name>
+    <uri>https://www.ebooksgratuits.com</uri>
+    <email>contact@ebooksgratuits.com</email>
+  </author>
+  <link type="application/atom+xml" href="/opds/feed.php" rel="start" title="OPDS Catalog"/>
+
+<opensearch:totalResults>5</opensearch:totalResults>
+<opensearch:itemsPerPage>100</opensearch:itemsPerPage>
+   <entry>
+      <title>Les Misérables - Tome I - Fantine</title>
+      <id>https://www.ebooksgratuits.com/details.php?book=726</id>
+      <author>
+         <name>Hugo, Victor</name>
+         <uri>https://www.ebooksgratuits.com/ebooks.php?auteur=Hugo_Victor</uri>
+      </author>
+      <published>2011-01-26T00:00:00-08:00</published>
+      <dcterms:language>fr</dcterms:language>
+      <link type="text/html" href="https://www.ebooksgratuits.com/details.php?book=726" rel="alternate" title="Voir sur ebooksgratuits.com" />
+      <link type="application/atom+xml" href="https://www.ebooksgratuits.com/opds/feed.php?mode=author&amp;id=66" rel="related" title="Du même auteur" />
+      <category term="Romans" label="Romans"/>
+      <category term="Historique" label="Historique"/>
+      <content type="text"><![CDATA[Oeuvre immense, joyau du patrimoine littéraire national, riche en figures assimilées par notre imaginaire ou notre langue, c’est roman touffu mais d’une lecture aisée, populaire mais déroutant, qu’il faut avoir lu.<br />Jean Valjean, un ancien forçat condamné en 1796, trouve asile, après avoir été libéré du bagne et avoir longtemps erré, chez Mgr Myriel, évêque de Digne. Il se laisse tenter par les couverts d’argent du prélat et déguerpit à l’aube. Des gendarmes le capturent, mais l’évêque témoigne en sa faveur et le sauve. Bouleversé, Jean Valjean cède à une dernière tentation en détroussant un petit Savoyard puis devient honnête homme. En 1817 à Paris, Fantine a été séduite par un étudiant puis abandonnée avec sa petite Cosette, qu’elle a confiée à un couple de sordides aubergistes de Montfermeil, les Thénardier. Elle est contrainte de se prostituer...<br /><br />Texte annoté par Guy Rosa, professeur à l’Université Paris-Diderot<br />Édition Ebooks libres et gratuits.<br />Mise à jour: 26/01/2011: Mise à jour du format epub.]]></content>
+      <dcterms:source>https://www.ebooksgratuits.com/ebooks.php</dcterms:source>
+      <link type="application/epub+zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=726&amp;format=epub" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-mobipocket-ebook" href="https://www.ebooksgratuits.com/newsendbook.php?id=726&amp;format=mp" rel="http://opds-spec.org/acquisition" />
+      <link type="application/pdf" href="https://www.ebooksgratuits.com/newsendbook.php?id=726&amp;format=pdf" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-palmreader" href="https://www.ebooksgratuits.com/newsendbook.php?id=726&amp;format=pr" rel="http://opds-spec.org/acquisition" />
+      <link type="application/zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=726&amp;format=so" rel="http://opds-spec.org/acquisition" />
+      <link type="application/octet-stream" href="https://www.ebooksgratuits.com/newsendbook.php?id=726&amp;format=lrf" rel="http://opds-spec.org/acquisition" />
+   </entry>
+   <entry>
+      <title>Les Misérables - Tome II - Cosette</title>
+      <id>https://www.ebooksgratuits.com/details.php?book=727</id>
+      <author>
+         <name>Hugo, Victor</name>
+         <uri>https://www.ebooksgratuits.com/ebooks.php?auteur=Hugo_Victor</uri>
+      </author>
+      <published>2011-01-26T00:00:00-08:00</published>
+      <dcterms:language>fr</dcterms:language>
+      <link type="text/html" href="https://www.ebooksgratuits.com/details.php?book=727" rel="alternate" title="Voir sur ebooksgratuits.com" />
+      <link type="application/atom+xml" href="https://www.ebooksgratuits.com/opds/feed.php?mode=author&amp;id=66" rel="related" title="Du même auteur" />
+      <category term="Romans" label="Romans"/>
+      <category term="Historique" label="Historique"/>
+      <content type="text"><![CDATA[À la bataille de Waterloo, Thénardier avait détroussé le colonel baron Pontmercy, tout en lui portant secours. Nous sommes en 1823. Jean Valjean a été repris et renvoyé au bagne. Il s’évade de nouveau, on le croit noyé. Ayant caché sa fortune près de l’auberge des Thénardier, il délivre Cosette de cet enfer...<br /><br />Texte annoté par Guy Rosa, professeur à l’Université Paris-Diderot<br />Édition Ebooks libres et gratuits.<br />Mise à jour: 26/01/2011: Mise à jour du format epub.]]></content>
+      <dcterms:source>https://www.ebooksgratuits.com/ebooks.php</dcterms:source>
+      <link type="application/epub+zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=727&amp;format=epub" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-mobipocket-ebook" href="https://www.ebooksgratuits.com/newsendbook.php?id=727&amp;format=mp" rel="http://opds-spec.org/acquisition" />
+      <link type="application/pdf" href="https://www.ebooksgratuits.com/newsendbook.php?id=727&amp;format=pdf" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-palmreader" href="https://www.ebooksgratuits.com/newsendbook.php?id=727&amp;format=pr" rel="http://opds-spec.org/acquisition" />
+      <link type="application/zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=727&amp;format=so" rel="http://opds-spec.org/acquisition" />
+      <link type="application/octet-stream" href="https://www.ebooksgratuits.com/newsendbook.php?id=727&amp;format=lrf" rel="http://opds-spec.org/acquisition" />
+   </entry>
+   <entry>
+      <title>Les Misérables - Tome III - Marius</title>
+      <id>https://www.ebooksgratuits.com/details.php?book=728</id>
+      <author>
+         <name>Hugo, Victor</name>
+         <uri>https://www.ebooksgratuits.com/ebooks.php?auteur=Hugo_Victor</uri>
+      </author>
+      <published>2011-01-26T00:00:00-08:00</published>
+      <dcterms:language>fr</dcterms:language>
+      <link type="text/html" href="https://www.ebooksgratuits.com/details.php?book=728" rel="alternate" title="Voir sur ebooksgratuits.com" />
+      <link type="application/atom+xml" href="https://www.ebooksgratuits.com/opds/feed.php?mode=author&amp;id=66" rel="related" title="Du même auteur" />
+      <category term="Romans" label="Romans"/>
+      <category term="Historique" label="Historique"/>
+      <content type="text"><![CDATA[Apparaissent deux nouveaux personnages: Gavroche, fils de Thénardier, qui incarne le gamin de Paris, et Marius Pontmercy, fils du colonel de Waterloo. Marius rejoint un groupe d’étudiants républicains...<br /><br />Texte annoté par Guy Rosa, professeur à l’Université Paris-Diderot<br />Édition Ebooks libres et gratuits.<br />Mise à jour: 26/01/2011: Mise à jour du format epub.]]></content>
+      <dcterms:source>https://www.ebooksgratuits.com/ebooks.php</dcterms:source>
+      <link type="application/epub+zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=728&amp;format=epub" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-mobipocket-ebook" href="https://www.ebooksgratuits.com/newsendbook.php?id=728&amp;format=mp" rel="http://opds-spec.org/acquisition" />
+      <link type="application/pdf" href="https://www.ebooksgratuits.com/newsendbook.php?id=728&amp;format=pdf" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-palmreader" href="https://www.ebooksgratuits.com/newsendbook.php?id=728&amp;format=pr" rel="http://opds-spec.org/acquisition" />
+      <link type="application/zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=728&amp;format=so" rel="http://opds-spec.org/acquisition" />
+      <link type="application/octet-stream" href="https://www.ebooksgratuits.com/newsendbook.php?id=728&amp;format=lrf" rel="http://opds-spec.org/acquisition" />
+   </entry>
+   <entry>
+      <title>Les Misérables - Tome IV - L’idylle rue Plumet et l’épopée rue Saint-Denis</title>
+      <id>https://www.ebooksgratuits.com/details.php?book=729</id>
+      <author>
+         <name>Hugo, Victor</name>
+         <uri>https://www.ebooksgratuits.com/ebooks.php?auteur=Hugo_Victor</uri>
+      </author>
+      <published>2011-01-26T00:00:00-08:00</published>
+      <dcterms:language>fr</dcterms:language>
+      <link type="text/html" href="https://www.ebooksgratuits.com/details.php?book=729" rel="alternate" title="Voir sur ebooksgratuits.com" />
+      <link type="application/atom+xml" href="https://www.ebooksgratuits.com/opds/feed.php?mode=author&amp;id=66" rel="related" title="Du même auteur" />
+      <category term="Romans" label="Romans"/>
+      <category term="Historique" label="Historique"/>
+      <content type="text"><![CDATA[En 1832, Jean Valjean habite, avec Cosette, rue Plumet, Thénardier est en prison, sa fille Éponine, amoureuse de Marius, aide pourtant le jeune homme à retrouver la trace d’une jeune fille rencontrée au Luxembourg. Il s’agit de Cosette...<br /><br />Texte annoté par Guy Rosa, professeur à l’Université Paris-Diderot<br />Édition Ebooks libres et gratuits.<br />Mise à jour: 26/01/2011: Mise à jour du format epub.]]></content>
+      <dcterms:source>https://www.ebooksgratuits.com/ebooks.php</dcterms:source>
+      <link type="application/epub+zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=729&amp;format=epub" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-mobipocket-ebook" href="https://www.ebooksgratuits.com/newsendbook.php?id=729&amp;format=mp" rel="http://opds-spec.org/acquisition" />
+      <link type="application/pdf" href="https://www.ebooksgratuits.com/newsendbook.php?id=729&amp;format=pdf" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-palmreader" href="https://www.ebooksgratuits.com/newsendbook.php?id=729&amp;format=pr" rel="http://opds-spec.org/acquisition" />
+      <link type="application/zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=729&amp;format=so" rel="http://opds-spec.org/acquisition" />
+      <link type="application/octet-stream" href="https://www.ebooksgratuits.com/newsendbook.php?id=729&amp;format=lrf" rel="http://opds-spec.org/acquisition" />
+   </entry>
+   <entry>
+      <title>Les Misérables - Tome V - Jean Valjean</title>
+      <id>https://www.ebooksgratuits.com/details.php?book=730</id>
+      <author>
+         <name>Hugo, Victor</name>
+         <uri>https://www.ebooksgratuits.com/ebooks.php?auteur=Hugo_Victor</uri>
+      </author>
+      <published>2011-01-26T00:00:00-08:00</published>
+      <dcterms:language>fr</dcterms:language>
+      <link type="text/html" href="https://www.ebooksgratuits.com/details.php?book=730" rel="alternate" title="Voir sur ebooksgratuits.com" />
+      <link type="application/atom+xml" href="https://www.ebooksgratuits.com/opds/feed.php?mode=author&amp;id=66" rel="related" title="Du même auteur" />
+      <category term="Romans" label="Romans"/>
+      <category term="Historique" label="Historique"/>
+      <content type="text"><![CDATA[Soulevé, le peuple de Paris est symbolisé par les combattants de la barricade. Jean Valjean s’est vu confier la garde de l’inspecteur Javert, arrêté par les insurgés. Il feint de l’exécuter mais le libère, puis sauve Marius blessé en passant par les égouts...<br /><br />Texte annoté par Guy Rosa, professeur à l’Université Paris-Diderot<br />Édition Ebooks libres et gratuits.<br />Mise à jour: 26/01/2011: Mise à jour du format epub.]]></content>
+      <dcterms:source>https://www.ebooksgratuits.com/ebooks.php</dcterms:source>
+      <link type="application/epub+zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=730&amp;format=epub" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-mobipocket-ebook" href="https://www.ebooksgratuits.com/newsendbook.php?id=730&amp;format=mp" rel="http://opds-spec.org/acquisition" />
+      <link type="application/pdf" href="https://www.ebooksgratuits.com/newsendbook.php?id=730&amp;format=pdf" rel="http://opds-spec.org/acquisition" />
+      <link type="application/x-palmreader" href="https://www.ebooksgratuits.com/newsendbook.php?id=730&amp;format=pr" rel="http://opds-spec.org/acquisition" />
+      <link type="application/zip" href="https://www.ebooksgratuits.com/newsendbook.php?id=730&amp;format=so" rel="http://opds-spec.org/acquisition" />
+      <link type="application/octet-stream" href="https://www.ebooksgratuits.com/newsendbook.php?id=730&amp;format=lrf" rel="http://opds-spec.org/acquisition" />
+   </entry>
+   <entry>
+      <title>Oraison funèbre de Anne de Gonzague de Clèves princesse palatine</title>
+      <id>https://www.ebooksgratuits.com/details.php?book=123</id>
+      <author>
+         <name>Bossuet, Jacques-Bénigne</name>
+         <uri>https://www.ebooksgratuits.com/ebooks.php?auteur=Bossuet_Jacques-B%C3%A9nigne</uri>
+      </author>
+      <published>2004-01-01T00:00:00-08:00</published>
+      <dcterms:language>fr</dcterms:language>
+      <link type="text/html" href="https://www.ebooksgratuits.com/details.php?book=123" rel="alternate" title="Voir sur ebooksgratuits.com" />
+      <link type="application/atom+xml" href="https://www.ebooksgratuits.com/opds/feed.php?mode=author&amp;id=23" rel="related" title="Du même auteur" />
+      <category term="Documents - Essais" label="Documents - Essais"/>
+      <content type="text"><![CDATA[Édition EbooksLib]]></content>
+      <dcterms:source>https://www.ebooksgratuits.com/ebooks.php</dcterms:source>
+      <link type="application/pdf" href="https://www.ebooksgratuits.com/newsendbook.php?id=123&amp;format=pdf" rel="http://opds-spec.org/acquisition" />
+   </entry>
+</feed>
