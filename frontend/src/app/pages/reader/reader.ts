@@ -55,20 +55,21 @@ const COUNT_START_DELAY_MS = 100;
         (contextmenu)="$event.preventDefault()"
       >
         <app-nav-bar direction="previous" [disabled]="isFirst()" (activate)="onBar('previous')" />
-        <div class="center">
+        <main class="center">
           <div class="toolbar">
+            <h1 class="visually-hidden">{{ title() }}</h1>
             <button type="button" class="button" (click)="openLibrary()">Mes livres</button>
             <div class="page-indicator" aria-live="polite">{{ indicator() }}</div>
           </div>
-          <main class="paged reading" lang="fr" aria-label="Texte du livre" tabindex="-1" #text>
+          <section class="paged reading" lang="fr" aria-label="Texte du livre" tabindex="-1" #text>
             <div class="paged-viewport" #viewport>
               <div class="paged-columns" #columns></div>
             </div>
             <div class="paged-viewport paged-viewport--measure" aria-hidden="true" #measureViewport>
               <div class="paged-columns" #measureColumns></div>
             </div>
-          </main>
-        </div>
+          </section>
+        </main>
         <app-nav-bar direction="next" [disabled]="isLast()" (activate)="onBar('next')" />
       </div>
     }
@@ -101,6 +102,8 @@ export class Reader {
   private readonly measureColumns = viewChild<ElementRef<HTMLElement>>('measureColumns');
 
   private readonly gate = new CommandGate(COMMAND_INTERVAL_MS, () => Date.now());
+
+  protected readonly title = computed(() => (this.book.hasValue() ? this.book.value().title : ''));
 
   protected readonly location = signal<Location | null>(null);
 

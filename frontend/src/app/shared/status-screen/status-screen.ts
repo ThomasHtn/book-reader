@@ -6,7 +6,7 @@ import { ChangeDetectionStrategy, Component, output } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="status">
-      <p>Le service est indisponible, nouvel essai dans quelques secondes.</p>
+      <h1>Le service est indisponible, nouvel essai dans quelques secondes.</h1>
       <button type="button" class="button" (click)="retry.emit()">Réessayer</button>
     </main>
   `,

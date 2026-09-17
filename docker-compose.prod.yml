@@ -1,0 +1,53 @@
+# Production stack on the VPS: two images behind the existing Traefik, same origin, /api/* to the backend.
+# The database is the VPS PostgreSQL 17 (dedicated database and role, see .env.example).
+# Usage: cp .env.example .env, fill it, then `docker compose -f docker-compose.prod.yml up -d --build`.
+
+services:
+  backend:
+    build: ./backend
+    image: book-reader-backend:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      API_DOCS_ENABLED: "false"
+      FORWARD_HEADERS_STRATEGY: framework
+    networks:
+      - traefik
+      - database
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik}
+      - traefik.http.routers.book-reader-api.rule=Host(`${PUBLIC_HOST:-book-reader.thomashtn.dev}`) && PathPrefix(`/api`)
+      - traefik.http.routers.book-reader-api.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}
+      - traefik.http.routers.book-reader-api.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      - traefik.http.routers.book-reader-api.middlewares=book-reader-ratelimit,book-reader-body-limit,book-reader-noindex
+      - traefik.http.services.book-reader-api.loadbalancer.server.port=8080
+      # The reader polls twice every ten seconds; this only stops floods and key guessing bursts.
+      - traefik.http.middlewares.book-reader-ratelimit.ratelimit.average=20
+      - traefik.http.middlewares.book-reader-ratelimit.ratelimit.burst=50
+      - traefik.http.middlewares.book-reader-body-limit.buffering.maxRequestBodyBytes=20971520
+      - traefik.http.middlewares.book-reader-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow
+
+  frontend:
+    build: ./frontend
+    image: book-reader-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik}
+      - traefik.http.routers.book-reader-web.rule=Host(`${PUBLIC_HOST:-book-reader.thomashtn.dev}`)
+      - traefik.http.routers.book-reader-web.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}
+      - traefik.http.routers.book-reader-web.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      - traefik.http.services.book-reader-web.loadbalancer.server.port=80
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
+  database:
+    external: true
+    name: ${DATABASE_NETWORK:-database}

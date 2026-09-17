@@ -26,7 +26,8 @@ export class DomChapterLayout implements ChapterLayout {
     const document = this.columns.ownerDocument;
     const nodes: HTMLElement[] = [];
     if (content.titlePage) {
-      nodes.push(element(document, 'h1', content.titlePage.title));
+      // The page h1 lives outside the text; a second one here would duplicate it.
+      nodes.push(element(document, 'p', content.titlePage.title, 'book-title'));
       nodes.push(element(document, 'p', content.titlePage.author, 'author'));
     }
     this.blockElements = content.blocks.map((block) =>

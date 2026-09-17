@@ -318,7 +318,7 @@ Spring) derrière Traefik sur le VPS, même origine, `/api/*` vers le backend, b
 documenté dans `.env.example` (base, `ADMIN_API_KEY`, URL du flux, `API_DOCS_ENABLED`). Limite de
 20 Mo alignée dans nginx, Traefik et Spring. `robots.txt` interdisant tout et `X-Robots-Tag: noindex`.
 Limitation de débit Traefik sur `/api/**`. CI GitHub Actions `backend-ci.yml` et `frontend-ci.yml`
-par chemin.
+par chemin, plus `e2e.yml` (parcours Playwright sur une base vide) dès que l'un des deux change.
 
 ## 12. Livraison
 

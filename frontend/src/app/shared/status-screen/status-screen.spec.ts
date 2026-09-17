@@ -10,7 +10,7 @@ describe('StatusScreen', () => {
     const element = fixture.nativeElement as HTMLElement;
 
     expect(element.querySelector('main')).not.toBeNull();
-    expect(element.querySelector('p')?.textContent?.trim()).toBe(
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe(
       'Le service est indisponible, nouvel essai dans quelques secondes.',
     );
     const button = element.querySelector('button') as HTMLButtonElement;

@@ -384,6 +384,11 @@
   margin: 0;
 }
 
+.a-help a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .a-message {
   margin: 0;
   font-size: var(--admin-text-sm);

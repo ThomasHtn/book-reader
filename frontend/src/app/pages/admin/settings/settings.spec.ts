@@ -42,6 +42,17 @@ describe('Settings', () => {
     expect(element.querySelectorAll('[role="group"][aria-labelledby]')).toHaveLength(2);
   });
 
+  it('credits the fonts and the book source, as their licences require', async () => {
+    const { element } = await render();
+
+    const credits = element.querySelector('footer')!.textContent!;
+    expect(credits).toContain('Luciole');
+    expect(credits).toContain('CC BY 4.0');
+    expect(credits).toContain('Atkinson Hyperlegible Next');
+    expect(credits).toContain('SIL Open Font License');
+    expect(credits).toContain('Ebooks libres et gratuits');
+  });
+
   it('previews the choice with its real size on her screen', async () => {
     const { element, settle, option } = await render();
 

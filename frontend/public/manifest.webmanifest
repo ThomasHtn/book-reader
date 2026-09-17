@@ -1,0 +1,10 @@
+{
+  "name": "Liseuse",
+  "short_name": "Liseuse",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#f4efe6",
+  "theme_color": "#f4efe6",
+  "icons": [{ "src": "favicon.ico", "sizes": "48x48", "type": "image/x-icon" }]
+}

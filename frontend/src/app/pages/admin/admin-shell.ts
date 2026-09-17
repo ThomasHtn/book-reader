@@ -8,6 +8,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { LucideLibrary, LucideSearch, LucideSettings, LucideUpload } from '@lucide/angular';
 import { AdminSession, SignInOutcome } from '@core/admin/admin-session';
 
 const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
@@ -24,7 +25,15 @@ const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
   selector: 'app-admin-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    LucideLibrary,
+    LucideSearch,
+    LucideSettings,
+    LucideUpload,
+  ],
   styleUrl: './admin.css',
   templateUrl: './admin-shell.html',
 })

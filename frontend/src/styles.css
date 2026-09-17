@@ -215,7 +215,7 @@ app-nav-bar {
   margin: 0 0 var(--gap-paragraph);
 }
 
-.reading h1,
+.reading .book-title,
 .reading h2 {
   margin: 0 0 var(--gap-paragraph);
   font-size: var(--text-heading);
@@ -229,6 +229,19 @@ app-nav-bar {
 .reading .end {
   color: var(--color-fg-muted);
   font-size: var(--text-meta);
+}
+
+/* Read by screen readers only. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ---- Book list ---- */
@@ -316,8 +329,9 @@ app-nav-bar {
   height: 100%;
 }
 
-.status p {
+.status h1 {
   font-size: var(--text-body);
+  font-weight: var(--weight-body);
   line-height: var(--leading-body);
   margin: 0;
   max-width: 24ch;

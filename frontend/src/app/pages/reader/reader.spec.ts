@@ -119,6 +119,9 @@ describe('Reader', () => {
     const { bars, indicator, fixture } = await open();
 
     expect(store.last).toBe('b1');
+    expect(fixture.nativeElement.querySelector('h1.visually-hidden')?.textContent?.trim()).toBe(
+      'Le Horla',
+    );
     expect(visible().content).toEqual({
       blocks: BOOK.blocks.slice(0, 3),
       firstBlock: 0,
@@ -245,7 +248,8 @@ describe('Reader', () => {
     bars()[1].click();
     await flush(fixture);
 
-    expect(document.activeElement).toBe(element.querySelector('main'));
+    expect(document.activeElement).toBe(element.querySelector('section.reading'));
+    expect(element.querySelector('main')?.contains(document.activeElement)).toBe(true);
   });
 
   it('keeps the position when the display settings change', async () => {
