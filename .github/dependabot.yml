@@ -1,0 +1,40 @@
+version: 2
+
+# Neither CI workflow scans dependencies, and both subprojects pull a large transitive tree
+# (Spring Boot on one side, the Angular toolchain on the other). These updates are the project's
+# only signal that a dependency it does not name directly has a published advisory.
+#
+# Each ecosystem is grouped into a single pull request per run: seven separate bumps a week on a
+# personal project get ignored, one grouped bump gets reviewed. Security updates are deliberately
+# left ungrouped by GitHub, so an advisory still arrives as its own pull request.
+updates:
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      backend-dependencies:
+        patterns:
+          - '*'
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend-dependencies:
+        patterns:
+          - '*'
+
+  # The workflows pin actions by major tag (actions/checkout@v4), which silently stops receiving
+  # fixes once a v5 exists.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - '*'

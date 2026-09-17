@@ -1,0 +1,89 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Superseded pull-request runs are cancelled; runs on shared branches are always
+# allowed to finish so every merged commit keeps a conclusive build status.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  verify:
+    name: Build, test and analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Grant execute permission to Maven Wrapper
+        run: chmod +x mvnw
+
+      # Runs Checkstyle, the unit and Testcontainers suites, SpotBugs and the
+      # JaCoCo coverage gate. Docker is preinstalled on the runner image.
+      - name: Build, test and analyze
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            backend/target/surefire-reports/
+            backend/target/failsafe-reports/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload JaCoCo coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: backend/target/site/jacoco/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload application artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: book-reader-backend
+          path: |
+            backend/target/*.jar
+            !backend/target/*-sources.jar
+            !backend/target/*-javadoc.jar
+          if-no-files-found: error
+          retention-days: 14

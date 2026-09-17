@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+  "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+  "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<!--
+    Every suppression here is a deliberate exception with a stated reason. A rule that needs a
+    blanket suppression across the codebase is the wrong rule and belongs in checkstyle.xml
+    instead, configured or removed.
+-->
+<suppressions>
+
+  <!--
+      Spring instantiates the @SpringBootApplication class as a configuration bean, so it cannot
+      have the private constructor Checkstyle wants for a class whose only method is static main.
+  -->
+  <suppress
+    files="BookReaderApplication\.java"
+    checks="HideUtilityClassConstructor"/>
+
+  <!--
+      Test fixture builders take one parameter per column of the entity they assemble. Collapsing
+      them behind a parameter object would hide, at the call site, exactly the values a test exists
+      to pin down.
+  -->
+  <suppress
+    files="[\\/]src[\\/]test[\\/]"
+    checks="ParameterNumber"/>
+
+</suppressions>
