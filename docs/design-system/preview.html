@@ -1,0 +1,736 @@
+<title>Liseuse Accessible</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Design tokens for the accessible reader.
+   Three layers: primitives (raw values), semantic (purpose, switched per theme), component.
+   Attributes on <html>:
+     data-theme   = dark-on-light (default) | light-on-dark | yellow-on-black
+     data-tier    = 48 | 72 | 100 | 140 (default 100), the tier value itself as served by GET /api/settings
+     data-density = admin, on backoffice routes only
+   Every text/background pair below is >= 7:1, every control edge >= 3:1 against its surroundings. */
+
+/* === PRIMITIVES ========================================================= */
+:root {
+  /* Paper theme */
+  --color-paper-50: #f4efe6;
+  --color-paper-100: #e3dccb;
+  --color-paper-200: #cfc6b0;
+  --color-ink-900: #141414;
+  --color-ink-700: #4a4a4a;
+
+  /* Night theme */
+  --color-night-950: #101010;
+  --color-night-900: #1a1a1a;
+  --color-night-800: #262626;
+  --color-night-700: #3a3a3a;
+  --color-snow-100: #f2f2f2;
+  --color-snow-300: #bdbdbd;
+
+  /* Amber theme */
+  --color-black: #000000;
+  --color-coal-900: #222222;
+  --color-amber-300: #ffd84d;
+  --color-amber-500: #cfaf3a;
+
+  /* Accent: one tangerine shared by every theme, dark text on it; the pressed state inverts */
+  --color-tangerine-300: #ffa03c;
+  --color-tangerine-400: #ff8a00;
+  --color-ember-600: #d1461e;
+  --color-ember-700: #b93d17;
+  --color-ember-800: #9e3413;
+  --color-peach-50: #ffe8dc;
+  --color-peach-100: #ffc9b8;
+  --color-peach-200: #ffb199;
+  --color-cocoa-900: #4a1f10;
+  --color-white: #ffffff;
+
+  /* Status (backoffice) */
+  --color-rust-700: #8a1c1c;
+  --color-salmon-300: #ff8a80;
+  --color-moss-700: #2f6b3a;
+  --color-moss-300: #8fd19a;
+  --color-ochre-700: #8a5a00;
+  --color-ochre-300: #f3c76b;
+
+  /* Typography */
+  --font-reading: "Luciole", "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", Arial, sans-serif;
+  --font-admin: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, "Segoe UI", Arial, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  /* Tiers are unitless: the size in px on any viewport of 1280px CSS or more */
+  --tier-current: 100;
+  --text-floor: 20px;
+  --weight-body: 700;
+  --weight-heading: 700;
+  --leading-body: 1.4;
+  --leading-tight: 1.15;
+  --tracking-body: 0.01em;
+
+  /* Spacing, 8px base */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+
+  /* Shape and motion for the reader: none by design */
+  --radius-none: 0;
+  --border-control: 6px;
+  --border-row: 4px;
+  --duration-none: 0ms;
+
+  /* Focus: inset double ring, gap in page colour then ring in text colour */
+  --focus-ring-width: 8px;
+  --focus-gap-width: 4px;
+
+  /* Large arrow cursor (64px), black with white outline, hotspot at the tip. Desktop only. */
+  --cursor-large: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><path d='M6 4 L6 52 L18 40 L28 60 L38 55 L28 36 L44 36 Z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>") 6 4, auto;
+}
+
+/* === SEMANTIC ============================================================ */
+/* Default theme: dark text on warm off-white (reduces glare compared to pure white). */
+:root {
+  --color-bg: var(--color-paper-50);
+  --color-fg: var(--color-ink-900);
+  --color-fg-muted: var(--color-ink-700);
+  --color-surface-raised: var(--color-paper-100);
+  --color-marker: var(--color-tangerine-300);
+  --color-control-bg: var(--color-tangerine-300);
+  --color-control-bg-hover: var(--color-tangerine-400);
+  --color-control-bg-active: var(--color-ink-900);
+  --color-control-fg: var(--color-ink-900);
+  --color-control-fg-active: var(--color-tangerine-300);
+  --color-control-border: var(--color-ink-900);
+  --color-focus-ring: var(--color-ink-900);
+  --color-focus-gap: var(--color-paper-50);
+  --color-error: var(--color-rust-700);
+
+  /* Body size = tier on any viewport of 1280px CSS or more (covers her PC at 100% and 125% Windows
+     scaling), scaled down proportionally below, never under the floor. 100 -> 31px on a 400px phone. */
+  --text-body: clamp(var(--text-floor), calc(var(--tier-current) / 12.8 * 1vw), calc(var(--tier-current) * 1px));
+  --text-heading: calc(var(--text-body) * 1.15);
+  --text-control: clamp(20px, calc(var(--text-body) * 0.55), 72px);
+  --text-meta: clamp(16px, calc(var(--text-body) * 0.5), 64px);
+  --gap-paragraph: 0.6em;
+}
+
+:root[data-theme="light-on-dark"] {
+  --color-bg: var(--color-night-950);
+  --color-fg: var(--color-snow-100);
+  --color-fg-muted: var(--color-snow-300);
+  --color-surface-raised: var(--color-night-800);
+  --color-focus-ring: var(--color-snow-100);
+  --color-focus-gap: var(--color-night-950);
+  --color-error: var(--color-salmon-300);
+}
+
+:root[data-theme="yellow-on-black"] {
+  --color-bg: var(--color-black);
+  --color-fg: var(--color-amber-300);
+  --color-fg-muted: var(--color-amber-500);
+  --color-surface-raised: var(--color-coal-900);
+  --color-focus-ring: var(--color-amber-300);
+  --color-focus-gap: var(--color-black);
+  --color-error: var(--color-amber-300);
+}
+
+:root[data-tier="48"] { --tier-current: 48; }
+:root[data-tier="72"] { --tier-current: 72; }
+:root[data-tier="100"] { --tier-current: 100; }
+:root[data-tier="140"] { --tier-current: 140; }
+
+/* === COMPONENT (reader) ================================================== */
+:root {
+  /* Side navigation bars (Previous / Next). Below the compact breakpoint (1100px) they become
+     a bottom row: --nav-bar-height applies instead of --nav-bar-width. */
+  --nav-bar-width: 300px;
+  --nav-bar-height: 96px;
+  /* Label sits horizontally under the chevron; sized so "Précédent" always fits on one line */
+  --nav-bar-label-size: min(var(--text-control), calc(var(--nav-bar-width) / 5.8));
+  --nav-bar-bg: var(--color-control-bg);
+  --nav-bar-bg-hover: var(--color-control-bg-hover);
+  --nav-bar-bg-active: var(--color-control-bg-active);
+  --nav-bar-fg: var(--color-control-fg);
+  --nav-bar-fg-active: var(--color-control-fg-active);
+  --nav-bar-border: var(--border-control) solid var(--color-control-border);
+  --nav-bar-disabled-bg: var(--color-bg);
+  --nav-bar-disabled-fg: var(--color-fg-muted);
+  /* Keeps the bar's silhouette on first and last page, since its fill matches the page */
+  --nav-bar-disabled-border: var(--border-control) solid var(--color-control-border);
+  --nav-bar-arrow-size: calc(var(--text-control) * 1.6);
+
+  /* Primary button ("Mes livres", "Réessayer") */
+  --button-bg: var(--color-control-bg);
+  --button-bg-hover: var(--color-control-bg-hover);
+  --button-bg-active: var(--color-control-bg-active);
+  --button-fg: var(--color-control-fg);
+  --button-fg-active: var(--color-control-fg-active);
+  --button-border: var(--border-control) solid var(--color-control-border);
+  --button-min-height: max(56px, calc(var(--text-control) * 2));
+  --button-padding-x: clamp(16px, 2.5vw, 48px);
+
+  /* Reading surface */
+  --reading-bg: var(--color-bg);
+  --reading-fg: var(--color-fg);
+  --reading-padding: clamp(16px, 2.5vw, 48px);
+  --reading-max-width: 1500px;
+
+  /* Top row: "Mes livres" button and page indicator */
+  --toolbar-height: calc(var(--button-min-height) + var(--space-4));
+  --toolbar-gap: var(--space-4);
+
+  /* Book list rows */
+  --row-min-height: calc(var(--text-body) * 1.8);
+  --row-padding-x: var(--reading-padding);
+  --row-border: var(--border-row) solid var(--color-fg-muted);
+  --row-current-bg: var(--color-marker);
+  --row-current-fg: var(--color-control-fg);
+  --row-current-stripe: var(--space-3) solid var(--color-control-border);
+  --row-hover-bg: var(--color-surface-raised);
+  --row-finished-fg: var(--color-fg-muted);
+
+  /* Status tag ("En cours", "Terminé") */
+  --tag-border: var(--border-row) solid currentColor;
+  --tag-padding: 0 var(--space-2);
+
+  /* Focus ring, applied as inset box-shadow so it works on edge-to-edge bars */
+  --focus-shadow: inset 0 0 0 var(--focus-gap-width) var(--color-focus-gap),
+    inset 0 0 0 calc(var(--focus-gap-width) + var(--focus-ring-width)) var(--color-focus-ring);
+}
+
+/* === BACKOFFICE ========================================================== */
+/* A conventional, mobile-first tool for sighted helpers. Same tangerine accent and warm neutrals,
+   system colour scheme, ordinary density. Rounded corners and one shadow are allowed here. */
+:root[data-density="admin"] {
+  --admin-bg: var(--color-paper-50);
+  --admin-surface: var(--color-white);
+  --admin-surface-muted: var(--color-paper-100);
+  --admin-border: var(--color-paper-200);
+  --admin-border-strong: var(--color-ink-700);
+  --admin-fg: var(--color-ink-900);
+  --admin-fg-muted: var(--color-ink-700);
+  --admin-accent: var(--color-ember-700);
+  --admin-accent-hover: var(--color-ember-800);
+  --admin-accent-fg: var(--color-white);
+  --admin-accent-soft: var(--color-peach-50);
+  --admin-success: var(--color-moss-700);
+  --admin-warning: var(--color-ochre-700);
+  --admin-danger: var(--color-rust-700);
+  --admin-focus: var(--color-ember-600);
+
+  --admin-text-xs: 13px;
+  --admin-text-sm: 14px;
+  --admin-text-base: 16px;
+  --admin-text-lg: 18px;
+  --admin-text-xl: 22px;
+  --admin-text-2xl: 28px;
+  --admin-leading: 1.5;
+  --admin-weight: 400;
+  --admin-weight-strong: 700;
+
+  --admin-radius: 6px;
+  --admin-radius-lg: 10px;
+  --admin-shadow: 0 1px 2px rgb(20 20 20 / 0.08), 0 4px 12px rgb(20 20 20 / 0.06);
+  --admin-control-height: 44px;
+  --admin-gutter: 16px;
+  --admin-content-max: 960px;
+  --admin-nav-height: 64px;
+  --admin-rail-width: 240px;
+  --admin-duration: 120ms;
+  --admin-focus-ring: 0 0 0 2px var(--admin-bg), 0 0 0 5px var(--admin-focus);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-density="admin"] {
+    --admin-bg: var(--color-night-950);
+    --admin-surface: var(--color-night-900);
+    --admin-surface-muted: var(--color-night-800);
+    --admin-border: var(--color-night-700);
+    --admin-border-strong: var(--color-snow-300);
+    --admin-fg: var(--color-snow-100);
+    --admin-fg-muted: var(--color-snow-300);
+    --admin-accent: var(--color-peach-200);
+    --admin-accent-hover: var(--color-peach-100);
+    --admin-accent-fg: var(--color-ink-900);
+    --admin-accent-soft: var(--color-cocoa-900);
+    --admin-success: var(--color-moss-300);
+    --admin-warning: var(--color-ochre-300);
+    --admin-danger: var(--color-salmon-300);
+    --admin-focus: var(--color-peach-200);
+    --admin-shadow: none;
+  }
+}
+
+/* ---- Preview-only base ------------------------------------------------ */
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-reading);
+  font-weight: var(--weight-body);
+  letter-spacing: var(--tracking-body);
+  overflow: hidden;
+}
+* { box-sizing: border-box; }
+button { font: inherit; letter-spacing: inherit; cursor: pointer; }
+@media (pointer: fine) and (min-width: 1100px) { body, button { cursor: var(--cursor-large); } }
+
+/* ---- Reader frame: bars left and right on wide screens, bottom row otherwise ------- */
+.screen { display: none; height: 100%; }
+.screen[data-active] { display: grid; grid-template-columns: var(--nav-bar-width) minmax(0, 1fr) var(--nav-bar-width); grid-template-rows: 100%; }
+
+.nav-bar {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2);
+  background: var(--nav-bar-bg); color: var(--nav-bar-fg);
+  border: 0; border-inline: var(--nav-bar-border);
+  font-size: var(--text-control); font-weight: var(--weight-heading);
+  padding: var(--space-2); height: 100%; width: 100%; border-radius: var(--radius-none);
+}
+.nav-bar svg { width: var(--nav-bar-arrow-size); height: var(--nav-bar-arrow-size); fill: none; stroke: currentColor; stroke-width: 12; stroke-linecap: square; }
+.nav-bar span { font-size: var(--nav-bar-label-size); white-space: nowrap; }
+.nav-bar:hover { background: var(--nav-bar-bg-hover); }
+.nav-bar:active { background: var(--nav-bar-bg-active); color: var(--nav-bar-fg-active); }
+.nav-bar:focus-visible { outline: none; box-shadow: var(--focus-shadow); }
+.nav-bar[aria-disabled="true"] { background: var(--nav-bar-disabled-bg); color: var(--nav-bar-disabled-fg); border: var(--nav-bar-disabled-border); }
+
+.center { display: grid; grid-template-rows: var(--toolbar-height) minmax(0, 1fr); min-width: 0; height: 100%; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--toolbar-gap); padding: var(--space-2) var(--reading-padding); }
+.page-indicator { font-size: var(--text-meta); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.button {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: var(--button-min-height); padding: 0 var(--button-padding-x);
+  background: var(--button-bg); color: var(--button-fg); border: var(--button-border);
+  font-size: var(--text-control); font-weight: var(--weight-heading); border-radius: var(--radius-none);
+}
+.button:hover { background: var(--button-bg-hover); }
+.button:active { background: var(--button-bg-active); color: var(--button-fg-active); }
+.button:focus-visible { outline: none; box-shadow: var(--focus-shadow); }
+
+.reading { overflow: hidden; padding: 0 var(--reading-padding) var(--reading-padding); font-size: var(--text-body); line-height: var(--leading-body); max-width: var(--reading-max-width); width: 100%; justify-self: center; text-align: left; hyphens: auto; overflow-wrap: anywhere; user-select: none; }
+.reading p { margin: 0 0 var(--gap-paragraph); text-wrap: pretty; }
+.reading h2 { margin: 0 0 var(--gap-paragraph); font-size: var(--text-heading); font-weight: var(--weight-heading); line-height: var(--leading-tight); text-wrap: balance; }
+.reading .author, .reading .end { color: var(--color-fg-muted); font-size: var(--text-meta); }
+
+.list { overflow: hidden; padding: 0 var(--reading-padding) var(--reading-padding); }
+.row {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  width: 100%; min-height: var(--row-min-height); padding: var(--space-2) var(--row-padding-x);
+  background: transparent; color: var(--color-fg); border: 0; border-bottom: var(--row-border); border-left: var(--space-3) solid transparent;
+  text-align: left; font-size: var(--text-body); line-height: var(--leading-tight); font-weight: var(--weight-body); border-radius: var(--radius-none);
+}
+.row .title { min-width: 0; }
+.row .author { display: block; color: var(--color-fg-muted); font-size: var(--text-meta); }
+.row--current { background: var(--row-current-bg); color: var(--row-current-fg); border-left: var(--row-current-stripe); }
+.row--current .author { color: var(--row-current-fg); }
+.row--finished { color: var(--row-finished-fg); }
+@media (hover: hover) { .row:hover:not(.row--current) { background: var(--row-hover-bg); } }
+.row:active, .row--current:active { background: var(--color-control-bg-active); color: var(--color-control-fg-active); }
+.row:active .author { color: var(--color-control-fg-active); }
+.row:focus-visible { outline: none; box-shadow: var(--focus-shadow); }
+.tag { flex: none; font-size: var(--text-meta); border: var(--tag-border); padding: var(--tag-padding); white-space: nowrap; }
+
+.status { display: grid; place-content: center; text-align: center; gap: var(--space-6); padding: var(--reading-padding); grid-column: 1 / -1; }
+.status p { font-size: var(--text-body); line-height: var(--leading-body); margin: 0; max-width: 24ch; text-wrap: balance; }
+.status .button { justify-self: center; }
+
+/* Compact reader (< 1100px): bars become a bottom row of two buttons, labels horizontal */
+@media (max-width: 1099px) {
+  .screen[data-active] { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) var(--nav-bar-height); }
+  .center { grid-column: 1 / -1; grid-row: 1; }
+  .status { grid-row: 1 / -1; }
+  .nav-bar { flex-direction: row; border-inline: 0; border-top: var(--nav-bar-border); }
+  .nav-bar--prev { grid-row: 2; grid-column: 1; }
+  .nav-bar--next { grid-row: 2; grid-column: 2; border-left: var(--nav-bar-border); }
+  :root { --nav-bar-arrow-size: calc(var(--text-control) * 1.2); }
+}
+@media (max-width: 480px) { :root { --nav-bar-height: 80px; --toolbar-gap: var(--space-2); } }
+
+/* ---- Tokens sheet ------------------------------------------------------- */
+.sheet { grid-column: 1 / -1; grid-row: 1 / -1; overflow: auto; padding: var(--space-4) clamp(16px, 3vw, 48px) 120px; font-family: var(--font-admin); font-weight: 400; font-size: 16px; line-height: 1.5; }
+.sheet h1 { font-size: 28px; margin: 0 0 var(--space-3); }
+.sheet h2 { font-size: 20px; margin: var(--space-4) 0 var(--space-2); }
+.sheet .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-2); }
+.sheet .swatch { border: 2px solid var(--color-fg); padding: var(--space-2); }
+.sheet .swatch i { display: block; height: 56px; border: 2px solid var(--color-fg); margin-bottom: var(--space-1); }
+.sheet code { font-family: var(--font-mono); font-size: 13px; }
+.sheet .scale div { font-family: var(--font-reading); font-weight: var(--weight-body); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sheet .tablewrap { overflow-x: auto; }
+.sheet table { border-collapse: collapse; }
+.sheet td, .sheet th { border: 1px solid var(--color-fg-muted); padding: 6px 10px; text-align: left; vertical-align: top; }
+
+/* ---- Backoffice (mobile first) ------------------------------------------ */
+.admin { grid-column: 1 / -1; grid-row: 1 / -1; display: grid; grid-template-rows: var(--admin-nav-height) minmax(0, 1fr) var(--admin-nav-height); height: 100%; background: var(--admin-bg); color: var(--admin-fg); font: var(--admin-weight) var(--admin-text-base)/var(--admin-leading) var(--font-admin); letter-spacing: 0; overflow: hidden; }
+.admin *:focus-visible { outline: none; box-shadow: var(--admin-focus-ring); }
+.a-header { display: flex; align-items: center; gap: 12px; padding: 0 var(--admin-gutter); border-bottom: 1px solid var(--admin-border); background: var(--admin-surface); }
+.a-header .brand { display: inline-grid; place-items: center; width: 32px; height: 32px; background: var(--admin-accent); color: var(--admin-accent-fg); border-radius: var(--admin-radius); font-weight: var(--admin-weight-strong); }
+.a-header h1 { font-size: var(--admin-text-lg); margin: 0; font-weight: var(--admin-weight-strong); }
+.a-header .who { margin-left: auto; color: var(--admin-fg-muted); font-size: var(--admin-text-sm); }
+.a-main { overflow: auto; padding: var(--admin-gutter); }
+.a-main > * { max-width: var(--admin-content-max); margin-inline: auto; }
+.a-nav { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--admin-border); background: var(--admin-surface); }
+.a-nav button { display: grid; place-items: center; gap: 2px; background: none; border: 0; color: var(--admin-fg-muted); font-size: var(--admin-text-xs); padding: 6px 4px; border-radius: 0; }
+.a-nav button svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.a-nav button[aria-current="page"] { color: var(--admin-accent); font-weight: var(--admin-weight-strong); }
+.a-view { display: none; } .a-view[data-active] { display: grid; gap: 16px; }
+.a-view h2 { font-size: var(--admin-text-xl); margin: 0; }
+.a-view h2 small { display: block; font-size: var(--admin-text-sm); color: var(--admin-fg-muted); font-weight: var(--admin-weight); }
+.a-field { display: grid; gap: 6px; }
+.a-field label { font-size: var(--admin-text-sm); font-weight: var(--admin-weight-strong); }
+.a-input { height: var(--admin-control-height); padding: 0 12px; border: 1px solid var(--admin-border-strong); border-radius: var(--admin-radius); background: var(--admin-surface); color: var(--admin-fg); font: inherit; width: 100%; }
+.a-search { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.a-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--admin-control-height); padding: 0 16px; border-radius: var(--admin-radius); border: 1px solid transparent; font: inherit; font-weight: var(--admin-weight-strong); transition: background var(--admin-duration); }
+.a-btn--primary { background: var(--admin-accent); color: var(--admin-accent-fg); }
+.a-btn--primary:hover { background: var(--admin-accent-hover); }
+.a-btn--secondary { background: var(--admin-surface); color: var(--admin-fg); border-color: var(--admin-border-strong); }
+.a-btn--secondary:hover { background: var(--admin-surface-muted); }
+.a-btn--danger { background: transparent; color: var(--admin-danger); border-color: currentColor; }
+.a-btn--sm { min-height: 36px; padding: 0 12px; font-size: var(--admin-text-sm); }
+.a-card { display: grid; gap: 8px; padding: 16px; background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: var(--admin-radius-lg); box-shadow: var(--admin-shadow); }
+.a-card .t { font-weight: var(--admin-weight-strong); font-size: var(--admin-text-lg); line-height: 1.3; }
+.a-card .m { color: var(--admin-fg-muted); font-size: var(--admin-text-sm); }
+.a-card .s { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--admin-fg-muted); font-size: var(--admin-text-sm); }
+.a-card .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.a-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--admin-accent-soft); color: var(--admin-accent); font-size: var(--admin-text-xs); font-weight: var(--admin-weight-strong); }
+.a-chip--ok { background: transparent; border: 1px solid var(--admin-success); color: var(--admin-success); }
+.a-list { display: grid; gap: 1px; background: var(--admin-border); border: 1px solid var(--admin-border); border-radius: var(--admin-radius-lg); overflow: hidden; }
+.a-item { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 16px; background: var(--admin-surface); align-items: center; }
+.a-item .t { font-weight: var(--admin-weight-strong); }
+.a-item .m { grid-column: 1; color: var(--admin-fg-muted); font-size: var(--admin-text-sm); }
+.a-item .actions { grid-row: 1 / span 2; display: flex; gap: 8px; }
+.a-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--admin-border-strong); border-radius: var(--admin-radius); overflow: hidden; background: var(--admin-surface); }
+.a-seg button { min-height: var(--admin-control-height); background: none; border: 0; border-right: 1px solid var(--admin-border-strong); color: var(--admin-fg); font: inherit; border-radius: 0; }
+.a-seg button:last-child { border-right: 0; }
+.a-seg button[aria-pressed="true"] { background: var(--admin-accent); color: var(--admin-accent-fg); font-weight: var(--admin-weight-strong); }
+.a-preview { padding: 16px; border-radius: var(--admin-radius-lg); border: 1px solid var(--admin-border); font-family: var(--font-reading); font-weight: 700; line-height: 1.3; overflow: hidden; }
+.a-preview small { display: block; font-size: var(--admin-text-xs); font-family: var(--font-admin); font-weight: 400; opacity: .8; margin-top: 8px; }
+.a-drop { display: grid; place-items: center; gap: 6px; padding: 32px 16px; border: 2px dashed var(--admin-border-strong); border-radius: var(--admin-radius-lg); text-align: center; color: var(--admin-fg-muted); background: var(--admin-surface); }
+.a-drop b { color: var(--admin-fg); }
+.a-toast { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--admin-radius); background: var(--admin-fg); color: var(--admin-bg); font-size: var(--admin-text-sm); }
+.a-toast i { width: 8px; height: 8px; border-radius: 999px; background: var(--admin-success); }
+.a-help { color: var(--admin-fg-muted); font-size: var(--admin-text-sm); margin: 0; }
+
+/* Backoffice on wide screens (>= 900px): the bottom tab bar becomes a left rail */
+@media (min-width: 900px) {
+  .admin { grid-template-columns: var(--admin-rail-width) minmax(0, 1fr); grid-template-rows: var(--admin-nav-height) minmax(0, 1fr); }
+  .a-header { grid-column: 1 / -1; }
+  .a-nav { grid-row: 2; grid-column: 1; grid-auto-flow: row; grid-auto-columns: auto; grid-auto-rows: max-content; align-content: start; border-top: 0; border-right: 1px solid var(--admin-border); padding: 12px; gap: 4px; }
+  .a-nav button { grid-template-columns: 24px 1fr; justify-items: start; padding: 10px 12px; font-size: var(--admin-text-base); border-radius: var(--admin-radius); }
+  .a-nav button[aria-current="page"] { background: var(--admin-accent-soft); }
+  .a-main { grid-row: 2; grid-column: 2; padding: 32px; }
+  .a-view--two { grid-template-columns: 1fr 1fr; align-items: start; }
+  .a-view--two > h2, .a-view--two > .a-toast { grid-column: 1 / -1; }
+}
+
+/* ---- Helper panel (not part of the product) ---------------------------- */
+.panel { position: fixed; top: 8px; right: 8px; z-index: 10; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; align-items: center; max-width: calc(100vw - 16px); background: #1e1e1e; color: #fff; padding: 8px 10px; border: 2px solid #fff; font: 13px/1.2 var(--font-admin); cursor: auto; }
+.panel b { margin-right: 4px; }
+.panel button { font: inherit; padding: 5px 9px; background: #444; color: #fff; border: 1px solid #888; cursor: pointer; border-radius: 0; }
+.panel button[aria-pressed="true"] { background: #fff; color: #000; border-color: #fff; }
+.panel .sep { width: 1px; height: 22px; background: #777; margin: 0 4px; }
+.panel button:focus-visible { outline: 3px solid #ffd84d; outline-offset: 1px; box-shadow: none; }
+.panel.is-hidden > :not(.panel-toggle) { display: none; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="panel" id="panel" aria-label="Réglages de l'aperçu">
+  <button type="button" class="panel-toggle" id="panel-toggle" aria-expanded="true">Masquer</button>
+  <span class="sep"></span>
+  <b>Écran</b>
+  <button type="button" data-screen="reading" aria-pressed="true">Lecture</button>
+  <button type="button" data-screen="list" aria-pressed="false">Mes livres</button>
+  <button type="button" data-screen="status" aria-pressed="false">Indisponible</button>
+  <button type="button" data-screen="admin" aria-pressed="false">Backoffice</button>
+  <button type="button" data-screen="sheet" aria-pressed="false">Tokens</button>
+  <span class="sep"></span>
+  <b>Palier</b>
+  <button type="button" data-tier="48" aria-pressed="false">48</button>
+  <button type="button" data-tier="72" aria-pressed="false">72</button>
+  <button type="button" data-tier="100" aria-pressed="true">100</button>
+  <button type="button" data-tier="140" aria-pressed="false">140</button>
+  <span class="sep"></span>
+  <b>Thème</b>
+  <button type="button" data-theme="dark-on-light" aria-pressed="true">Noir sur blanc</button>
+  <button type="button" data-theme="light-on-dark" aria-pressed="false">Blanc sur noir</button>
+  <button type="button" data-theme="yellow-on-black" aria-pressed="false">Jaune sur noir</button>
+</div>
+
+<section class="screen" id="screen-reading" data-active aria-label="Lecture">
+  <button type="button" class="nav-bar nav-bar--prev" id="prev" aria-label="Page précédente">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M70 10 L30 50 L70 90"/></svg><span>Précédent</span>
+  </button>
+  <div class="center">
+    <div class="toolbar">
+      <button type="button" class="button" data-goto="list">Mes livres</button>
+      <div class="page-indicator" aria-live="polite" id="indicator">Page 1 sur 1</div>
+    </div>
+    <main class="reading" id="reading" lang="fr" aria-label="Texte du livre"></main>
+  </div>
+  <button type="button" class="nav-bar nav-bar--next" id="next" aria-label="Page suivante">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 10 L70 50 L30 90"/></svg><span>Suivant</span>
+  </button>
+</section>
+
+<section class="screen" id="screen-list" aria-label="Mes livres">
+  <button type="button" class="nav-bar nav-bar--prev" aria-label="Titres précédents" aria-disabled="true">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M70 10 L30 50 L70 90"/></svg><span>Précédent</span>
+  </button>
+  <div class="center">
+    <div class="toolbar">
+      <h1 class="page-indicator" style="margin:0">Mes livres</h1>
+      <div class="page-indicator">Titres 1 à 4 sur 7</div>
+    </div>
+    <div class="list">
+      <button type="button" class="row row--current" data-goto="reading"><span class="title">Le Tour du monde en quatre-vingts jours<span class="author">Jules Verne</span></span><span class="tag">En cours</span></button>
+      <button type="button" class="row row--finished"><span class="title">Boule de Suif<span class="author">Guy de Maupassant</span></span><span class="tag">Terminé</span></button>
+      <button type="button" class="row"><span class="title">Le Grand Meaulnes<span class="author">Alain-Fournier</span></span></button>
+      <button type="button" class="row"><span class="title">La Guerre des boutons<span class="author">Louis Pergaud</span></span></button>
+    </div>
+  </div>
+  <button type="button" class="nav-bar nav-bar--next" aria-label="Titres suivants">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 10 L70 50 L30 90"/></svg><span>Suivant</span>
+  </button>
+</section>
+
+<section class="screen" id="screen-status" aria-label="Service indisponible">
+  <div class="status"><p>Le service est indisponible. Nouvel essai dans quelques secondes.</p><button type="button" class="button">Réessayer</button></div>
+</section>
+
+<section class="screen" id="screen-admin" aria-label="Backoffice">
+  <div class="admin">
+    <header class="a-header"><span class="brand" aria-hidden="true">L</span><h1>Liseuse, backoffice</h1><button type="button" class="who a-btn a-btn--secondary a-btn--sm" style="margin-left:auto">Se déconnecter</button></header>
+    <main class="a-main">
+      <div class="a-view" id="aview-catalogue" data-active>
+        <h2>Catalogue<small>3 032 titres, dernier passage ce matin à 6 h 10</small></h2>
+        <div class="a-search"><input class="a-input" id="a-search" type="search" placeholder="Titre, auteur ou catégorie" aria-label="Rechercher dans le catalogue"><button type="button" class="a-btn a-btn--secondary">Filtrer</button></div>
+        <div class="a-card"><div class="t">Le Tour du monde en quatre-vingts jours</div><div class="m">Jules Verne, 1873</div><div class="s">Phileas Fogg parie vingt mille livres qu'il fera le tour du monde en quatre-vingts jours, accompagné de son domestique Passepartout.</div><div class="actions"><span class="a-chip a-chip--ok">Déjà active</span><span class="a-chip">Romans</span></div></div>
+        <div class="a-card"><div class="t">Vingt mille lieues sous les mers</div><div class="m">Jules Verne, 1870</div><div class="s">Le professeur Aronnax, Conseil et Ned Land embarquent malgré eux à bord du Nautilus, commandé par le mystérieux capitaine Nemo.</div><div class="actions"><button type="button" class="a-btn a-btn--primary a-btn--sm" aria-busy="true" disabled style="opacity:.7">Conversion en cours…</button><span class="a-chip">Romans</span></div></div>
+        <div class="a-card"><div class="t">Les Misérables, tome I</div><div class="m">Victor Hugo, 1862</div><div class="s">Jean Valjean, ancien forçat, tente de refaire sa vie sous une nouvelle identité tandis que l'inspecteur Javert le traque.</div><div class="actions"><button type="button" class="a-btn a-btn--primary a-btn--sm">Activer</button><span class="a-chip">Romans</span></div></div>
+      </div>
+      <div class="a-view" id="aview-library">
+        <h2>Sa bibliothèque<small>4 livres actifs</small></h2>
+        <div class="a-toast"><i aria-hidden="true"></i>Livre retiré : Les Misérables, tome I</div>
+        <div class="a-list">
+          <div class="a-item"><div class="t">Le Tour du monde en quatre-vingts jours</div><div class="m">Jules Verne, catalogue, ajouté le 12 sept.</div><div class="actions"><button type="button" class="a-btn a-btn--secondary a-btn--sm">Modifier</button><button type="button" class="a-btn a-btn--danger a-btn--sm">Retirer</button></div></div>
+          <div class="a-item"><div class="t">Le Grand Meaulnes</div><div class="m">Alain-Fournier, catalogue, ajouté le 9 sept.</div><div class="actions"><button type="button" class="a-btn a-btn--secondary a-btn--sm">Modifier</button><button type="button" class="a-btn a-btn--danger a-btn--sm">Retirer</button></div></div>
+          <div class="a-item"><div class="t">La Guerre des boutons</div><div class="m">Louis Pergaud, dépôt manuel, ajouté le 2 sept.</div><div class="actions"><button type="button" class="a-btn a-btn--secondary a-btn--sm">Modifier</button><button type="button" class="a-btn a-btn--danger a-btn--sm">Retirer</button></div></div>
+          <div class="a-item"><div class="t">Boule de Suif</div><div class="m">Guy de Maupassant, catalogue, ajouté le 20 août</div><div class="actions"><button type="button" class="a-btn a-btn--secondary a-btn--sm">Modifier</button><button type="button" class="a-btn a-btn--danger a-btn--sm">Retirer</button></div></div>
+        </div>
+      </div>
+      <div class="a-view" id="aview-upload">
+        <h2>Déposer un livre<small>EPUB sans DRM, 20 Mo maximum</small></h2>
+        <div class="a-drop"><b>Glissez un fichier EPUB ici</b><span>ou</span><button type="button" class="a-btn a-btn--secondary">Choisir un fichier</button></div>
+        <p class="a-help">Le livre est converti puis créé inactif. Vérifiez le titre et l'auteur avant de l'activer.</p>
+      </div>
+      <div class="a-view a-view--two" id="aview-settings">
+        <h2>Réglages d'affichage<small>Appliqués à la liseuse au prochain démarrage</small></h2>
+        <div style="display:grid;gap:16px">
+          <div class="a-field"><label for="a-seg-tier">Palier de taille</label><div class="a-seg" id="a-seg-tier" role="group"><button type="button" data-atier="48">48</button><button type="button" data-atier="72">72</button><button type="button" data-atier="100" aria-pressed="true">100</button><button type="button" data-atier="140">140</button></div></div>
+          <div class="a-field"><label for="a-seg-theme">Thème</label><div class="a-seg" id="a-seg-theme" role="group"><button type="button" data-atheme="dark-on-light" aria-pressed="true">Noir sur blanc</button><button type="button" data-atheme="light-on-dark">Blanc sur noir</button><button type="button" data-atheme="yellow-on-black">Jaune sur noir</button></div></div>
+          <button type="button" class="a-btn a-btn--primary">Enregistrer</button>
+        </div>
+        <div class="a-preview" id="a-preview">Il n'était ni industriel, ni négociant, ni marchand.<small>Aperçu à l'échelle de cet écran. Sur son écran, ce texte fait 100 px.</small></div>
+        <div class="a-toast"><i aria-hidden="true"></i>Réglages enregistrés</div>
+      </div>
+    </main>
+    <nav class="a-nav" aria-label="Sections du backoffice">
+      <button type="button" data-aview="catalogue" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Catalogue</button>
+      <button type="button" data-aview="library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h5v16H4zM10 4h5v16h-5zM16 5l4 1-3 14-4-1z"/></svg>Bibliothèque</button>
+      <button type="button" data-aview="upload"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v4h16v-4"/></svg>Dépôt</button>
+      <button type="button" data-aview="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.3 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.4 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.5 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.3-1a7 7 0 0 0 1.7 1l.4 2.5h5l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.5-2-1.5c.1-.3.1-.7.1-1z"/></svg>Réglages</button>
+    </nav>
+  </div>
+</section>
+
+<section class="screen" id="screen-sheet" aria-label="Tokens">
+  <div class="sheet">
+    <h1>Tokens du thème courant</h1>
+    <p>Changez le thème et le palier dans le bandeau : les valeurs suivent. Redimensionnez la fenêtre : le corps de texte suit la largeur d'écran (taille pleine à partir de 1280 px, environ 31 px sur un téléphone au palier 100). Police d'aperçu : Atkinson Hyperlegible Next ; Luciole sera auto-hébergée dans l'application.</p>
+    <h2>Couleurs sémantiques</h2>
+    <div class="swatches" id="swatches"></div>
+    <h2>Échelle de texte au palier courant et à cette largeur de fenêtre</h2>
+    <div class="scale" id="scale"></div>
+    <h2>Contrastes mesurés (WCAG 2.2, cible 7:1)</h2>
+    <div class="tablewrap"><table><thead><tr><th>Paire</th><th>Noir sur blanc</th><th>Blanc sur noir</th><th>Jaune sur noir</th></tr></thead><tbody>
+      <tr><td>Texte sur fond</td><td>16,1</td><td>17,0</td><td>15,2</td></tr>
+      <tr><td>Texte atténué sur fond</td><td>7,7</td><td>10,1</td><td>9,9</td></tr>
+      <tr><td>Libellé de barre sur barre</td><td>9,1</td><td>9,1</td><td>9,1</td></tr>
+      <tr><td>Libellé de barre au survol</td><td>7,8</td><td>7,8</td><td>7,8</td></tr>
+      <tr><td>Libellé de barre au clic (inversé)</td><td>9,1</td><td>9,1</td><td>9,1</td></tr>
+      <tr><td>Barre ou sa bordure sur fond (non textuel, cible 3:1)</td><td>16,1 (bordure)</td><td>9,4</td><td>10,4</td></tr>
+      <tr><td>Texte d'erreur sur fond</td><td>8,1</td><td>8,3</td><td>15,2</td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var blocks = [
+    { kind: 'heading', text: 'Le Tour du monde en quatre-vingts jours' },
+    { kind: 'author', text: 'Jules Verne' },
+    { kind: 'heading', text: 'Chapitre premier' },
+    { kind: 'paragraph', text: "En l'année 1872, la maison portant le numéro 7 de Saville-row, Burlington Gardens, maison dans laquelle Sheridan mourut en 1814, était habitée par Phileas Fogg, esq., l'un des membres les plus singuliers et les plus remarqués du Reform-Club de Londres, bien qu'il semblât prendre à tâche de ne rien faire qui pût attirer l'attention." },
+    { kind: 'paragraph', text: "À l'un des plus grands orateurs qui honorent l'Angleterre, succédait donc ce Phileas Fogg, personnage énigmatique, dont on ne savait rien, sinon que c'était un fort galant homme et l'un des plus beaux gentlemen de la haute société anglaise." },
+    { kind: 'paragraph', text: "On disait qu'il ressemblait à Byron, par la tête, s'entend, car il était irréprochable quant aux pieds, mais un Byron à moustaches et à favoris, un Byron impassible, qui aurait vécu mille ans sans vieillir." },
+    { kind: 'paragraph', text: "Anglais, à coup sûr, Phileas Fogg n'était peut-être pas Londonner. On ne l'avait jamais vu ni à la Bourse, ni à la Banque, ni dans aucun des comptoirs de la Cité. Ni les bassins ni les docks de Londres n'avaient jamais reçu un navire ayant pour armateur Phileas Fogg." },
+    { kind: 'paragraph', text: "Ce gentleman ne figurait dans aucun comité d'administration. Son nom n'avait jamais retenti dans un collège d'avocats, ni au Temple, ni à Lincoln's-inn, ni à Gray's-inn. Jamais il ne plaida ni à la Cour du chancelier, ni au Banc de la Reine, ni à l'Échiquier, ni en Cour ecclésiastique." },
+    { kind: 'paragraph', text: "Il n'était ni industriel, ni négociant, ni marchand, ni agriculteur. Il ne faisait partie ni de l'Institution royale de la Grande-Bretagne, ni de l'Institution de Londres, ni de l'Institution des Artisans, ni de l'Institution Russell, ni de l'Institution littéraire de l'Ouest, ni de l'Institution du Droit, ni de cette Institution des Arts et des Sciences réunis, qui est placée sous le patronage direct de Sa Gracieuse Majesté." },
+    { kind: 'paragraph', text: "Phileas Fogg était membre du Reform-Club, et voilà tout. À qui s'étonnerait de ce qu'un gentleman aussi mystérieux comptât parmi les membres de cette honorable association, on répondra qu'il passa sur la recommandation de MM. Baring frères, chez lesquels il avait un crédit ouvert." },
+    { kind: 'paragraph', text: "Ce Phileas Fogg était-il riche ? Incontestablement. Mais comment il avait fait fortune, c'est ce que les mieux informés ne pouvaient dire, et Mr. Fogg était le dernier auquel il convînt de s'adresser pour l'apprendre. En tout cas, il n'était prodigue de rien, mais non avare, car partout où il manquait un appoint pour une chose noble, utile ou généreuse, il l'apportait silencieusement et même anonymement." },
+    { kind: 'end', text: "Fin de l'extrait" }
+  ];
+
+  var reading = document.getElementById('reading');
+  var indicator = document.getElementById('indicator');
+  var pages = [];
+  var current = 0;
+
+  function makeNode(b, text) {
+    var el = document.createElement(b.kind === 'heading' ? 'h2' : 'p');
+    if (b.kind === 'author') el.className = 'author';
+    if (b.kind === 'end') el.className = 'end';
+    el.textContent = text;
+    return el;
+  }
+
+  /* Fills pages word by word; a page ends when the surface overflows. Preview-grade, not the product engine. */
+  function paginate() {
+    pages = [];
+    reading.innerHTML = '';
+    var limit = reading.clientHeight;
+    var page = [];
+    var i = 0, offset = 0, guard = 0;
+    while (i < blocks.length && guard++ < 5000) {
+      var b = blocks[i];
+      var words = b.text.split(' ');
+      var node = makeNode(b, '');
+      reading.appendChild(node);
+      var j = offset, fitted = offset;
+      while (j < words.length) {
+        node.textContent = words.slice(offset, j + 1).join(' ');
+        if (reading.scrollHeight > limit) break;
+        fitted = j + 1; j++;
+      }
+      if (fitted === offset) {
+        reading.removeChild(node);
+        if (page.length === 0) { fitted = Math.min(words.length, offset + 1); reading.appendChild(node); node.textContent = words.slice(offset, fitted).join(' '); page.push({ b: b, from: offset, to: fitted }); }
+        pages.push(page); page = []; reading.innerHTML = '';
+        if (fitted === offset) continue;
+        if (fitted >= words.length) { i++; offset = 0; } else { offset = fitted; }
+        continue;
+      }
+      node.textContent = words.slice(offset, fitted).join(' ');
+      page.push({ b: b, from: offset, to: fitted });
+      if (fitted >= words.length) { i++; offset = 0; }
+      else { offset = fitted; pages.push(page); page = []; reading.innerHTML = ''; }
+    }
+    if (page.length) pages.push(page);
+    if (!pages.length) pages.push([]);
+    current = Math.min(current, pages.length - 1);
+    render();
+  }
+
+  function render() {
+    reading.innerHTML = '';
+    pages[current].forEach(function (s) { reading.appendChild(makeNode(s.b, s.b.text.split(' ').slice(s.from, s.to).join(' '))); });
+    indicator.textContent = 'Page ' + (current + 1) + ' sur ' + pages.length;
+    document.getElementById('prev').setAttribute('aria-disabled', current === 0 ? 'true' : 'false');
+    document.getElementById('next').setAttribute('aria-disabled', current === pages.length - 1 ? 'true' : 'false');
+  }
+
+  /* Anti-rebond: a command within 400 ms of the previous one is ignored (double clicks, held keys). */
+  var lastCommand = 0;
+  function go(delta) {
+    var now = Date.now(); if (now - lastCommand < 400) return; lastCommand = now;
+    var n = current + delta; if (n < 0 || n >= pages.length) return; current = n; render();
+  }
+  document.getElementById('prev').addEventListener('click', function () { go(-1); });
+  document.getElementById('next').addEventListener('click', function () { go(1); });
+
+  function isActive(name) { return document.getElementById('screen-' + name).hasAttribute('data-active'); }
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(function (s) { s.removeAttribute('data-active'); });
+    document.getElementById('screen-' + name).setAttribute('data-active', '');
+    document.querySelectorAll('[data-screen]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.screen === name ? 'true' : 'false'); });
+    /* The backoffice route flips the density attribute, exactly as the product will. */
+    if (name === 'admin') root.setAttribute('data-density', 'admin'); else root.removeAttribute('data-density');
+    if (name === 'reading') paginate();
+    if (name === 'sheet') fillSheet();
+    if (name === 'admin') fillAdminPreview();
+  }
+  document.querySelectorAll('[data-goto]').forEach(function (b) { b.addEventListener('click', function () { showScreen(b.dataset.goto); }); });
+
+  var panel = document.getElementById('panel');
+  if (window.innerWidth < 700) { panel.classList.add('is-hidden'); var pt = document.getElementById('panel-toggle'); pt.textContent = 'Réglages'; pt.setAttribute('aria-expanded', 'false'); }
+  panel.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.screen) showScreen(b.dataset.screen);
+    if (b.dataset.tier) { setTier(b.dataset.tier); }
+    if (b.dataset.theme) { setTheme(b.dataset.theme); }
+    if (b.id === 'panel-toggle') { var hidden = panel.classList.toggle('is-hidden'); b.textContent = hidden ? 'Réglages' : 'Masquer'; b.setAttribute('aria-expanded', hidden ? 'false' : 'true'); }
+  });
+  function setTier(t) { root.setAttribute('data-tier', t); pressed('[data-tier]', 'tier', t); pressed('[data-atier]', 'atier', t); if (isActive('reading')) paginate(); if (isActive('sheet')) fillSheet(); fillAdminPreview(); }
+  function setTheme(t) { root.setAttribute('data-theme', t); pressed('[data-theme]', 'theme', t); pressed('[data-atheme]', 'atheme', t); if (isActive('sheet')) fillSheet(); fillAdminPreview(); }
+  function pressed(sel, key, value) { document.querySelectorAll(sel).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset[key] === value ? 'true' : 'false'); }); }
+
+  /* Backoffice tabs and settings controls */
+  document.querySelector('.a-nav').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('.a-view').forEach(function (v) { v.removeAttribute('data-active'); });
+    document.getElementById('aview-' + b.dataset.aview).setAttribute('data-active', '');
+    document.querySelectorAll('.a-nav button').forEach(function (x) { x.removeAttribute('aria-current'); });
+    b.setAttribute('aria-current', 'page');
+  });
+  document.getElementById('aview-settings').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.atier) setTier(b.dataset.atier);
+    if (b.dataset.atheme) setTheme(b.dataset.atheme);
+  });
+  var themes = { 'dark-on-light': ['#f4efe6', '#141414'], 'light-on-dark': ['#101010', '#f2f2f2'], 'yellow-on-black': ['#000000', '#ffd84d'] };
+  function fillAdminPreview() {
+    var p = document.getElementById('a-preview');
+    var t = themes[root.getAttribute('data-theme') || 'dark-on-light'];
+    var size = Number(root.getAttribute('data-tier') || '100');
+    p.style.background = t[0]; p.style.color = t[1];
+    p.style.fontSize = Math.max(20, Math.round(size * Math.min(1, window.innerWidth / 1280))) + 'px';
+    p.querySelector('small').textContent = "Aperçu à l'échelle de cet écran. Sur son écran, ce texte fait " + size + ' px.';
+  }
+
+  /* Reader screens: no context menu, so a right click shows nothing to the reader. */
+  document.addEventListener('contextmenu', function (e) { if (!isActive('admin') && !isActive('sheet') && !e.target.closest('.panel')) e.preventDefault(); });
+  document.addEventListener('keydown', function (e) {
+    if (!isActive('reading')) return;
+    if (e.repeat) { e.preventDefault(); return; }
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+  });
+
+  function fillSheet() {
+    var cs = getComputedStyle(root);
+    var names = ['--color-bg', '--color-fg', '--color-fg-muted', '--color-surface-raised', '--color-marker', '--color-control-bg', '--color-control-bg-hover', '--color-control-bg-active', '--color-control-fg', '--color-control-fg-active', '--color-control-border', '--color-focus-ring', '--color-error'];
+    var sw = document.getElementById('swatches'); sw.innerHTML = '';
+    names.forEach(function (n) {
+      var v = cs.getPropertyValue(n).trim();
+      var d = document.createElement('div'); d.className = 'swatch';
+      d.innerHTML = '<i style="background:' + v + '"></i><code>' + n + '</code><br><code>' + v + '</code>';
+      sw.appendChild(d);
+    });
+    var sc = document.getElementById('scale'); sc.innerHTML = '';
+    var probe = document.getElementById('reading');
+    [['--text-heading', 'Titre'], ['--text-body', 'Texte courant'], ['--text-control', 'Commandes'], ['--text-meta', 'Indicateur, auteur']].forEach(function (p) {
+      var d = document.createElement('div'); d.style.fontSize = 'var(' + p[0] + ')'; sc.appendChild(d);
+      d.textContent = p[1] + ' (' + p[0] + ' = ' + Math.round(parseFloat(getComputedStyle(d).fontSize)) + ' px)';
+    });
+  }
+
+  var resizeTimer;
+  window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { if (isActive('reading')) paginate(); if (isActive('sheet')) fillSheet(); fillAdminPreview(); }, 150); });
+  /* Deep link: #reading, #list, #status, #admin, #sheet */
+  var initial = (location.hash || '').slice(1);
+  if (initial && document.getElementById('screen-' + initial)) showScreen(initial); else paginate();
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function () { if (isActive('reading')) paginate(); }); }
+  fillAdminPreview();
+})();
+</script>
