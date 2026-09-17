@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ProgressStore, READER_STORAGE } from './progress-store';
+import { ProgressStore, BROWSER_STORAGE } from './progress-store';
 
 class MemoryStorage implements Storage {
   private readonly items = new Map<string, string>();
@@ -33,7 +33,7 @@ class BrokenStorage extends MemoryStorage {
 }
 
 function storeWith(storage: Storage | null): ProgressStore {
-  TestBed.configureTestingModule({ providers: [{ provide: READER_STORAGE, useValue: storage }] });
+  TestBed.configureTestingModule({ providers: [{ provide: BROWSER_STORAGE, useValue: storage }] });
   return TestBed.inject(ProgressStore);
 }
 

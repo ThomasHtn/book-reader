@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader.shared.exception;
 
+import io.github.thomashtn.bookreader.catalogue.client.CatalogueRefusedException;
 import io.github.thomashtn.bookreader.catalogue.client.CatalogueUnavailableException;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -239,6 +240,28 @@ public class GlobalExceptionHandler {
             HttpStatus.SERVICE_UNAVAILABLE,
             "CATALOGUE_UNAVAILABLE",
             "The catalogue site cannot be reached.",
+            request,
+            Map.of()
+        );
+    }
+
+    /**
+     * Handles a download the catalogue refused, typically after banning the server address for a while.
+     *
+     * @param exception refusal with the content type received
+     * @param request current HTTP request
+     * @return standardized HTTP 503 response
+     */
+    @ExceptionHandler(CatalogueRefusedException.class)
+    ResponseEntity<ApiErrorResponse> handleCatalogueRefused(
+        CatalogueRefusedException exception,
+        HttpServletRequest request
+    ) {
+        LOGGER.warn("Catalogue refused a download: {}", exception.getMessage());
+        return buildResponse(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "CATALOGUE_REFUSED",
+            "The catalogue refuses downloads for now.",
             request,
             Map.of()
         );

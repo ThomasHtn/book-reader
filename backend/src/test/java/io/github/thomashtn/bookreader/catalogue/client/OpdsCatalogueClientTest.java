@@ -112,6 +112,18 @@ class OpdsCatalogueClientTest {
     }
 
     @Test
+    @DisplayName("Reports a refused download when the site answers with its HTML warning page instead of the EPUB")
+    void reportsRefusedDownload() {
+        server.enqueue(new MockResponse.Builder()
+            .addHeader("Content-Type", "text/html; charset=utf-8")
+            .body("<html><body>ATTENTION : votre adresse IP a été bannie</body></html>")
+            .build());
+
+        assertThatThrownBy(() -> client.downloadEpub(726)).isInstanceOf(CatalogueRefusedException.class);
+        assertThat(server.getRequestCount()).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("Reports a book the catalogue no longer has")
     void reportsMissingBook() {
         server.enqueue(new MockResponse.Builder().code(404).build());

@@ -1,8 +1,8 @@
 import { DOCUMENT, inject, InjectionToken, Service } from '@angular/core';
 import { parseProgress, ReadingProgress, TextPosition } from './reading-progress';
 
-/** Browser storage holding reading progress; `null` where it is unavailable. */
-export const READER_STORAGE = new InjectionToken<Storage | null>('READER_STORAGE', {
+/** Browser `localStorage`, `null` where it is unavailable. */
+export const BROWSER_STORAGE = new InjectionToken<Storage | null>('BROWSER_STORAGE', {
   providedIn: 'root',
   factory: () => {
     try {
@@ -22,7 +22,7 @@ const PROGRESS_KEY_PREFIX = 'reader.progress.';
  */
 @Service()
 export class ProgressStore {
-  private readonly storage = inject(READER_STORAGE);
+  private readonly storage = inject(BROWSER_STORAGE);
 
   /**
    * Returns the last opened book.

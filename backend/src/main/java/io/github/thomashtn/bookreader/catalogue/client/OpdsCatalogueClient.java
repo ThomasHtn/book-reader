@@ -7,10 +7,13 @@ import io.github.thomashtn.bookreader.shared.exception.ResourceNotFoundException
 import io.netty.channel.ChannelOption;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -82,6 +85,7 @@ public class OpdsCatalogueClient {
      * @throws CatalogueUnavailableException when the site does not answer
      * @throws ResourceNotFoundException     when the site has no EPUB for this book
      * @throws EpubRejectedException         when the file exceeds the size limit
+     * @throws CatalogueRefusedException     when the site answers with a web page, as when it bans the address
      */
     public byte[] downloadEpub(int bookNumber) {
         byte[] epub = withRetry(webClient.get()
@@ -89,8 +93,7 @@ public class OpdsCatalogueClient {
                 .queryParam("id", bookNumber)
                 .queryParam("format", "epub")
                 .build())
-            .retrieve()
-            .bodyToMono(byte[].class))
+            .exchangeToMono(OpdsCatalogueClient::readEpub))
             .onErrorMap(OpdsCatalogueClient::isTooLarge,
                 error -> new EpubRejectedException(Reason.TOO_LARGE, "Catalogue EPUB exceeds the size limit"))
             .onErrorMap(OpdsCatalogueClient::isClientError,
@@ -98,6 +101,20 @@ public class OpdsCatalogueClient {
             .onErrorMap(OpdsCatalogueClient::isTransportFailure, OpdsCatalogueClient::unavailable)
             .block();
         return epub == null ? new byte[0] : epub;
+    }
+
+    /**
+     * Reads the EPUB body, refusing the HTML warning page the site serves with a 200 once it bans an address.
+     */
+    private static Mono<byte[]> readEpub(ClientResponse response) {
+        if (response.statusCode().isError()) {
+            return response.createError();
+        }
+        Optional<MediaType> contentType = response.headers().contentType();
+        if (contentType.isPresent() && MediaType.TEXT_HTML.isCompatibleWith(contentType.get())) {
+            return response.releaseBody().then(Mono.error(new CatalogueRefusedException(contentType.get().toString())));
+        }
+        return response.bodyToMono(byte[].class);
     }
 
     private static <T> Mono<T> withRetry(Mono<T> call) {

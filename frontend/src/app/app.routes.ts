@@ -7,5 +7,6 @@ export const routes: Routes = [
   { path: '', component: Start, title: 'Liseuse' },
   { path: 'livres', component: Library, title: 'Mes livres' },
   { path: 'lire/:id', component: Reader, title: 'Lecture' },
+  { path: 'admin', loadChildren: () => import('@pages/admin/admin.routes') },
   { path: '**', redirectTo: '' },
 ];

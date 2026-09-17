@@ -2,6 +2,7 @@ package io.github.thomashtn.bookreader.shared.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.thomashtn.bookreader.catalogue.client.CatalogueRefusedException;
 import io.github.thomashtn.bookreader.catalogue.client.CatalogueUnavailableException;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException.Reason;
@@ -126,6 +127,15 @@ class GlobalExceptionHandlerTest {
             new CatalogueUnavailableException("timeout", new IllegalStateException()), request);
 
         assertError(response, HttpStatus.SERVICE_UNAVAILABLE, "CATALOGUE_UNAVAILABLE");
+    }
+
+    @Test
+    @DisplayName("Renders a download refused by the catalogue as 503 with its own code")
+    void rendersCatalogueRefused() {
+        ResponseEntity<ApiErrorResponse> response =
+            handler.handleCatalogueRefused(new CatalogueRefusedException("text/html"), request);
+
+        assertError(response, HttpStatus.SERVICE_UNAVAILABLE, "CATALOGUE_REFUSED");
     }
 
     @Test

@@ -267,7 +267,9 @@ temporaire par adresse après plusieurs échecs. Écran : un champ mot de passe,
 - Réglages : palier et thème, avec un aperçu du rendu indiquant la taille réelle sur son écran.
 
 Toute action longue désactive son bouton ("en cours") puis affiche succès ou échec avec la raison
-(chiffré, sans texte, trop volumineux, catalogue injoignable). Rien d'autre.
+(chiffré, sans texte, trop volumineux, catalogue injoignable, catalogue qui refuse les
+téléchargements : le site renvoie alors une page HTML au lieu de l'EPUB quand il bannit une adresse).
+Rien d'autre.
 
 ## 10. API
 

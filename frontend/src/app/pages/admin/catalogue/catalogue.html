@@ -1,0 +1,71 @@
+<section class="a-view" aria-labelledby="catalogue-title">
+  <h2 id="catalogue-title">Catalogue<small>Ebooks libres et gratuits</small></h2>
+  <form class="a-search" role="search" (submit)="search($event)">
+    <div class="a-field">
+      <label for="catalogue-query">Titre ou auteur</label>
+      <input
+        id="catalogue-query"
+        class="a-input"
+        type="search"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </div>
+    <button type="submit" class="a-btn a-btn--primary">Rechercher</button>
+  </form>
+
+  <div aria-live="polite">
+    @if (results.isLoading()) {
+      <p class="a-help">Recherche en cours</p>
+    } @else if (searchFailure(); as failure) {
+      <div class="a-card">
+        <p class="a-message a-message--failure">{{ failure }}</p>
+        <div class="actions">
+          <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="retry()">
+            Réessayer
+          </button>
+        </div>
+      </div>
+    } @else if (results.hasValue() && results.value().length === 0) {
+      <p class="a-help">Aucun résultat</p>
+    }
+  </div>
+
+  @if (results.hasValue()) {
+    @for (entry of results.value(); track entry.entryId) {
+      <article class="a-card">
+        <h3 class="t">{{ entry.title }}</h3>
+        @if (entry.author) {
+          <p class="m">{{ entry.author }}</p>
+        }
+        @if (entry.summary) {
+          <p class="s">{{ entry.summary }}</p>
+        }
+        <div class="actions">
+          @if (stateOf(entry) === 'active') {
+            <span class="a-chip a-chip--ok">Déjà active</span>
+          } @else {
+            <button
+              type="button"
+              class="a-btn a-btn--primary a-btn--sm"
+              [disabled]="busy()[entry.entryId]"
+              [attr.aria-busy]="busy()[entry.entryId] || null"
+              (click)="activate(entry)"
+            >
+              {{ busy()[entry.entryId] ? 'Activation en cours' : 'Activer' }}
+            </button>
+          }
+        </div>
+        @if (messages()[entry.entryId]; as message) {
+          <p
+            class="a-message"
+            [class.a-message--failure]="message.kind === 'failure'"
+            role="status"
+          >
+            {{ message.text }}
+          </p>
+        }
+      </article>
+    }
+  }
+</section>

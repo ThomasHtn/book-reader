@@ -1,0 +1,38 @@
+<section class="a-view" aria-labelledby="upload-title">
+  <h2 id="upload-title">Dépôt<small>EPUB sans DRM, 20 Mo maximum</small></h2>
+  <div class="a-drop" (dragover)="$event.preventDefault()" (drop)="drop($event)">
+    <b>Glissez un fichier EPUB ici</b>
+    <span>ou</span>
+    <label for="upload-file" class="a-btn a-btn--secondary">Choisir un fichier EPUB</label>
+    <input
+      id="upload-file"
+      class="sr-only"
+      type="file"
+      accept=".epub,application/epub+zip"
+      (change)="choose($event)"
+    />
+    @if (file(); as chosen) {
+      <span>{{ chosen.name }}</span>
+    }
+  </div>
+  <button
+    type="button"
+    class="a-btn a-btn--primary"
+    [disabled]="!file() || sending()"
+    [attr.aria-busy]="sending() || null"
+    (click)="send()"
+  >
+    {{ sending() ? 'Envoi en cours' : 'Envoyer' }}
+  </button>
+  <p class="a-help">
+    Le livre est converti puis activé ; corrigez le titre et l'auteur dans la Bibliothèque si
+    besoin.
+  </p>
+  <div aria-live="polite">
+    @if (message(); as current) {
+      <p class="a-message" [class.a-message--failure]="current.kind === 'failure'">
+        {{ current.text }}
+      </p>
+    }
+  </div>
+</section>
