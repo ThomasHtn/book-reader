@@ -208,7 +208,7 @@
      keeps the tier-100 size at every tier, or "Mes livres" would grow and shrink with her font size. */
   --page-title-size: clamp(20px, 2.734vw, 35px);
   --indicator-size: clamp(16px, calc(var(--text-body) * 0.25), 32px);
-  --head-padding: var(--space-2) var(--reading-padding);
+  --head-padding: var(--space-3) var(--reading-padding) var(--space-2);
 
   /* Book grid: three blocks per row, each carrying a title and its state. No cover: the title is
      the whole of what identifies a book, so it gets the block's full width. */

@@ -37,14 +37,18 @@ export function paginateGrid(items: readonly GridItem[], viewportHeight: number)
     }
   });
 
+  // Offsets are relative to the first row, not to 0: the grid may carry a top padding before it
+  // (as it does in the library), and every page must keep that same margin, not just the first one.
+  const firstTop = rows[0].top;
+  let start = firstTop;
   const offsets = [0];
   const pages = items.map(() => 0);
   let page = 0;
   for (const row of rows) {
-    const start = offsets[page];
     if (row.top > start && row.bottom - start > viewportHeight) {
       page += 1;
-      offsets.push(row.top);
+      start = row.top;
+      offsets.push(row.top - firstTop);
     }
     for (const index of row.items) {
       pages[index] = page;

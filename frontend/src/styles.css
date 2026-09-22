@@ -151,7 +151,7 @@ app-book-card {
    indicator stays right, which is why the row is flush-end and the title pushes itself over. */
 .page-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--head-padding);
@@ -215,11 +215,11 @@ app-book-card {
 /* Only entry point to the backoffice from the reader side (decision log, 22 September 2026):
    discreet on purpose, meant for the sighted caregiver, not the low-vision reader; pinned to the
    actual screen corner, outside the bounded content column, and kept small. Same edge margins as
-   `page-head--grid` (`--space-2` block, `--grid-padding` inline), so it lines up with the title row
+   `page-head--grid` (`--space-3` block, `--grid-padding` inline), so it lines up with the title row
    instead of floating at its own distance from the corner. */
 .button--settings {
   position: fixed;
-  top: var(--space-2);
+  top: var(--space-3);
   right: var(--grid-padding);
   display: inline-flex;
   align-items: center;
@@ -246,6 +246,48 @@ app-book-card {
   width: var(--space-3);
   height: var(--space-3);
   fill: currentColor;
+}
+
+/* Same treatment as the footer's nav-bar (Précédent/Suivant): background, border and press states.
+   Square, and a touch smaller than the nav-bar's own height: this is a single icon, not a page turn. */
+.button--restart {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--grid-padding);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--nav-bar-height) * 0.85);
+  height: calc(var(--nav-bar-height) * 0.85);
+  padding: 0;
+  background: var(--nav-bar-bg);
+  color: var(--nav-bar-fg);
+  border: var(--nav-bar-border);
+  border-radius: var(--radius-none);
+}
+
+.button--restart:hover {
+  background: var(--nav-bar-bg-hover);
+}
+
+.button--restart:active {
+  background: var(--nav-bar-bg-active);
+  color: var(--nav-bar-fg-active);
+}
+
+.button--restart:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-shadow);
+}
+
+.button--restart svg {
+  width: var(--nav-bar-arrow-size);
+  height: var(--nav-bar-arrow-size);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ---- Paginated surfaces: one page is one column of exactly the viewport width ---- */

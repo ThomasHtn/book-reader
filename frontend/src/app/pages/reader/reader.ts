@@ -50,6 +50,17 @@ const COUNT_START_DELAY_MS = 100;
     @if (unavailable()) {
       <app-status-screen (retry)="retry()" />
     } @else {
+      <button
+        type="button"
+        class="button--restart"
+        aria-label="Revenir au début du livre"
+        (click)="restart()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+        </svg>
+      </button>
       <div
         class="screen"
         [style.visibility]="location() ? null : 'hidden'"
@@ -223,6 +234,15 @@ export class Reader {
 
   protected openLibrary(): void {
     void this.router.navigateByUrl('/livres');
+  }
+
+  protected restart(): void {
+    if (!this.location()) {
+      return;
+    }
+    this.layoutAt({ blockIndex: 0, charOffset: 0 });
+    this.save();
+    this.text()?.nativeElement.focus();
   }
 
   protected retry(): void {

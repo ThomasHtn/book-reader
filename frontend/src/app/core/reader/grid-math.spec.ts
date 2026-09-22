@@ -50,6 +50,15 @@ describe('paginateGrid', () => {
     expect(paginateGrid(items, 250)).toEqual({ offsets: [0, 100], pages: [0, 1] });
   });
 
+  it('keeps every page at the same margin when the grid carries a top padding', () => {
+    // Real measurements include the grid's padding-top, so the first row never starts at 0.
+    const items: GridItem[] = rows(4, 3, 100, 24).map((item) => ({ ...item, top: item.top + 24 }));
+
+    const { offsets } = paginateGrid(items, 250);
+
+    expect(offsets).toEqual([0, 248]);
+  });
+
   it('answers one empty page when there is nothing to lay out or nothing to lay out in', () => {
     expect(paginateGrid([], 400)).toEqual({ offsets: [0], pages: [] });
     expect(paginateGrid(rows(2, 3, 100), 0)).toEqual({
