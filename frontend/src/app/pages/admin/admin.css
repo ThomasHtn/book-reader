@@ -327,23 +327,27 @@
   font-weight: var(--admin-weight-strong);
 }
 
-/* Real reader rendering of the chosen tier and theme, scaled to the current screen like the reader. */
+/* Real reader rendering of the chosen tier and theme, scaled down to this box. The reader sizes its
+   text against the viewport (tier px at 1280px wide); here the box is the viewport, hence `cqi`. */
 .a-preview {
   --preview-tier: 100;
+  container-type: inline-size;
   padding: calc(var(--spacing) * 4);
   border-radius: var(--admin-radius-lg);
   border: 1px solid var(--admin-border);
-  font-family: var(--font-reading);
-  font-weight: var(--weight-body);
-  font-size: clamp(
-    var(--text-floor),
-    calc(var(--preview-tier) / 12.8 * 1vw),
-    calc(var(--preview-tier) * 1px)
-  );
-  line-height: var(--leading-body);
-  overflow-wrap: anywhere;
+  overflow: hidden;
   background: var(--color-paper-50);
   color: var(--color-ink-900);
+}
+
+/* `cqi` on the container itself would resolve against its ancestor, so the text sits in a child. */
+.a-preview__text {
+  margin: 0;
+  font-family: var(--font-reading);
+  font-weight: var(--weight-body);
+  font-size: clamp(12px, calc(var(--preview-tier) / 12.8 * 1cqi), calc(var(--preview-tier) * 1px));
+  line-height: var(--leading-body);
+  overflow-wrap: anywhere;
 }
 
 .a-preview[data-theme='light-on-dark'] {

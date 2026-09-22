@@ -48,7 +48,7 @@ test('README screenshots', async ({ page }) => {
   });
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto('/livres');
-  await expect(page.locator('button.row')).toHaveCount(2);
+  await expect(page.locator('button.book-card')).toHaveCount(2);
   await page.mouse.move(960, 900);
   await page.screenshot({ path: `${OUTPUT}/livres-1920.png` });
 
@@ -76,7 +76,7 @@ async function openAt(page: Page, bookId: string, blockIndex: number): Promise<v
     [bookId, blockIndex] as const,
   );
   await page.goto(`/lire/${bookId}`);
-  await expect(page.locator('.toolbar [aria-live]')).toHaveText(/sur \d+/);
+  await expect(page.locator('.page-indicator')).toHaveText(/sur \d+/);
   // Rest the pointer on the text, where nothing reacts to hovering.
   const viewport = page.viewportSize()!;
   await page.mouse.move(viewport.width / 2, viewport.height / 2);

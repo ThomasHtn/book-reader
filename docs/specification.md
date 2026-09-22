@@ -44,8 +44,8 @@ livres.
 2. Route `/` : si un dernier livre ouvert est mémorisé, actif et non terminé, redirection vers
    `/lire/:id` à la dernière position ; sinon vers `/livres`. Aucun écran d'accueil, aucune
    confirmation.
-3. Barre droite "Suivant", barre gauche "Précédent".
-4. Bouton "Mes livres" : la liste ; un clic sur un titre ouvre le livre à sa dernière position.
+3. Pied de page : "Mes livres" à gauche, "Précédent" au centre, "Suivant" à droite.
+4. Bouton "Mes livres" : la liste ; un clic sur un bloc ouvre le livre à sa dernière position.
 5. Fin de livre : la dernière page affiche "Fin du livre" sous le dernier paragraphe, le livre passe
    "terminé" mais reste en tête de liste tant qu'il est le dernier lu. Il n'est plus repris
    automatiquement ; le rouvrir repart de la première page ; reculer depuis la dernière page retire
@@ -57,10 +57,12 @@ Aucun autre parcours n'existe côté lectrice.
 
 ### 5.1 Écran de lecture
 
-De gauche à droite : barre "Précédent" (pleine hauteur, 300 px, flèche puis libellé), zone de texte
-(une page, sans défilement), barre "Suivant" (symétrique). Au-dessus de la zone de texte, sur une
-ligne : bouton "Mes livres" et indicateur "Page 12 sur 840". Sous 1100 px de large, les barres passent
-en bas, côte à côte.
+De haut en bas : "Page 12 sur 840" seul dans le coin supérieur droit, en petit et en texte atténué,
+sans titre à gauche, le livre se nommant lui-même sur sa page de titre,
+puis la zone de texte (une page, sans défilement) sur tout le reste, puis le pied. Pas d'en-tête. Le
+pied ne porte que les trois commandes, sur une rangée : "Mes livres" à gauche, à la largeur de son
+libellé, "Précédent" au centre et "Suivant" à droite (flèche puis libellé), ces deux-là se partageant
+tout le reste de la largeur.
 
 Règles :
 
@@ -74,9 +76,10 @@ Règles :
 - anti-rebond : une commande reçue moins de 400 ms après la précédente est ignorée, la répétition
   automatique d'une touche maintenue est neutralisée ;
 - les barres réagissent sur toute leur surface, avec un changement de couleur net, sans animation ;
-  sur la première ou la dernière page, la barre inutile reste en place, désactivée ;
+  sur la première ou la dernière page, la barre inutile disparaît et celle qui reste occupe la place
+  libérée ; sur "Mes livres", le pied disparaît entièrement quand tout tient sur une page ;
 - texte aligné à gauche, jamais justifié ; `user-select: none` ; menu contextuel désactivé ; curseur
-  agrandi (64 px) sur PC.
+  agrandi (64 px) sur PC, flèche sur la page et main sur tout ce qui se presse.
 
 ### 5.2 Pagination
 
@@ -116,16 +119,22 @@ Règles :
 
 ### 5.4 Écran "Mes livres"
 
-- Une ligne par livre : titre en très gros, auteur en plus petit dessous. Paginée par les mêmes
-  barres et le même multi-colonnes que le texte, chaque ligne étant insécable : un titre long prend
-  la place qu'il faut, jamais tronqué.
+- Un bloc par livre, trois par ligne, tous de la même taille quelle que soit la longueur du titre :
+  un aplat portant le titre en très gros, l'auteur d'un cran en dessous et, s'il y a lieu, son état.
+  Ni couverture ni image de remplacement : le texte suffit à reconnaître un livre dans une
+  bibliothèque de cette taille, et tout le bloc est la cible.
+- Paginée par les mêmes barres que le texte, mais par rangées entières et non en multi-colonnes :
+  une rangée n'est jamais coupée, et un titre long prend la place qu'il faut, jamais tronqué.
 - Ordre : livres ayant une progression, terminés compris, du plus récemment lu au plus ancien ; puis
   livres jamais ouverts, du plus récemment ajouté au plus ancien.
-- Repères : la première ligne, si elle est en cours et non terminée, a un fond tangerine ; un livre
-  terminé porte l'étiquette "Terminé" en texte atténué. Rien d'autre.
-- En-tête : titre "Mes livres" et indicateur "Titres 1 à 4 sur 7" (maquette du design system) ;
-  flèches gauche et droite comme sur l'écran de lecture, espace et Entrée activent la ligne focalisée.
-- Un clic ouvre le livre à sa dernière position ; jamais ouvert ou terminé : première page.
+- Repères : le premier bloc, s'il est en cours et non terminé, est rose et porte l'étiquette
+  "En cours" ; un livre terminé a un bloc atténué et l'étiquette "Terminé". Rien d'autre, et jamais
+  la couleur seule.
+- Ligne de tête : titre "Mes livres" à gauche, indicateur "Titres 1 à 6 sur 7" à droite ; pied réduit
+  aux deux barres (maquette du design system) ; flèches gauche et droite comme sur l'écran de lecture,
+  espace et Entrée activent le bloc focalisé. Le titre "Mes livres" n'est plus affiché, il reste
+  lu par le lecteur d'écran.
+- Un clic sur le bloc ouvre le livre à sa dernière position ; jamais ouvert ou terminé : première page.
 
 ### 5.5 Réglages d'affichage
 
@@ -135,7 +144,7 @@ Globaux, lus depuis le serveur, modifiables seulement dans le backoffice. À cal
 |---|---|---|
 | Palier | 48, 72, 100, 140 (pixels sur tout écran d'au moins 1280 px CSS ; en dessous, proportionnel, plancher 20 px) | 100 |
 | Thème | noir sur blanc cassé, blanc sur noir, jaune sur noir | noir sur blanc cassé |
-| Fixes | police Luciole 700, interligne 1,4, accent tangerine à texte sombre | |
+| Fixes | police Luciole 700, interligne 1,4, repère "en cours" rose à texte sombre | |
 
 La référence à 1280 px couvre son PC à 100 % comme à 125 % de mise à l'échelle Windows. Ctrl plus et
 Ctrl moins restent le zoom de Chrome : un zoom avant ne change rien, un zoom arrière rétrécit le texte
@@ -247,7 +256,9 @@ Titre et auteur pris dans l'OPF, modifiables dans le backoffice.
 
 ## 9. Backoffice
 
-Route `/admin` de la même application, sans lien depuis la liseuse. Mobile first, schéma de couleurs
+Route `/admin` de la même application. Un bouton discret (icône engrenage, libellé accessible
+seulement) en haut à droite de `/livres` y mène, destiné à l'aidant et non à l'utilisatrice ; c'est le
+seul lien depuis la liseuse. Mobile first, schéma de couleurs
 du système, quatre onglets : Catalogue, Bibliothèque, Dépôt, Réglages.
 
 **Authentification** (schéma valoquests) : clé d'administration en variable d'environnement, saisie
@@ -343,12 +354,25 @@ La version 1 est livrable quand :
 |---|---|---|
 | Ebooks libres et gratuits par OPDS, plus dépôt | Gutenberg, Gallica, Éole, PNB | seul catalogue français propre avec flux ; Éole sans API et chiffré ; PNB sous DRM |
 | Recherche relayée en direct | copie locale du catalogue | quelques recherches par mois ne justifient ni table ni tâche |
+| Écran catalogue vide invitant à chercher | suggestions chargées à l'ouverture de l'onglet | une sélection par défaut appellerait le site à chaque visite, ce que la ligne précédente écarte |
+| Classes de la liseuse préfixées `book-*` | noms nus `grid`, `card`, `cover` | 22 septembre 2026 : `grid` écrasait l'utilitaire Tailwind du backoffice et cassait la page Réglages |
 | Paliers globaux | loupe, Ctrl plus et moins | motricité fine, texte mobile, conflit avec le zoom Chrome |
 | Référence 1280 px | référence 1920 px | couvre la mise à l'échelle Windows à 100 % et 125 % |
 | Multi-colonnes CSS par chapitre, total compté en fond | livre entier en un conteneur, mesure mot par mot, pages du chapitre seul, pourcentage | essai du 17 septembre 2026 (5.2) : plafond de Blink dépassé et plus d'une seconde pour le livre entier ; le chapitre tient en 0,22 s et garde "Page 12 sur 840" |
 | Position par `Range` seul | `caretPositionFromPoint` | le coin de colonne tombe dans une marge ; une seule API |
 | Texte brut par bloc | `<i>`, `<b>` conservés | gras invisible, italique nuisible, position triviale |
-| Barres pleine hauteur | boutons en bas, moitiés d'écran | périphérie conservée, cibles impossibles à manquer |
+| Pied de page, boutons en moitiés d'écran | barres verticales pleine hauteur | 17 septembre 2026 : zone de lecture élargie de 600 px sur grand écran ; cibles encore très grandes (demi-écran de large, plus hautes que l'en-tête) |
+| Pied unique, aucun en-tête | en-tête avec "Mes livres" et l'indicateur | 22 septembre 2026 : le texte gagne toute la hauteur de l'en-tête et les trois commandes sont au même endroit, à portée du pouce |
+| Indicateur en petit dans le coin supérieur droit | bande d'état au-dessus des commandes, indicateur supprimé, indicateur dans le bouton "Suivant" | 22 septembre 2026 : une bande pleine largeur donnait trop de poids à une information secondaire ; le coin la garde visible sans voler de surface au texte ni à une cible |
+| Accent rose `#ffa6c1`, réservé aux commandes | tangerine `#ffa03c`, rose sur le seul thème clair | 22 septembre 2026 : demande de l'utilisateur ; le rose ne colore que ce qui s'active, donc une surface rose veut toujours dire "appuyez ici" |
+| Bordure des commandes à 2 px | 6 px | les aplats pleins portent les formes, un filet de 6 px alourdissait sans rien ajouter au contraste |
+| Grille de trois blocs par ligne, paginée par rangées | une ligne par livre en multi-colonnes | 22 septembre 2026 : demande de l'utilisateur ; une grille ne se fragmente pas en colonnes CSS, d'où le découpage par rangées entières (`core/reader/grid-math.ts`) |
+| Grille sur 1 500 px avec des marges de 20 px, des blocs deux fois plus hauts qu'une commande et un titre plafonné à `8cqi` | grille sur 1 100 px, marges de lecture, titre à `11cqi` | 22 septembre 2026 : demande de l'utilisateur ; sur cet écran les blocs sont le contenu, donc ils prennent la largeur que les marges abandonnent, et le plafond du titre garde neuf titres par page au palier 100 sur 1080 px, barres de pagination comprises |
+| Bloc plein portant le titre, l'auteur et l'état | plateau 3:4 avec l'initiale du titre, couverture extraite de l'EPUB | 22 septembre 2026 : demande de l'utilisateur ; sans couverture à afficher, le plateau ne faisait que voler la place du titre. L'auteur, d'abord écarté avec le plateau, est rétabli le même jour : il tient sur une ligne sous le titre, à `--card-author-size`, sans reprendre de place au titre |
+| Barre retirée quand elle ne mène nulle part | barre laissée en place et désactivée | 22 septembre 2026 : demande de l'utilisateur ; contrepartie assumée, la cible restante change de largeur au premier et au dernier tour de page |
+| Commandes sur la surface beige du thème | commandes en aplat rose | 22 septembre 2026 : demande de l'utilisateur ; le rose ne désigne plus que le livre en cours, qui devient la seule surface colorée de l'écran |
+| Filet permanent de 2 px sur les blocs, aplat un ton plus soutenu au survol | filet de 4 px, filet épaissi au survol | 22 septembre 2026 : demande de l'utilisateur ; 4 px alourdissaient la grille alors que la gouttière de 24 px sépare déjà les blocs, donc le survol passe par le fond, comme sur les commandes, sans rien déplacer ni révéler ; il reste un supplément pour la souris, le clavier et le tactile gardent le filet et l'anneau de focus |
+| Titre de l'écran en haut à gauche de "Mes livres" | titre lu par le seul lecteur d'écran | 22 septembre 2026 : demande de l'utilisateur ; la ligne existait déjà pour l'indicateur, donc elle ne coûte pas de place |
 | Une application Angular avec `/admin` | deux applications | un front, un back |
 | `localStorage` seul, en ligne | IndexedDB, hors ligne | simplicité, perte acceptée |
 | API publique | clé par poste | une seule utilisatrice |
@@ -356,6 +380,8 @@ La version 1 est livrable quand :
 | Composants faits main | Angular Material | tailles et animations contraires au besoin |
 | Conversion serveur | parsing EPUB dans le navigateur | liseuse minuscule et testable |
 | Mode kiosque | `--start-fullscreen`, PWA installée | pas de bulle ni de raccourci de sortie ; la PWA ignore les drapeaux |
+| Bouton engrenage discret, libellé accessible seulement, en haut à droite de `/livres` | aucun lien depuis la liseuse, bouton avec libellé visible | 22 septembre 2026 : demande de l'utilisateur ; destiné à l'aidant, pas à l'utilisatrice, seul point d'entrée vers `/admin` depuis la liseuse |
+| `page-title` fixé au palier 100, indépendant du palier choisi | `page-title` proportionnel au corps du texte (un tiers) | 22 septembre 2026 : demande de l'utilisateur ; "Mes livres" est du décor d'écran, pas du texte de lecture, il ne doit pas grossir ni rétrécir avec le palier |
 
 ## 15. Vitrine
 

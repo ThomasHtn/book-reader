@@ -105,9 +105,10 @@ describe('Reader', () => {
     http.expectOne(API_ENDPOINTS.book(book.id)).flush(book);
     await flush(fixture);
     const element = fixture.nativeElement as HTMLElement;
-    const bars = () => [...element.querySelectorAll<HTMLButtonElement>('button.nav-bar')];
+    const prev = () => element.querySelector<HTMLButtonElement>('button.nav-bar--prev');
+    const next = () => element.querySelector<HTMLButtonElement>('button.nav-bar--next');
     const indicator = () => element.querySelector('[aria-live]')?.textContent?.trim();
-    return { fixture, element, bars, indicator };
+    return { fixture, element, prev, next, indicator };
   }
 
   async function countAllChapters(fixture: { detectChanges(): void }): Promise<void> {
@@ -116,7 +117,7 @@ describe('Reader', () => {
   }
 
   it('opens a never read book at its first page, with the title page before the text', async () => {
-    const { bars, indicator, fixture } = await open();
+    const { prev, next, indicator, fixture } = await open();
 
     expect(store.last).toBe('b1');
     expect(fixture.nativeElement.querySelector('h1.visually-hidden')?.textContent?.trim()).toBe(
@@ -129,8 +130,8 @@ describe('Reader', () => {
       endOfBook: false,
     });
     expect(visible().shownPage).toBe(0);
-    expect(bars()[0].getAttribute('aria-disabled')).toBe('true');
-    expect(bars()[1].getAttribute('aria-disabled')).toBeNull();
+    expect(prev()).toBeNull();
+    expect(next()).not.toBeNull();
     expect(indicator()).toBe('Page 1');
 
     await countAllChapters(fixture);
@@ -139,12 +140,12 @@ describe('Reader', () => {
 
   it('resumes at the stored position and marks the book finished on its last page', async () => {
     store.progress.set('b1', { blockIndex: 4, charOffset: 0, finished: false, updatedAt: 't' });
-    const { bars, indicator, fixture } = await open();
+    const { next, indicator, fixture } = await open();
 
     expect(visible().content?.firstBlock).toBe(3);
     expect(visible().content?.endOfBook).toBe(true);
     expect(visible().shownPage).toBe(1);
-    expect(bars()[1].getAttribute('aria-disabled')).toBe('true');
+    expect(next()).toBeNull();
     expect(store.saves.at(-1)).toEqual({
       bookId: 'b1',
       position: { blockIndex: 4, charOffset: 0 },
@@ -158,9 +159,9 @@ describe('Reader', () => {
 
   it('turns pages across chapters and saves the first character of each page', async () => {
     store.progress.set('b1', { blockIndex: 2, charOffset: 0, finished: false, updatedAt: 't' });
-    const { fixture, bars } = await open();
+    const { fixture, prev, next } = await open();
 
-    bars()[1].click();
+    next()!.click();
     await flush(fixture);
     expect(visible().content?.firstBlock).toBe(3);
     expect(visible().shownPage).toBe(0);
@@ -171,7 +172,7 @@ describe('Reader', () => {
     });
 
     vi.advanceTimersByTime(400);
-    bars()[0].click();
+    prev()!.click();
     await flush(fixture);
     expect(visible().content?.firstBlock).toBe(0);
     expect(visible().shownPage).toBe(2);
@@ -180,9 +181,9 @@ describe('Reader', () => {
 
   it('clears the finished flag when turning back from the last page', async () => {
     store.progress.set('b1', { blockIndex: 4, charOffset: 0, finished: false, updatedAt: 't' });
-    const { fixture, bars } = await open();
+    const { fixture, prev } = await open();
 
-    bars()[0].click();
+    prev()!.click();
     await flush(fixture);
 
     expect(store.saves.at(-1)).toEqual({
@@ -200,15 +201,15 @@ describe('Reader', () => {
   });
 
   it('ignores a command within 400 ms of the previous one', async () => {
-    const { fixture, bars } = await open();
+    const { fixture, next } = await open();
 
-    bars()[1].click();
-    bars()[1].click();
+    next()!.click();
+    next()!.click();
     await flush(fixture);
     expect(visible().shownPage).toBe(1);
 
     vi.advanceTimersByTime(400);
-    bars()[1].click();
+    next()!.click();
     await flush(fixture);
     expect(visible().shownPage).toBe(2);
   });
@@ -243,9 +244,9 @@ describe('Reader', () => {
   });
 
   it('gives focus back to the text after a click, so space always means next', async () => {
-    const { element, bars, fixture } = await open();
+    const { element, next, fixture } = await open();
 
-    bars()[1].click();
+    next()!.click();
     await flush(fixture);
 
     expect(document.activeElement).toBe(element.querySelector('section.reading'));
@@ -264,10 +265,10 @@ describe('Reader', () => {
     expect(visible().shownPage).toBe(1);
   });
 
-  it('opens "Mes livres" from the toolbar', async () => {
+  it('opens "Mes livres" from the footer', async () => {
     const { element } = await open();
 
-    element.querySelector<HTMLButtonElement>('.toolbar .button')!.click();
+    element.querySelector<HTMLButtonElement>('.nav-bar--exit')!.click();
 
     expect(navigate).toHaveBeenCalledWith('/livres');
   });

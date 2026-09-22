@@ -24,14 +24,15 @@ test.describe.configure({ mode: 'serial' });
  * site is never contacted: its search is intercepted, and its activation uploads the same EPUB instead.
  */
 test('reader journey', async ({ page }) => {
-  const readerIndicator = page.locator('.toolbar [aria-live]');
-  const bars = page.locator('button.nav-bar');
+  const readerIndicator = page.locator('.page-indicator');
+  const prevBar = page.locator('button.nav-bar--prev');
+  const nextBar = page.locator('button.nav-bar--next');
 
   await test.step('starts on an empty "Mes livres"', async () => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/livres$/);
     await expect(page.getByRole('heading', { name: 'Mes livres' })).toBeVisible();
-    await expect(page.locator('button.row')).toHaveCount(0);
+    await expect(page.locator('button.book-card')).toHaveCount(0);
     await expectAccessible(page);
   });
 
@@ -97,11 +98,11 @@ test('reader journey', async ({ page }) => {
   await test.step('opens a book and reads ten pages', async () => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/livres$/);
-    await page.locator('button.row', { hasText: 'Le Horla' }).click();
+    await page.locator('button.book-card', { hasText: 'Le Horla' }).click();
     await expect(page).toHaveURL(/\/lire\//);
     horlaUrl = new URL(page.url()).pathname;
     await expect(readerIndicator).toHaveText(/^Page 1( sur \d+)?$/);
-    await expect(bars.first()).toHaveAttribute('aria-disabled', 'true');
+    await expect(prevBar).toHaveCount(0);
 
     for (let turn = 0; turn < 10; turn++) {
       await page.keyboard.press(turn % 2 === 0 ? 'ArrowRight' : 'Space');
@@ -114,21 +115,21 @@ test('reader journey', async ({ page }) => {
   await test.step('goes back to the list, where the book is current', async () => {
     await page.getByRole('button', { name: 'Mes livres' }).click();
     await expect(page).toHaveURL(/\/livres$/);
-    const first = page.locator('button.row').first();
+    const first = page.locator('button.book-card').first();
     await expect(first).toContainText('Le Horla');
-    await expect(first).toHaveClass(/row--current/);
+    await expect(first).toHaveClass(/book-card--current/);
     await expectAccessible(page);
   });
 
   await test.step('switches to another book, then comes back to the same page', async () => {
-    await page.locator('button.row', { hasText: 'Amour' }).click();
+    await page.locator('button.book-card', { hasText: 'Amour' }).click();
     await expect(readerIndicator).toHaveText(/^Page 1( sur \d+)?$/);
     await page.keyboard.press('ArrowRight');
     await page.waitForTimeout(COMMAND_GAP_MS);
     await page.getByRole('button', { name: 'Mes livres' }).click();
-    await expect(page.locator('button.row').first()).toContainText('Amour');
+    await expect(page.locator('button.book-card').first()).toContainText('Amour');
 
-    await page.locator('button.row', { hasText: 'Le Horla' }).click();
+    await page.locator('button.book-card', { hasText: 'Le Horla' }).click();
     await expect(readerIndicator).toHaveText(/^Page 11 sur \d+$/);
   });
 
@@ -192,15 +193,11 @@ test('reader journey', async ({ page }) => {
     await page.reload();
     await expect(readerIndicator).toHaveText(/^Page \d+/);
 
-    for (
-      let turn = 0;
-      turn < 60 && (await bars.last().getAttribute('aria-disabled')) !== 'true';
-      turn++
-    ) {
+    for (let turn = 0; turn < 60 && (await nextBar.count()) > 0; turn++) {
       await page.keyboard.press('ArrowRight');
       await page.waitForTimeout(COMMAND_GAP_MS);
     }
-    await expect(bars.last()).toHaveAttribute('aria-disabled', 'true');
+    await expect(nextBar).toHaveCount(0);
     await expect(page.getByText('Fin du livre')).toBeInViewport();
     expect((await storedProgress(page, horlaUrl)).finished).toBe(true);
 

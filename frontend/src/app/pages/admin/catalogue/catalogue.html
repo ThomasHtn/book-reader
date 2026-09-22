@@ -28,6 +28,8 @@
       </div>
     } @else if (results.hasValue() && results.value().length === 0) {
       <p class="a-help">Aucun résultat</p>
+    } @else if (!results.hasValue()) {
+      <p class="a-help">Cherchez un titre ou un auteur pour l'ajouter à sa bibliothèque.</p>
     }
   </div>
 

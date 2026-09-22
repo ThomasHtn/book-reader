@@ -37,8 +37,9 @@ import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './chapter
 const COUNT_START_DELAY_MS = 100;
 
 /**
- * Route `/lire/:id`: three commands only (previous, next, "Mes livres"). The current chapter is laid
- * out in columns; the other chapters are counted one by one in a hidden twin for "Page 12 sur 840".
+ * Route `/lire/:id`: three commands only, all in the footer (Mes livres, Précédent, Suivant); the
+ * text owns everything above them. The current chapter is laid out in columns; the other chapters
+ * are counted one by one in a hidden twin for "Page 12 sur 840".
  */
 @Component({
   selector: 'app-reader',
@@ -54,13 +55,11 @@ const COUNT_START_DELAY_MS = 100;
         [style.visibility]="location() ? null : 'hidden'"
         (contextmenu)="$event.preventDefault()"
       >
-        <app-nav-bar direction="previous" [disabled]="isFirst()" (activate)="onBar('previous')" />
-        <main class="center">
-          <div class="toolbar">
-            <h1 class="visually-hidden">{{ title() }}</h1>
-            <button type="button" class="button" (click)="openLibrary()">Mes livres</button>
-            <div class="page-indicator" aria-live="polite">{{ indicator() }}</div>
-          </div>
+        <div class="page-head">
+          <p class="page-indicator" aria-live="polite">{{ indicator() }}</p>
+        </div>
+        <main>
+          <h1 class="visually-hidden">{{ title() }}</h1>
           <section class="paged reading" lang="fr" aria-label="Texte du livre" tabindex="-1" #text>
             <div class="paged-viewport" #viewport>
               <div class="paged-columns" #columns></div>
@@ -70,7 +69,19 @@ const COUNT_START_DELAY_MS = 100;
             </div>
           </section>
         </main>
-        <app-nav-bar direction="next" [disabled]="isLast()" (activate)="onBar('next')" />
+        <footer class="nav-footer">
+          <div class="nav-row nav-row--exit">
+            <button type="button" class="nav-bar nav-bar--exit" (click)="openLibrary()">
+              <span>Mes livres</span>
+            </button>
+            @if (!isFirst()) {
+              <app-nav-bar direction="previous" (activate)="onBar('previous')" />
+            }
+            @if (!isLast()) {
+              <app-nav-bar direction="next" (activate)="onBar('next')" />
+            }
+          </div>
+        </footer>
       </div>
     }
   `,

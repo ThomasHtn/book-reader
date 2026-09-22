@@ -53,40 +53,42 @@ describe('Library', () => {
     });
 
     const element = await render();
-    const rows = [...element.querySelectorAll<HTMLButtonElement>('button.row')];
+    const cards = [...element.querySelectorAll<HTMLButtonElement>('button.book-card')];
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Mes livres');
-    expect(rows.map((row) => row.querySelector('.title')?.firstChild?.textContent?.trim())).toEqual(
-      ['Titre reading', 'Titre done', 'Titre new'],
-    );
-    expect(rows[0].classList).toContain('row--current');
-    expect(rows[0].querySelector('.author')?.textContent).toBe('Auteur reading');
-    expect(rows[0].querySelector('.tag')).toBeNull();
-    expect(rows[1].classList).toContain('row--finished');
-    expect(rows[1].querySelector('.tag')?.textContent?.trim()).toBe('Terminé');
-    expect(rows[2].classList).not.toContain('row--current');
+    expect(cards.map((card) => card.querySelector('.title')?.textContent?.trim())).toEqual([
+      'Titre reading',
+      'Titre done',
+      'Titre new',
+    ]);
+    expect(cards.map((card) => card.querySelector('.author')?.textContent?.trim())).toEqual([
+      'Auteur reading',
+      'Auteur done',
+      'Auteur new',
+    ]);
+    expect(cards[0].classList).toContain('book-card--current');
+    expect(cards[0].querySelector('.tag')?.textContent?.trim()).toBe('En cours');
+    expect(cards[1].classList).toContain('book-card--finished');
+    expect(cards[1].querySelector('.tag')?.textContent?.trim()).toBe('Terminé');
+    expect(cards[2].classList).not.toContain('book-card--current');
   });
 
-  it('opens a book from its row', async () => {
+  it('opens a book from its card', async () => {
     data.books.set([book('a')]);
     const element = await render();
 
-    element.querySelector<HTMLButtonElement>('button.row')!.click();
+    element.querySelector<HTMLButtonElement>('button.book-card')!.click();
 
     expect(navigate).toHaveBeenCalledWith('/lire/a');
   });
 
-  it('shows the range of titles and disables both bars when everything fits on one page', async () => {
+  it('shows the range of titles and drops the whole footer when everything fits on one page', async () => {
     data.books.set([book('a'), book('b'), book('c')]);
     const element = await render();
 
     expect(element.querySelector('[aria-live]')?.textContent?.trim()).toBe('Titres 1 à 3 sur 3');
-    const bars = [...element.querySelectorAll('button.nav-bar')];
-    expect(bars.map((bar) => bar.getAttribute('aria-disabled'))).toEqual(['true', 'true']);
-    expect(bars.map((bar) => bar.getAttribute('aria-label'))).toEqual([
-      'Titres précédents',
-      'Titres suivants',
-    ]);
+    expect(element.querySelector('footer')).toBeNull();
+    expect(element.querySelectorAll('button.nav-bar')).toHaveLength(0);
   });
 
   it('shows the unavailable screen only while the list has never loaded', async () => {

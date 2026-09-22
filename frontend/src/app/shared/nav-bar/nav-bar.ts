@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 /**
- * Full-height "Précédent" or "Suivant" bar. When there is nowhere to go it stays in place with
- * `aria-disabled` rather than `disabled`, so it keeps its focus and its silhouette.
+ * "Précédent" or "Suivant" bar, sitting in the footer. It is rendered only when there is somewhere to
+ * go, so it carries no disabled state: its caller drops it from the DOM instead.
  */
 @Component({
   selector: 'app-nav-bar',
@@ -14,22 +14,24 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
       [class.nav-bar--prev]="direction() === 'previous'"
       [class.nav-bar--next]="direction() === 'next'"
       [attr.aria-label]="accessibleName()"
-      [attr.aria-disabled]="disabled() ? 'true' : null"
-      (click)="onClick()"
+      (click)="activate.emit()"
     >
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <path
-          [attr.d]="direction() === 'previous' ? 'M70 10 L30 50 L70 90' : 'M30 10 L70 50 L30 90'"
-        />
-      </svg>
+      @if (direction() === 'previous') {
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M70 10 L30 50 L70 90" />
+        </svg>
+      }
       <span>{{ label() }}</span>
+      @if (direction() === 'next') {
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M30 10 L70 50 L30 90" />
+        </svg>
+      }
     </button>
   `,
 })
 export class NavBar {
   public readonly direction = input.required<'previous' | 'next'>();
-
-  public readonly disabled = input(false);
 
   /** Accessible name, "Page précédente" by default; the list says "Titres précédents". */
   public readonly name = input<string>();
@@ -43,10 +45,4 @@ export class NavBar {
   protected readonly accessibleName = computed(
     () => this.name() ?? (this.direction() === 'previous' ? 'Page précédente' : 'Page suivante'),
   );
-
-  protected onClick(): void {
-    if (!this.disabled()) {
-      this.activate.emit();
-    }
-  }
 }

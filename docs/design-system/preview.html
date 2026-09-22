@@ -32,9 +32,11 @@
   --color-amber-300: #ffd84d;
   --color-amber-500: #cfaf3a;
 
-  /* Accent: one tangerine shared by every theme, dark text on it; the pressed state inverts */
-  --color-tangerine-300: #ffa03c;
-  --color-tangerine-400: #ff8a00;
+  /* Accent: one rose shared by every theme, dark text on it; the pressed state inverts.
+     Reserved for controls, so rose on screen always means "you can press this". */
+  --color-rose-200: #ffc2d6;
+  --color-rose-300: #ffa6c1;
+  --color-rose-400: #ff8ab0;
   --color-ember-600: #d1461e;
   --color-ember-700: #b93d17;
   --color-ember-800: #9e3413;
@@ -53,12 +55,15 @@
   --color-ochre-300: #f3c76b;
 
   /* Typography */
-  --font-reading: "Luciole", "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", Arial, sans-serif;
-  --font-admin: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, "Segoe UI", Arial, sans-serif;
-  --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  --font-reading:
+    'Luciole', 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', Arial, sans-serif;
+  --font-admin:
+    'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, 'Segoe UI', Arial, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
   /* Tiers are unitless: the size in px on any viewport of 1280px CSS or more */
   --tier-current: 100;
   --text-floor: 20px;
+  /* Luciole ships 400 and 700 only; headings share the body weight */
   --weight-body: 700;
   --weight-heading: 700;
   --leading-body: 1.4;
@@ -75,16 +80,28 @@
 
   /* Shape and motion for the reader: none by design */
   --radius-none: 0;
-  --border-control: 6px;
-  --border-row: 4px;
+  /* Thin rules everywhere: the flat fills carry the commands, and the grid gutter does most of
+     the separating between blocks, so their edge only has to close the shape. */
+  --border-control: 2px;
+  --border-card: 2px;
   --duration-none: 0ms;
 
   /* Focus: inset double ring, gap in page colour then ring in text colour */
   --focus-ring-width: 8px;
   --focus-gap-width: 4px;
 
-  /* Large arrow cursor (64px), black with white outline, hotspot at the tip. Desktop only. */
-  --cursor-large: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><path d='M6 4 L6 52 L18 40 L28 60 L38 55 L28 36 L44 36 Z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>") 6 4, auto;
+  /* Large hand (64px), same treatment as the arrow, hotspot at the fingertip. Desktop only, and
+     the system pointer takes over everywhere else. */
+  --cursor-large-pointer:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><path d='M22 4c-3 0-5 2-5 5v24l-5-4c-3-2-7-1-8 2-1 2 0 4 1 6l11 14c3 4 7 6 12 6h12c7 0 12-5 12-12V28c0-3-2-5-5-5-2 0-4 1-4 3v-2c0-3-2-5-5-5-2 0-4 1-4 3v-2c0-3-2-5-5-5-1 0-2 0-3 1V9c0-3-2-5-4-5z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>")
+      22 4,
+    pointer;
+
+  /* Large arrow (64px), black with white outline, hotspot at the tip: the page's own cursor. */
+  --cursor-large:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><path d='M6 4 L6 52 L18 40 L28 60 L38 55 L28 36 L44 36 Z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>")
+      6 4,
+    auto;
 }
 
 /* === SEMANTIC ============================================================ */
@@ -94,70 +111,84 @@
   --color-fg: var(--color-ink-900);
   --color-fg-muted: var(--color-ink-700);
   --color-surface-raised: var(--color-paper-100);
-  --color-marker: var(--color-tangerine-300);
-  --color-control-bg: var(--color-tangerine-300);
-  --color-control-bg-hover: var(--color-tangerine-400);
-  --color-control-bg-active: var(--color-ink-900);
-  --color-control-fg: var(--color-ink-900);
-  --color-control-fg-active: var(--color-tangerine-300);
-  --color-control-border: var(--color-ink-900);
+  --color-surface-raised-strong: var(--color-paper-200);
+  --color-marker: var(--color-rose-300);
+  /* Commands share the blocks' surface; their ink edge is what tells them from the page, and both
+     edge and label follow the text colour so the three themes stay legible. */
+  --color-control-bg: var(--color-surface-raised);
+  --color-control-bg-hover: var(--color-surface-raised-strong);
+  --color-control-bg-active: var(--color-fg);
+  --color-control-fg: var(--color-fg);
+  --color-control-fg-active: var(--color-bg);
+  --color-control-border: var(--color-fg);
   --color-focus-ring: var(--color-ink-900);
   --color-focus-gap: var(--color-paper-50);
   --color-error: var(--color-rust-700);
 
   /* Body size = tier on any viewport of 1280px CSS or more (covers her PC at 100% and 125% Windows
      scaling), scaled down proportionally below, never under the floor. 100 -> 31px on a 400px phone. */
-  --text-body: clamp(var(--text-floor), calc(var(--tier-current) / 12.8 * 1vw), calc(var(--tier-current) * 1px));
+  --text-body: clamp(
+    var(--text-floor),
+    calc(var(--tier-current) / 12.8 * 1vw),
+    calc(var(--tier-current) * 1px)
+  );
   --text-heading: calc(var(--text-body) * 1.15);
   --text-control: clamp(20px, calc(var(--text-body) * 0.55), 72px);
   --text-meta: clamp(16px, calc(var(--text-body) * 0.5), 64px);
   --gap-paragraph: 0.6em;
 }
 
-:root[data-theme="light-on-dark"] {
+:root[data-theme='light-on-dark'] {
   --color-bg: var(--color-night-950);
   --color-fg: var(--color-snow-100);
   --color-fg-muted: var(--color-snow-300);
   --color-surface-raised: var(--color-night-800);
+  --color-surface-raised-strong: var(--color-night-700);
   --color-focus-ring: var(--color-snow-100);
   --color-focus-gap: var(--color-night-950);
   --color-error: var(--color-salmon-300);
 }
 
-:root[data-theme="yellow-on-black"] {
+:root[data-theme='yellow-on-black'] {
   --color-bg: var(--color-black);
   --color-fg: var(--color-amber-300);
   --color-fg-muted: var(--color-amber-500);
   --color-surface-raised: var(--color-coal-900);
+  --color-surface-raised-strong: var(--color-night-700);
   --color-focus-ring: var(--color-amber-300);
   --color-focus-gap: var(--color-black);
   --color-error: var(--color-amber-300);
 }
 
-:root[data-tier="48"] { --tier-current: 48; }
-:root[data-tier="72"] { --tier-current: 72; }
-:root[data-tier="100"] { --tier-current: 100; }
-:root[data-tier="140"] { --tier-current: 140; }
+:root[data-tier='48'] {
+  --tier-current: 48;
+}
+:root[data-tier='72'] {
+  --tier-current: 72;
+}
+:root[data-tier='100'] {
+  --tier-current: 100;
+}
+:root[data-tier='140'] {
+  --tier-current: 140;
+}
 
 /* === COMPONENT (reader) ================================================== */
 :root {
-  /* Side navigation bars (Previous / Next). Below the compact breakpoint (1100px) they become
-     a bottom row: --nav-bar-height applies instead of --nav-bar-width. */
-  --nav-bar-width: 300px;
-  --nav-bar-height: 96px;
-  /* Label sits horizontally under the chevron; sized so "Précédent" always fits on one line */
-  --nav-bar-label-size: min(var(--text-control), calc(var(--nav-bar-width) / 5.8));
+  /* Command bars (Mes livres / Précédent / Suivant), the whole chrome of a screen. There is no
+     header: the content owns every pixel above them. */
+  --nav-bar-arrow-size: calc(var(--text-control) * 1.2);
+  --nav-bar-height: calc(var(--button-min-height) * 1.4);
+  /* Reference width for label sizing, not an actual layout dimension any more. */
+  --nav-bar-label-reference-width: 300px;
+  /* Label sits beside the chevron; sized so "Précédent" always fits on one line */
+  --nav-bar-label-size: min(var(--text-control), calc(var(--nav-bar-label-reference-width) / 5.8));
   --nav-bar-bg: var(--color-control-bg);
   --nav-bar-bg-hover: var(--color-control-bg-hover);
   --nav-bar-bg-active: var(--color-control-bg-active);
   --nav-bar-fg: var(--color-control-fg);
   --nav-bar-fg-active: var(--color-control-fg-active);
   --nav-bar-border: var(--border-control) solid var(--color-control-border);
-  --nav-bar-disabled-bg: var(--color-bg);
-  --nav-bar-disabled-fg: var(--color-fg-muted);
-  /* Keeps the bar's silhouette on first and last page, since its fill matches the page */
-  --nav-bar-disabled-border: var(--border-control) solid var(--color-control-border);
-  --nav-bar-arrow-size: calc(var(--text-control) * 1.6);
 
   /* Primary button ("Mes livres", "Réessayer") */
   --button-bg: var(--color-control-bg);
@@ -175,26 +206,51 @@
   --reading-padding: clamp(16px, 2.5vw, 48px);
   --reading-max-width: 1500px;
 
-  /* Top row: "Mes livres" button and page indicator */
-  --toolbar-height: calc(var(--button-min-height) + var(--space-4));
-  --toolbar-gap: var(--space-4);
+  /* Head line: screen title on the left, page indicator on the right. Both are status, never a
+     command, so both stay small next to the reading text. */
+  --page-title-size: clamp(20px, calc(var(--text-body) * 0.35), 44px);
+  --indicator-size: clamp(16px, calc(var(--text-body) * 0.25), 32px);
+  --head-padding: var(--space-2) var(--reading-padding);
 
-  /* Book list rows */
-  --row-min-height: calc(var(--text-body) * 1.8);
-  --row-padding-x: var(--reading-padding);
-  --row-border: var(--border-row) solid var(--color-fg-muted);
-  --row-current-bg: var(--color-marker);
-  --row-current-fg: var(--color-control-fg);
-  --row-current-stripe: var(--space-3) solid var(--color-control-border);
-  --row-hover-bg: var(--color-surface-raised);
-  --row-finished-fg: var(--color-fg-muted);
+  /* Book grid: three blocks per row, each carrying a title and its state. No cover: the title is
+     the whole of what identifies a book, so it gets the block's full width. */
+  --grid-columns: 3;
+  --grid-gap: var(--space-3);
+  /* Same axis as the reading text, on a narrow side padding of its own: the blocks are the content
+     here, so they take the width the margins give up. */
+  --grid-max-width: 1500px;
+  --grid-padding: clamp(8px, 1vw, 20px);
+  --book-block-bg: var(--color-surface-raised);
+  /* Same rule as the commands: pointing at a block deepens its fill by one tone, nothing moves */
+  --book-block-bg-hover: var(--color-surface-raised-strong);
+  --book-block-fg: var(--color-fg);
+  --book-block-border: var(--border-card) solid var(--color-fg);
+  --book-block-padding: var(--space-3);
+  --book-block-min-height: calc(var(--button-min-height) * 2);
+  /* The book in progress is the only rose block of the grid, so it also reads as "resume here" */
+  --book-block-current-bg: var(--color-marker);
+  /* The rose block deepens too, on the same rose ramp, and keeps its ink text at 8,3:1 */
+  --book-block-current-bg-hover: var(--color-rose-400);
+  /* Ink whatever the theme: the rose plate is the same in all three, and the text colour is not */
+  --book-block-current-fg: var(--color-ink-900);
+  --book-block-finished-fg: var(--color-fg-muted);
+  --book-block-finished-border: var(--border-card) solid var(--color-fg-muted);
+  /* Blocks are containers, so their text is sized against the column, never the viewport. The
+     factor is capped so a wide column does not cost a row of the grid. */
+  --card-title-size: clamp(var(--text-floor), 8cqi, var(--text-body));
+  /* Author on a lower step than the title: the block is read title first, and the two lines must
+     not compete at the same size once a narrow column caps both on `cqi`. */
+  --card-author-size: clamp(16px, 6cqi, var(--text-meta));
+  --card-meta-size: clamp(14px, 8cqi, var(--text-meta));
+  --card-gap: var(--space-2);
 
-  /* Status tag ("En cours", "Terminé") */
-  --tag-border: var(--border-row) solid currentColor;
-  --tag-padding: 0 var(--space-2);
+  /* Status tag ("Terminé") */
+  --tag-border: var(--border-card) solid currentColor;
+  --tag-padding: 0 var(--space-1);
 
   /* Focus ring, applied as inset box-shadow so it works on edge-to-edge bars */
-  --focus-shadow: inset 0 0 0 var(--focus-gap-width) var(--color-focus-gap),
+  --focus-shadow:
+    inset 0 0 0 var(--focus-gap-width) var(--color-focus-gap),
     inset 0 0 0 calc(var(--focus-gap-width) + var(--focus-ring-width)) var(--color-focus-ring);
 }
 
@@ -274,29 +330,38 @@ body {
 }
 * { box-sizing: border-box; }
 button { font: inherit; letter-spacing: inherit; cursor: pointer; }
-@media (pointer: fine) and (min-width: 1100px) { body, button { cursor: var(--cursor-large); } }
+@media (pointer: fine) and (min-width: 1100px) {
+  :root:not([data-density="admin"]) body { cursor: var(--cursor-large); }
+  :root:not([data-density="admin"]) button { cursor: var(--cursor-large-pointer); } }
 
-/* ---- Reader frame: bars left and right on wide screens, bottom row otherwise ------- */
+/* ---- Reader frame: content owns everything above the footer, there is no header ---- */
 .screen { display: none; height: 100%; }
-.screen[data-active] { display: grid; grid-template-columns: var(--nav-bar-width) minmax(0, 1fr) var(--nav-bar-width); grid-template-rows: 100%; }
+.screen[data-active] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.screen[data-active] > main { display: grid; grid-template-rows: minmax(0, 1fr); min-height: 0; }
+
+.nav-row { display: flex; }
+.nav-row .nav-bar { flex: 1; }
+.nav-row .nav-bar--exit { flex: 0 1 auto; }
+.nav-row .nav-bar--exit:only-child { flex: 1; }
+.nav-row > * + * { margin-left: calc(-1 * var(--border-control)); }
 
 .nav-bar {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2);
-  background: var(--nav-bar-bg); color: var(--nav-bar-fg);
-  border: 0; border-inline: var(--nav-bar-border);
+  display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+  background: var(--nav-bar-bg); color: var(--nav-bar-fg); border: var(--nav-bar-border);
   font-size: var(--text-control); font-weight: var(--weight-heading);
-  padding: var(--space-2); height: 100%; width: 100%; border-radius: var(--radius-none);
+  padding: var(--space-2); min-height: var(--nav-bar-height); border-radius: var(--radius-none);
 }
+.nav-bar--exit { padding: var(--space-2) var(--button-padding-x); }
 .nav-bar svg { width: var(--nav-bar-arrow-size); height: var(--nav-bar-arrow-size); fill: none; stroke: currentColor; stroke-width: 12; stroke-linecap: square; }
 .nav-bar span { font-size: var(--nav-bar-label-size); white-space: nowrap; }
 .nav-bar:hover { background: var(--nav-bar-bg-hover); }
 .nav-bar:active { background: var(--nav-bar-bg-active); color: var(--nav-bar-fg-active); }
 .nav-bar:focus-visible { outline: none; box-shadow: var(--focus-shadow); }
-.nav-bar[aria-disabled="true"] { background: var(--nav-bar-disabled-bg); color: var(--nav-bar-disabled-fg); border: var(--nav-bar-disabled-border); }
 
-.center { display: grid; grid-template-rows: var(--toolbar-height) minmax(0, 1fr); min-width: 0; height: 100%; }
-.toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--toolbar-gap); padding: var(--space-2) var(--reading-padding); }
-.page-indicator { font-size: var(--text-meta); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.page-head { display: flex; align-items: baseline; justify-content: flex-end; gap: var(--space-3); padding: var(--head-padding); max-width: var(--reading-max-width); width: 100%; margin: 0 auto; }
+.page-head--grid { max-width: var(--grid-max-width); }
+.page-title { margin: 0 auto 0 0; font-size: var(--page-title-size); font-weight: var(--weight-heading); line-height: var(--leading-tight); }
+.page-indicator { margin: 0; color: var(--color-fg-muted); font-size: var(--indicator-size); font-weight: var(--weight-heading); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .button {
   display: inline-flex; align-items: center; gap: var(--space-2);
@@ -308,44 +373,37 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
 .button:active { background: var(--button-bg-active); color: var(--button-fg-active); }
 .button:focus-visible { outline: none; box-shadow: var(--focus-shadow); }
 
-.reading { overflow: hidden; padding: 0 var(--reading-padding) var(--reading-padding); font-size: var(--text-body); line-height: var(--leading-body); max-width: var(--reading-max-width); width: 100%; justify-self: center; text-align: left; hyphens: auto; overflow-wrap: anywhere; user-select: none; }
+.reading { overflow: hidden; padding: var(--reading-padding); font-size: var(--text-body); line-height: var(--leading-body); max-width: var(--reading-max-width); width: 100%; justify-self: center; text-align: left; hyphens: auto; overflow-wrap: anywhere; user-select: none; }
 .reading p { margin: 0 0 var(--gap-paragraph); text-wrap: pretty; }
 .reading h2 { margin: 0 0 var(--gap-paragraph); font-size: var(--text-heading); font-weight: var(--weight-heading); line-height: var(--leading-tight); text-wrap: balance; }
 .reading .author, .reading .end { color: var(--color-fg-muted); font-size: var(--text-meta); }
 
-.list { overflow: hidden; padding: 0 var(--reading-padding) var(--reading-padding); }
-.row {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
-  width: 100%; min-height: var(--row-min-height); padding: var(--space-2) var(--row-padding-x);
-  background: transparent; color: var(--color-fg); border: 0; border-bottom: var(--row-border); border-left: var(--space-3) solid transparent;
-  text-align: left; font-size: var(--text-body); line-height: var(--leading-tight); font-weight: var(--weight-body); border-radius: var(--radius-none);
+/* ---- Book grid: three filled blocks per row, paged by whole rows ---------- */
+.book-grid-viewport { height: 100%; overflow: hidden; padding: 0 var(--reading-padding); max-width: var(--grid-max-width); width: 100%; margin: 0 auto; }
+.book-grid { display: grid; grid-template-columns: repeat(var(--grid-columns), 1fr); grid-auto-rows: 1fr; gap: var(--grid-gap); align-content: start; padding-top: var(--reading-padding); }
+.book-card {
+  container-type: inline-size; width: 100%; display: grid; align-content: start; gap: var(--card-gap);
+  min-height: var(--book-block-min-height); padding: var(--book-block-padding);
+  background: var(--book-block-bg); color: var(--book-block-fg); border: var(--book-block-border);
+  text-align: left; font-weight: var(--weight-body); line-height: var(--leading-tight); border-radius: var(--radius-none);
 }
-.row .title { min-width: 0; }
-.row .author { display: block; color: var(--color-fg-muted); font-size: var(--text-meta); }
-.row--current { background: var(--row-current-bg); color: var(--row-current-fg); border-left: var(--row-current-stripe); }
-.row--current .author { color: var(--row-current-fg); }
-.row--finished { color: var(--row-finished-fg); }
-@media (hover: hover) { .row:hover:not(.row--current) { background: var(--row-hover-bg); } }
-.row:active, .row--current:active { background: var(--color-control-bg-active); color: var(--color-control-fg-active); }
-.row:active .author { color: var(--color-control-fg-active); }
-.row:focus-visible { outline: none; box-shadow: var(--focus-shadow); }
-.tag { flex: none; font-size: var(--text-meta); border: var(--tag-border); padding: var(--tag-padding); white-space: nowrap; }
+.book-card .title { font-size: var(--card-title-size); overflow-wrap: anywhere; }
+.book-card .author { font-size: var(--card-author-size); overflow-wrap: anywhere; }
+.book-card--current { background: var(--book-block-current-bg); color: var(--book-block-current-fg); }
+.book-card--finished { color: var(--book-block-finished-fg); border: var(--book-block-finished-border); }
+.book-card:hover { background: var(--book-block-bg-hover); }
+.book-card--current:hover { background: var(--book-block-current-bg-hover); }
+.book-card--finished:hover { color: var(--book-block-fg); border: var(--book-block-border); }
+.book-card:active { background: var(--color-control-bg-active); color: var(--color-control-fg-active); }
+.book-card:focus-visible { outline: none; box-shadow: var(--focus-shadow); }
+.book-card .tag { justify-self: start; font-size: var(--card-meta-size); border: var(--tag-border); padding: var(--tag-padding); white-space: nowrap; }
 
-.status { display: grid; place-content: center; text-align: center; gap: var(--space-6); padding: var(--reading-padding); grid-column: 1 / -1; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.status { display: grid; place-content: center; text-align: center; gap: var(--space-6); padding: var(--reading-padding); grid-column: 1 / -1; grid-row: 1 / -1; }
 .status p { font-size: var(--text-body); line-height: var(--leading-body); margin: 0; max-width: 24ch; text-wrap: balance; }
 .status .button { justify-self: center; }
 
-/* Compact reader (< 1100px): bars become a bottom row of two buttons, labels horizontal */
-@media (max-width: 1099px) {
-  .screen[data-active] { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) var(--nav-bar-height); }
-  .center { grid-column: 1 / -1; grid-row: 1; }
-  .status { grid-row: 1 / -1; }
-  .nav-bar { flex-direction: row; border-inline: 0; border-top: var(--nav-bar-border); }
-  .nav-bar--prev { grid-row: 2; grid-column: 1; }
-  .nav-bar--next { grid-row: 2; grid-column: 2; border-left: var(--nav-bar-border); }
-  :root { --nav-bar-arrow-size: calc(var(--text-control) * 1.2); }
-}
-@media (max-width: 480px) { :root { --nav-bar-height: 80px; --toolbar-gap: var(--space-2); } }
+@media (max-width: 480px) { :root { --grid-gap: var(--space-2); } }
 
 /* ---- Tokens sheet ------------------------------------------------------- */
 .sheet { grid-column: 1 / -1; grid-row: 1 / -1; overflow: auto; padding: var(--space-4) clamp(16px, 3vw, 48px) 120px; font-family: var(--font-admin); font-weight: 400; font-size: 16px; line-height: 1.5; }
@@ -457,40 +515,43 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
 </div>
 
 <section class="screen" id="screen-reading" data-active aria-label="Lecture">
-  <button type="button" class="nav-bar nav-bar--prev" id="prev" aria-label="Page précédente">
-    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M70 10 L30 50 L70 90"/></svg><span>Précédent</span>
-  </button>
-  <div class="center">
-    <div class="toolbar">
-      <button type="button" class="button" data-goto="list">Mes livres</button>
-      <div class="page-indicator" aria-live="polite" id="indicator">Page 1 sur 1</div>
+  <div class="page-head"><p class="page-indicator" aria-live="polite" id="indicator">Page 1 sur 1</p></div>
+  <main class="reading" id="reading" lang="fr" aria-label="Texte du livre"></main>
+  <footer class="nav-footer">
+    <div class="nav-row nav-row--exit">
+      <button type="button" class="nav-bar nav-bar--exit" data-goto="list"><span>Mes livres</span></button>
+      <button type="button" class="nav-bar nav-bar--prev" id="prev" aria-label="Page précédente">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M70 10 L30 50 L70 90"/></svg><span>Précédent</span>
+      </button>
+      <button type="button" class="nav-bar nav-bar--next" id="next" aria-label="Page suivante">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 10 L70 50 L30 90"/></svg><span>Suivant</span>
+      </button>
     </div>
-    <main class="reading" id="reading" lang="fr" aria-label="Texte du livre"></main>
-  </div>
-  <button type="button" class="nav-bar nav-bar--next" id="next" aria-label="Page suivante">
-    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 10 L70 50 L30 90"/></svg><span>Suivant</span>
-  </button>
+  </footer>
 </section>
 
 <section class="screen" id="screen-list" aria-label="Mes livres">
-  <button type="button" class="nav-bar nav-bar--prev" aria-label="Titres précédents" aria-disabled="true">
-    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M70 10 L30 50 L70 90"/></svg><span>Précédent</span>
-  </button>
-  <div class="center">
-    <div class="toolbar">
-      <h1 class="page-indicator" style="margin:0">Mes livres</h1>
-      <div class="page-indicator">Titres 1 à 4 sur 7</div>
-    </div>
-    <div class="list">
-      <button type="button" class="row row--current" data-goto="reading"><span class="title">Le Tour du monde en quatre-vingts jours<span class="author">Jules Verne</span></span><span class="tag">En cours</span></button>
-      <button type="button" class="row row--finished"><span class="title">Boule de Suif<span class="author">Guy de Maupassant</span></span><span class="tag">Terminé</span></button>
-      <button type="button" class="row"><span class="title">Le Grand Meaulnes<span class="author">Alain-Fournier</span></span></button>
-      <button type="button" class="row"><span class="title">La Guerre des boutons<span class="author">Louis Pergaud</span></span></button>
-    </div>
+  <div class="page-head page-head--grid">
+    <h1 class="page-title">Mes livres</h1>
+    <p class="page-indicator">Titres 1 à 6 sur 7</p>
   </div>
-  <button type="button" class="nav-bar nav-bar--next" aria-label="Titres suivants">
-    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 10 L70 50 L30 90"/></svg><span>Suivant</span>
-  </button>
+  <main class="book-grid-viewport">
+    <div class="book-grid">
+    <button type="button" class="book-card book-card--current" data-goto="reading"><span class="title">Le Tour du monde en quatre-vingts jours</span><span class="author">Jules Verne</span><span class="tag">En cours</span></button>
+    <button type="button" class="book-card book-card--finished"><span class="title">Boule de Suif</span><span class="author">Guy de Maupassant</span><span class="tag">Terminé</span></button>
+    <button type="button" class="book-card"><span class="title">Le Grand Meaulnes</span><span class="author">Alain-Fournier</span></button>
+    <button type="button" class="book-card"><span class="title">La Guerre des boutons</span><span class="author">Louis Pergaud</span></button>
+    <button type="button" class="book-card"><span class="title">Vingt mille lieues sous les mers</span><span class="author">Jules Verne</span></button>
+    <button type="button" class="book-card"><span class="title">Une vie</span><span class="author">Guy de Maupassant</span></button>
+    </div>
+  </main>
+  <footer class="nav-footer">
+    <div class="nav-row">
+      <button type="button" class="nav-bar nav-bar--next" aria-label="Titres suivants">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 10 L70 50 L30 90"/></svg><span>Suivant</span>
+      </button>
+    </div>
+  </footer>
 </section>
 
 <section class="screen" id="screen-status" aria-label="Service indisponible">
@@ -636,8 +697,9 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
     reading.innerHTML = '';
     pages[current].forEach(function (s) { reading.appendChild(makeNode(s.b, s.b.text.split(' ').slice(s.from, s.to).join(' '))); });
     indicator.textContent = 'Page ' + (current + 1) + ' sur ' + pages.length;
-    document.getElementById('prev').setAttribute('aria-disabled', current === 0 ? 'true' : 'false');
-    document.getElementById('next').setAttribute('aria-disabled', current === pages.length - 1 ? 'true' : 'false');
+    // A bar that leads nowhere is removed, not disabled.
+    document.getElementById('prev').hidden = current === 0;
+    document.getElementById('next').hidden = current === pages.length - 1;
   }
 
   /* Anti-rebond: a command within 400 ms of the previous one is ignored (double clicks, held keys). */

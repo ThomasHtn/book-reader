@@ -4,15 +4,10 @@ import { NavBar } from './nav-bar';
 
 @Component({
   imports: [NavBar],
-  template: `<app-nav-bar
-    [direction]="direction()"
-    [disabled]="disabled()"
-    (activate)="activations = activations + 1"
-  />`,
+  template: `<app-nav-bar [direction]="direction()" (activate)="activations = activations + 1" />`,
 })
 class Host {
   public readonly direction = signal<'previous' | 'next'>('next');
-  public readonly disabled = signal(false);
   public activations = 0;
 }
 
@@ -44,21 +39,9 @@ describe('NavBar', () => {
     expect(button.classList).toContain('nav-bar--prev');
   });
 
-  it('emits on click while enabled', () => {
+  it('emits on click', () => {
     const { button, host } = render();
     button.click();
     expect(host.activations).toBe(1);
-  });
-
-  it('stays in place and focusable when disabled, but does nothing', () => {
-    const { fixture, button, host } = render();
-    host.disabled.set(true);
-    fixture.detectChanges();
-
-    button.click();
-
-    expect(host.activations).toBe(0);
-    expect(button.disabled).toBe(false);
-    expect(button.getAttribute('aria-disabled')).toBe('true');
   });
 });

@@ -41,41 +41,81 @@ button {
   cursor: pointer;
 }
 
+/* Reader only: the backoffice is for a sighted helper and keeps the system cursor */
 @media (pointer: fine) and (min-width: 1100px) {
-  body,
-  button {
+  :root:not([data-density='admin']) body {
     cursor: var(--cursor-large);
+  }
+
+  /* Everything that can be pressed carries the hand; the arrow is left to the page and its text */
+  :root:not([data-density='admin']) button {
+    cursor: var(--cursor-large-pointer);
   }
 }
 
 app-root,
-app-nav-bar {
+app-nav-bar,
+app-book-card {
   display: contents;
 }
 
-/* ---- Screen frame: bars left and right on wide screens, bottom row below 1100px ---- */
+/* ---- Screen frame: content owns every pixel above the footer, there is no header ---- */
 .screen {
   display: grid;
-  grid-template-columns: var(--nav-bar-width) minmax(0, 1fr) var(--nav-bar-width);
-  grid-template-rows: 100%;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
+}
+
+/* One bounded track: without it the reading surface takes its content height and runs under the
+   footer, and `justify-self` on `.paged` has nothing to centre against. */
+.screen > main {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+/* Commands: "Mes livres" takes its text width, "Précédent" and "Suivant" share the rest */
+.nav-row {
+  display: flex;
+}
+
+/* The bars share whatever is left; a bar that leads nowhere is not rendered at all, so the row
+   holds one or two of them. */
+.nav-row .nav-bar {
+  flex: 1;
+}
+
+/* "Mes livres" takes its label's width, unless the book fits one page and it is the only command */
+.nav-row .nav-bar--exit {
+  flex: 0 1 auto;
+}
+
+.nav-row .nav-bar--exit:only-child {
+  flex: 1;
+}
+
+/* "Mes livres" is an exit, not a page turn: no chevron, and only the width its label needs */
+.nav-bar--exit {
+  padding: var(--space-2) var(--button-padding-x);
+}
+
+/* Collapse the adjacent ink edges into a single rule between two bars */
+.nav-row > * + * {
+  margin-left: calc(-1 * var(--border-control));
 }
 
 .nav-bar {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   background: var(--nav-bar-bg);
   color: var(--nav-bar-fg);
-  border: 0;
-  border-inline: var(--nav-bar-border);
+  border: var(--nav-bar-border);
   font-size: var(--text-control);
   font-weight: var(--weight-heading);
   padding: var(--space-2);
-  height: 100%;
-  width: 100%;
+  min-height: var(--nav-bar-height);
   border-radius: var(--radius-none);
 }
 
@@ -107,31 +147,37 @@ app-nav-bar {
   box-shadow: var(--focus-shadow);
 }
 
-.nav-bar[aria-disabled='true'] {
-  background: var(--nav-bar-disabled-bg);
-  color: var(--nav-bar-disabled-fg);
-  border: var(--nav-bar-disabled-border);
-  cursor: default;
-}
-
-.center {
-  display: grid;
-  grid-template-rows: var(--toolbar-height) minmax(0, 1fr);
-  min-width: 0;
-  height: 100%;
-}
-
-.toolbar {
+/* Head line above the content: title on the left, "Page 12 sur 840" on the right. With no title the
+   indicator stays right, which is why the row is flush-end and the title pushes itself over. */
+.page-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--toolbar-gap);
-  padding: var(--space-2) var(--reading-padding);
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--head-padding);
+  /* Same axis as the content below, or the title floats away from what it names */
+  max-width: var(--reading-max-width);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page-head--grid {
+  max-width: var(--grid-max-width);
+  /* Head and grid share one side padding, or the title stops sitting over the first block */
+  padding-inline: var(--grid-padding);
+}
+
+.page-title {
+  margin: 0 auto 0 0;
+  font-size: var(--page-title-size);
+  font-weight: var(--weight-heading);
+  line-height: var(--leading-tight);
 }
 
 .page-indicator {
   margin: 0;
-  font-size: var(--text-meta);
+  color: var(--color-fg-muted);
+  font-size: var(--indicator-size);
   font-weight: var(--weight-heading);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -166,12 +212,48 @@ app-nav-bar {
   box-shadow: var(--focus-shadow);
 }
 
+/* Only entry point to the backoffice from the reader side (decision log, 22 September 2026):
+   discreet on purpose, meant for the sighted caregiver, not the low-vision reader; pinned to the
+   actual screen corner, outside the bounded content column, and kept small. Same edge margins as
+   `page-head--grid` (`--space-2` block, `--grid-padding` inline), so it lines up with the title row
+   instead of floating at its own distance from the corner. */
+.button--settings {
+  position: fixed;
+  top: var(--space-2);
+  right: var(--grid-padding);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-4);
+  height: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--color-fg-muted);
+  border-radius: var(--radius-none);
+}
+
+.button--settings:hover {
+  color: var(--color-fg);
+}
+
+.button--settings:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-shadow);
+}
+
+/* Fixed size, not tied to the font tier: this is chrome for the caregiver, not reading content */
+.button--settings svg {
+  width: var(--space-3);
+  height: var(--space-3);
+  fill: currentColor;
+}
+
 /* ---- Paginated surfaces: one page is one column of exactly the viewport width ---- */
 .paged {
   position: relative;
   overflow: hidden;
   min-height: 0;
-  padding: 0 var(--reading-padding) var(--reading-padding);
+  padding: var(--reading-padding);
   max-width: var(--reading-max-width);
   width: 100%;
   justify-self: center;
@@ -189,7 +271,7 @@ app-nav-bar {
 /* Twin container used to count pages of other chapters without touching the visible one. */
 .paged-viewport--measure {
   position: absolute;
-  inset: 0 var(--reading-padding) var(--reading-padding);
+  inset: var(--reading-padding);
   height: auto;
   visibility: hidden;
 }
@@ -244,76 +326,102 @@ app-nav-bar {
   border: 0;
 }
 
-/* ---- Book list ---- */
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
+/* ---- Book grid: three blocks per row, paged by whole rows.
+   Every class is prefixed: unprefixed names such as `grid` collide with Tailwind in /admin. ---- */
+.book-grid-viewport {
+  height: 100%;
+  overflow: hidden;
+  padding: 0 var(--grid-padding);
+  max-width: var(--grid-max-width);
   width: 100%;
-  min-height: var(--row-min-height);
-  padding: var(--space-2) var(--row-padding-x);
-  background: transparent;
-  color: var(--color-fg);
-  border: 0;
-  border-bottom: var(--row-border);
-  border-left: var(--space-3) solid transparent;
+  margin: 0 auto;
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  /* `1fr` on a grid of undefined height gives every row the height of the tallest one, so all the
+     blocks end up the same size whatever the length of their title. */
+  grid-auto-rows: 1fr;
+  gap: var(--grid-gap);
+  align-content: start;
+  padding-top: var(--reading-padding);
+}
+
+/* Blocks of the other pages keep their box, so the measurement stays valid, but stay out of sight:
+   without this the top of the next row shows under the current page. */
+.book-grid > [inert] {
+  visibility: hidden;
+}
+
+/* One book, one filled block: title at the top, state at the bottom, nothing else. */
+.book-card {
+  container-type: inline-size;
+  width: 100%;
+  display: grid;
+  align-content: start;
+  gap: var(--card-gap);
+  min-height: var(--book-block-min-height);
+  padding: var(--book-block-padding);
+  background: var(--book-block-bg);
+  color: var(--book-block-fg);
+  border: var(--book-block-border);
   text-align: left;
-  font-size: var(--text-body);
-  line-height: var(--leading-tight);
   font-weight: var(--weight-body);
+  line-height: var(--leading-tight);
   border-radius: var(--radius-none);
-  break-inside: avoid;
 }
 
-.row .title {
-  min-width: 0;
+.book-card .title {
+  font-size: var(--card-title-size);
+  overflow-wrap: anywhere;
 }
 
-.row .author {
-  display: block;
-  color: var(--color-fg-muted);
-  font-size: var(--text-meta);
+/* Same ink as the title, one size down: the muted ink would fall under 7:1 on the block fill. */
+.book-card .author {
+  font-size: var(--card-author-size);
+  overflow-wrap: anywhere;
 }
 
-.row--current {
-  background: var(--row-current-bg);
-  color: var(--row-current-fg);
-  border-left: var(--row-current-stripe);
+.book-card--current {
+  background: var(--book-block-current-bg);
+  color: var(--book-block-current-fg);
 }
 
-.row--current .author {
-  color: var(--row-current-fg);
+.book-card--finished {
+  color: var(--book-block-finished-fg);
+  border: var(--book-block-finished-border);
 }
 
-.row--finished {
-  color: var(--row-finished-fg);
+/* Pointing at a block deepens its fill only: no movement, no edge change, nothing revealed. */
+.book-card:hover {
+  background: var(--book-block-bg-hover);
 }
 
-@media (hover: hover) {
-  .row:hover:not(.row--current) {
-    background: var(--row-hover-bg);
-  }
+.book-card--current:hover {
+  background: var(--book-block-current-bg-hover);
 }
 
-.row:active,
-.row--current:active {
+/* The deeper fill would take the muted ink of a finished book under 7:1, so hovering it restores
+   the full-strength text and edge. */
+.book-card--finished:hover {
+  color: var(--book-block-fg);
+  border: var(--book-block-border);
+}
+
+.book-card:active {
   background: var(--color-control-bg-active);
   color: var(--color-control-fg-active);
 }
 
-.row:active .author {
-  color: var(--color-control-fg-active);
-}
-
-.row:focus-visible {
+.book-card:focus-visible {
   outline: none;
   box-shadow: var(--focus-shadow);
 }
 
-.tag {
-  flex: none;
-  font-size: var(--text-meta);
+.book-card .tag {
+  justify-self: start;
+  font-size: var(--card-meta-size);
   border: var(--tag-border);
   padding: var(--tag-padding);
   white-space: nowrap;
@@ -342,43 +450,9 @@ app-nav-bar {
   justify-self: center;
 }
 
-/* ---- Compact layout: bars become a bottom row ---- */
-@media (max-width: 1099px) {
-  .screen {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: minmax(0, 1fr) var(--nav-bar-height);
-  }
-
-  .center {
-    grid-column: 1 / -1;
-    grid-row: 1;
-  }
-
-  .nav-bar {
-    flex-direction: row;
-    border-inline: 0;
-    border-top: var(--nav-bar-border);
-  }
-
-  .nav-bar--prev {
-    grid-row: 2;
-    grid-column: 1;
-  }
-
-  .nav-bar--next {
-    grid-row: 2;
-    grid-column: 2;
-    border-left: var(--nav-bar-border);
-  }
-
-  :root {
-    --nav-bar-arrow-size: calc(var(--text-control) * 1.2);
-  }
-}
-
+/* Three per row stays, but the chevron labels drop below the phone breakpoint */
 @media (max-width: 480px) {
   :root {
-    --nav-bar-height: 80px;
-    --toolbar-gap: var(--space-2);
+    --grid-gap: var(--space-2);
   }
 }

@@ -1,6 +1,6 @@
 # Design system de la liseuse
 
-Version 2.0, 17 septembre 2026. Complète `docs/specification.md`. Source de vérité des valeurs :
+Version 3.0, 22 septembre 2026. Complète `docs/specification.md`. Source de vérité des valeurs :
 `docs/design-system/tokens.css`, à copier tel quel dans `frontend/src/styles/tokens.css`. Aperçu en
 taille réelle : `docs/design-system/preview.html` (ancres `#reading`, `#list`, `#status`, `#admin`).
 
@@ -16,8 +16,8 @@ taille réelle : `docs/design-system/preview.html` (ancres `#reading`, `#list`, 
 | Police | Luciole 700 | Atkinson Hyperlegible Next 400 et 700 |
 | Schéma de couleurs | thème choisi dans le backoffice | système (`prefers-color-scheme`) |
 
-Commun : palette (neutres chauds, tangerine pour les commandes), tokens en trois couches, aucune
-bibliothèque de composants.
+Commun : palette (neutres chauds, rose pour le seul repère "en cours"), tokens en trois couches,
+aucune bibliothèque de composants.
 
 ## 2. Principes de la liseuse
 
@@ -36,12 +36,18 @@ variante sombre. Aucune valeur en dur dans un composant.
 
 Décisions de couleur :
 
-- une seule couleur d'accent, la tangerine `#ffa03c` avec texte encre (9,1:1), identique dans les
-  trois thèmes ; survol un ton plus foncé (7,8:1) ; état pressé inversé, texte tangerine sur encre ;
-- bordure encre de 6 px sur les commandes : sur fond crème la tangerine ne se détache que de 1,8:1 ;
-- le repère "en cours" est un fond tangerine plein, une teinte de surface serait imperceptible ;
-- thème jaune sur noir : la proximité jaune et tangerine est à vérifier au calibrage, la menthe
-  `#2fe0b8` est l'accent de remplacement prévu.
+- les commandes sont posées sur la surface haute du thème, le beige `#e3dccb` en clair, avec le
+  texte du thème (13,5:1) ; survol un ton plus soutenu (10,8:1) ; état pressé entièrement inversé,
+  couleur de page sur couleur de texte ;
+- fond, libellé et filet d'une commande dérivent tous de la paire fond/texte du thème, donc les
+  trois thèmes restent lisibles sans règle particulière ;
+- bordure de 2 px sur les commandes : leur fond ne se détache du papier que de 1,2:1, c'est le filet
+  qui les pose, à 16,1:1 ;
+- le rose `#ffa6c1` ne sert plus qu'au repère "en cours", avec texte encre dans les trois thèmes
+  (10,1:1) : c'est la seule surface colorée de la liseuse, donc elle se repère sans la lire ;
+- le repère "en cours" est un bloc rose plein, une teinte de surface serait imperceptible ;
+- thème jaune sur noir : le rose et l'ambre ne se confondent pas, le rose n'y désigne que les
+  commandes et le bloc du livre en cours.
 
 Contrastes mesurés, liseuse (cible 7:1) :
 
@@ -49,8 +55,10 @@ Contrastes mesurés, liseuse (cible 7:1) :
 |---|---|---|---|
 | texte sur fond | 16,1 | 17,0 | 15,2 |
 | texte atténué sur fond | 7,7 | 10,1 | 9,9 |
-| libellé sur commande / survolée / pressée | 9,1 / 7,8 / 9,1 | idem | idem |
-| commande ou sa bordure sur fond (cible 3:1) | 16,1 | 9,4 | 10,4 |
+| libellé sur commande / survolée / pressée | 13,5 / 10,8 / 16,1 | 13,5 / 10,2 / 17,0 | 11,5 / 8,2 / 15,2 |
+| titre sur bloc survolé | 10,8 | 10,2 | 8,2 |
+| titre sur bloc en cours, au repos / survolé | 10,1 / 8,3 | 10,1 / 8,3 | 10,1 / 8,3 |
+| bordure de commande sur fond (cible 3:1) | 16,1 | 17,0 | 15,2 |
 
 Backoffice (cible 4,5:1) : texte sur fond 16,1 clair et 17,0 sombre ; texte d'accent sur accent 5,6 et
 10,5 ; états succès, avertissement, danger sur fond au moins 5,2. À recalculer si une primitive change.
@@ -79,23 +87,33 @@ la mise à l'échelle Windows (1536 px CSS à 125 %). En dessous, proportionnel 
 | 140 | 140 | 112 | 84 | 44 |
 
 Dérivés : titre 1,15 x corps ; commandes 0,55 x corps entre 20 et 72 px ; métadonnées 0,5 x corps
-entre 16 et 64 px. Capacité sur 1920 x 1080 (barres 300 px, marges 48 px) : 44, 29, 21 et 15
-caractères par ligne pour 12, 8, 6 et 4 lignes, du palier 48 au palier 140.
+entre 16 et 64 px. Capacité en caractères par ligne sur 1920 x 1080 : à recalculer au calibrage,
+la largeur de lecture utile a changé avec le passage des barres latérales au pied de page (section 5).
 
 ## 5. Mise en page
 
-Liseuse :
+Liseuse, à toute largeur : aucun en-tête, seulement une ligne de tête, sans fond ni filet, portant le
+titre de l'écran à gauche et l'indicateur de page à droite, tous deux petits. Elle est calée sur la
+largeur du contenu qu'elle surmonte, sans quoi le titre flotterait loin de ce qu'il nomme. L'écran de
+lecture n'y met pas de titre : le livre se nomme lui-même sur sa page de titre. Le contenu prend tout
+le reste, et le pied ne porte que des commandes.
+En lecture, trois commandes, "Mes livres" à la largeur de son libellé puis "Précédent" et "Suivant"
+qui se partagent le reste ; sur "Mes livres", deux moitiés égales. Texte et grille de livres centrés
+sur 1 500 px maximum.
 
-| Largeur | Disposition |
-|---|---|
-| 1100 px et plus | barres verticales de 300 px de chaque côté, texte centré sur 1 500 px maximum |
-| moins de 1100 px | barres en bas, côte à côte, 96 px de haut, texte pleine largeur |
-| moins de 480 px | barres de 80 px, marges de 16 px |
+Marges de lecture `clamp(16px, 2.5vw, 48px)`, marges de la grille `clamp(8px, 1vw, 20px)` : les blocs
+sont le contenu de cet écran, donc ils prennent la place que les marges laissent. Curseur agrandi seulement dans la liseuse, sur
+`pointer: fine` à partir de 1100 px, taille constante sur toute la page pour ne pas
+perdre le pointeur : flèche sur la page et son texte, main sur tout ce qui se
+presse, blocs comme barres, même noir cerné de blanc et même 64 px, `pointer` en repli. Jamais dans le backoffice, qui s'adresse à une personne
+voyante : la règle est gardée par `:root:not([data-density='admin'])`. Espacement base 8 px. Bordure de 2 px sur les quatre côtés
+d'une commande ; deux barres voisines font se chevaucher leurs filets pour n'en donner qu'un. Même
+bordure de 2 px sur les blocs de la grille, que la gouttière de 24 px sépare déjà.
 
-Marges de lecture `clamp(16px, 2.5vw, 48px)`. Curseur agrandi seulement sur `pointer: fine` à partir
-de 1100 px. Espacement base 8 px. Bordures de 6 px (commandes) et 4 px (séparateurs, étiquettes).
-
-Backoffice : sous 900 px, en-tête de 64 px, une colonne, gouttière 16 px, barre d'onglets fixe en bas
+Backoffice : aucune contrainte de basse vision ne s'y applique, ni curseur agrandi, ni paliers, ni
+contraste 7:1. Les classes de la liseuse sont toutes préfixées (`book-grid`, `book-card`,
+`book-cover`) : un nom nu comme `grid` entrerait en collision avec les utilitaires Tailwind du
+backoffice. Sous 900 px, en-tête de 64 px, une colonne, gouttière 16 px, barre d'onglets fixe en bas
 (Catalogue, Bibliothèque, Dépôt, Réglages) au-dessus de la zone de sécurité ; à partir de 900 px,
 rail de 240 px à gauche, contenu limité à 960 px. Rayons 6 et 10 px, contrôles de 44 px, une ombre en
 clair, aucune en sombre.
@@ -110,12 +128,18 @@ anti-rebond : cahier des charges 5.1. Aucun geste tactile requis.
 
 | Composant | Spécification |
 |---|---|
-| Barre `nav-bar` | collée au bord ; chevron SVG (1,6 x `--text-control`, trait 12) puis libellé horizontal en `--nav-bar-label-size` sur une ligne ; bordure encre 6 px côté texte. Défaut tangerine, survol plus foncé, pressé inversé. Désactivée (première ou dernière page) : fond de page, texte atténué, bordure encre sur les quatre côtés, `aria-disabled="true"`, place inchangée |
-| Bouton `button` | "Mes livres", "Réessayer" : hauteur `max(56px, 2 x --text-control)`, mêmes couleurs et états que la barre |
+| Pied `nav-footer` | pied de `screen`, commandes seules : une rangée `nav-row` en flex. Les barres se partagent la place (`flex: 1`), "Mes livres" prend celle de son libellé, ou toute la largeur s'il reste seul. Une barre qui ne mène nulle part n'est pas rendue, et sur "Mes livres" le pied disparaît entièrement quand tout tient sur une page |
+| Ligne de tête `page-head` | première rangée de `screen` ; rangée alignée à droite, centrée sur `--reading-max-width` ou, avec `page-head--grid`, sur `--grid-max-width`. Le titre s'y pousse à gauche tout seul, donc l'indicateur reste à droite quand il n'y a pas de titre |
+| Titre `page-title` | `--page-title-size` (entre 20 et 35 px, calé sur le palier 100 sans en dépendre : c'est du décor, pas du texte de lecture). Sur "Mes livres" seulement |
+| Indicateur `page-indicator` | `--indicator-size` (un quart du corps, entre 16 et 32 px), texte atténué, chiffres tabulaires, `aria-live="polite"`, aucun filet. Porte "Page 12 sur 840" en lecture, "Titres 1 à 6 sur 7" sur la liste. Volontairement discret : c'est un état, jamais une commande |
+| Barre `nav-bar` | hauteur minimale `1,4 x --button-min-height` ; chevron SVG (1,2 x `--text-control`, trait 12) puis libellé en `--nav-bar-label-size` sur une ligne ; bordure encre de 2 px sur les quatre côtés, celles de deux barres voisines se chevauchant. Défaut beige, survol un ton plus soutenu, pressé inversé. Aucun état désactivé : sur la première ou la dernière page, la barre inutile est retirée du DOM et celle qui reste occupe la place libérée |
+| Sortie `nav-bar--exit` | "Mes livres" en lecture : une `nav-bar` sans chevron, large de son libellé plus `--button-padding-x` |
+| Bouton `button` | "Réessayer" : hauteur `max(56px, 2 x --text-control)`, mêmes couleurs et états que la barre |
 | Surface `reading` | 1 500 px max centrée, `overflow: hidden`, `column-gap: 0`, marges par `padding` ; corps `--text-body`, aligné à gauche, `white-space: pre-line`, `hyphens: auto`, `overflow-wrap: anywhere`, `user-select: none` ; titres `--text-heading`, `text-wrap: balance`, `break-after: avoid` ; auteur et "Fin du livre" en `--text-meta` atténué |
-| Barre d'outils `toolbar` | "Mes livres" à gauche, "Page 12 sur 840" à droite en `--text-meta`, chiffres tabulaires, `aria-live="polite"` |
-| Ligne `row` | bouton pleine largeur, hauteur minimale 1,8 x `--text-body`, titre en `--text-body`, auteur dessous en `--text-meta`, séparateur 4 px, `break-inside: avoid`. En cours (première ligne, non terminée) : fond tangerine, texte encre, bande gauche encre de 24 px. Terminé : texte atténué, étiquette "Terminé". Survol sous `@media (hover: hover)` seulement |
-| Étiquette `tag` | `--text-meta`, bordure 4 px `currentColor`, jamais en capitales |
+| Grille `book-grid` | trois colonnes égales, gouttière 24 px, 1 500 px de large au maximum, calée en haut. La ligne de tête partage ses marges latérales, sans quoi le titre cesse de surmonter le premier bloc. `grid-auto-rows: 1fr` : sur une grille de hauteur indéfinie, toutes les rangées prennent la hauteur de la plus grande, donc tous les blocs font la même taille quelle que soit la longueur de leur titre. Paginée par rangées entières : une rangée n'est jamais coupée, et une rangée plus haute que l'écran occupe sa propre page. Les blocs des autres pages gardent leur boîte, pour que la mesure reste valable, mais passent en `visibility: hidden` |
+| Bloc `book-card` | le livre entier tient dans un aplat : titre en `--card-title-size`, auteur en `--card-author-size` puis, s'il y a lieu, l'étiquette d'état, groupés en haut à gauche. Ni couverture. L'auteur garde l'encre pleine du titre et se distingue par la seule taille : l'encre atténuée tomberait sous 7:1 sur l'aplat. Fond de surface, filet encre de 2 px, retrait interne de 24 px, hauteur minimale `2 x --button-min-height`, alignés à gauche. Conteneur de requête (`container-type: inline-size`), donc son texte se mesure sur la colonne et jamais sur la fenêtre ; le titre est plafonné à `8cqi` pour qu'une colonne large ne coûte pas une rangée de la grille, l'auteur à `6cqi` pour que les deux lignes ne se retrouvent jamais à la même taille sur une colonne étroite. En cours : bloc rose, seul rose de la grille. Terminé : texte et filet atténués. Survol : fond un ton plus soutenu, rose 400 pour le bloc en cours, et un bloc terminé retrouve son texte et son filet pleins, l'ink atténué passant sous 7:1 sur ce fond ; ni filet épaissi ni déplacement, la géométrie ne bouge pas. Pressé : inversé |
+| Étiquette `tag` | `--card-meta-size`, bordure 2 px `currentColor`, jamais en capitales. "En cours" et "Terminé" : la couleur seule ne suffit jamais à porter l'état |
+| Aperçu `a-preview` (backoffice) | rendu réel du palier et du thème, réduit à la boîte : la boîte est un conteneur et le texte est dimensionné en `cqi`, sinon il se mesure sur la fenêtre entière et déborde |
 | Écran d'état `status` | une phrase centrée en `--text-body`, 24 caractères par ligne maximum, un bouton |
 
 ## 8. Composants du backoffice
