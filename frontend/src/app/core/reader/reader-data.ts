@@ -42,7 +42,6 @@ export class ReaderData {
       const settings = this.settings();
       if (settings) {
         root.dataset['tier'] = String(settings.fontTier);
-        root.dataset['theme'] = settings.theme;
       }
     });
     const timer = setInterval(() => this.retry(), POLL_INTERVAL_MS);

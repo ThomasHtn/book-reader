@@ -14,14 +14,20 @@ export interface GridPages {
 const ROW_TOLERANCE_PX = 1;
 
 /**
- * Packs cards into pages of at most `viewportHeight`, never splitting a row and never truncating a
- * card: a row taller than the viewport gets a page of its own rather than being cut.
+ * Packs cards into pages of at most `viewportHeight` and at most `maxRowsPerPage` rows, never
+ * splitting a row and never truncating a card: a row taller than the viewport gets a page of its
+ * own rather than being cut.
  *
  * @param items - Cards in document order.
  * @param viewportHeight - Usable height of one page.
+ * @param maxRowsPerPage - Row count above which a page breaks even if more would still fit.
  * @returns The scroll offset of every page and the page index of every card.
  */
-export function paginateGrid(items: readonly GridItem[], viewportHeight: number): GridPages {
+export function paginateGrid(
+  items: readonly GridItem[],
+  viewportHeight: number,
+  maxRowsPerPage = Infinity,
+): GridPages {
   if (items.length === 0 || viewportHeight <= 0) {
     return { offsets: [0], pages: items.map(() => 0) };
   }
@@ -44,12 +50,16 @@ export function paginateGrid(items: readonly GridItem[], viewportHeight: number)
   const offsets = [0];
   const pages = items.map(() => 0);
   let page = 0;
+  let rowsOnPage = 0;
   for (const row of rows) {
-    if (row.top > start && row.bottom - start > viewportHeight) {
+    const overflows = row.top > start && row.bottom - start > viewportHeight;
+    if (overflows || rowsOnPage >= maxRowsPerPage) {
       page += 1;
       start = row.top;
+      rowsOnPage = 0;
       offsets.push(row.top - firstTop);
     }
+    rowsOnPage += 1;
     for (const index of row.items) {
       pages[index] = page;
     }

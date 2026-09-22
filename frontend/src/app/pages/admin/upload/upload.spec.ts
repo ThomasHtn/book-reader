@@ -25,9 +25,9 @@ describe('Upload', () => {
     await settle();
     const element = fixture.nativeElement as HTMLElement;
     const send = () => element.querySelector<HTMLButtonElement>('button.a-btn--primary')!;
-    const choose = async (file: File) => {
+    const choose = async (...files: File[]) => {
       const input = element.querySelector<HTMLInputElement>('input[type="file"]')!;
-      Object.defineProperty(input, 'files', { value: [file], configurable: true });
+      Object.defineProperty(input, 'files', { value: files, configurable: true });
       input.dispatchEvent(new Event('change'));
       await settle();
     };
@@ -39,6 +39,7 @@ describe('Upload', () => {
 
     const input = element.querySelector<HTMLInputElement>('input[type="file"]')!;
     expect(input.accept).toContain('.epub');
+    expect(input.multiple).toBe(true);
     expect(element.querySelector(`label[for="${input.id}"]`)).not.toBeNull();
     expect(send().disabled).toBe(true);
   });
@@ -61,6 +62,54 @@ describe('Upload', () => {
     await settle();
 
     expect(element.textContent).toContain('Livre ajouté et activé : Le Horla');
+  });
+
+  it('sends several chosen files, one request each, then confirms all of them', async () => {
+    const { element, settle, send, choose } = await render();
+    const first = new File(['PK'], 'horla.epub', { type: 'application/epub+zip' });
+    const second = new File(['PK'], 'boule-de-suif.epub', { type: 'application/epub+zip' });
+
+    await choose(first, second);
+    expect(element.textContent).toContain('2 fichiers sélectionnés');
+    send().click();
+    await settle();
+
+    const firstRequest = http.expectOne(API_ENDPOINTS.admin.upload);
+    expect((firstRequest.request.body as FormData).get('file')).toBe(first);
+    firstRequest.flush({ id: 'b1', title: 'Le Horla' }, { status: 201, statusText: 'Created' });
+    await settle();
+
+    const secondRequest = http.expectOne(API_ENDPOINTS.admin.upload);
+    expect((secondRequest.request.body as FormData).get('file')).toBe(second);
+    secondRequest.flush(
+      { id: 'b2', title: 'Boule de suif' },
+      { status: 201, statusText: 'Created' },
+    );
+    await settle();
+
+    expect(element.textContent).toContain('2 livres ajoutés et activés : Le Horla, Boule de suif');
+  });
+
+  it('reports per-file failures without losing the successful uploads', async () => {
+    const { element, settle, send, choose } = await render();
+    const good = new File(['PK'], 'horla.epub', { type: 'application/epub+zip' });
+    const bad = new File(['x'], 'big.epub');
+
+    await choose(good, bad);
+    send().click();
+    await settle();
+
+    http
+      .expectOne(API_ENDPOINTS.admin.upload)
+      .flush({ id: 'b1', title: 'Le Horla' }, { status: 201, statusText: 'Created' });
+    await settle();
+    http
+      .expectOne(API_ENDPOINTS.admin.upload)
+      .flush({ code: 'EPUB_TOO_LARGE' }, { status: 413, statusText: 'Too large' });
+    await settle();
+
+    expect(element.textContent).toContain('1 livre(s) ajouté(s) : Le Horla');
+    expect(element.textContent).toContain('Échec : big.epub (le fichier dépasse 20 Mo)');
   });
 
   it('explains a refused file', async () => {

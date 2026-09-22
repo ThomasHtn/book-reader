@@ -2,6 +2,7 @@ import { BookSummary } from '@core/http/api.model';
 import {
   ReadingProgress,
   parseProgress,
+  readingProgressPercent,
   resumableBookId,
   sortLibrary,
   startPosition,
@@ -55,6 +56,13 @@ describe('startPosition', () => {
 
   it('starts at the beginning when the block index exceeds the book', () => {
     expect(startPosition(progress('t'), 3)).toEqual({ blockIndex: 0, charOffset: 0 });
+  });
+});
+
+describe('readingProgressPercent', () => {
+  it('rounds the current block over the total', () => {
+    expect(readingProgressPercent({ blockIndex: 0, charOffset: 0 }, 5)).toBe(20);
+    expect(readingProgressPercent({ blockIndex: 4, charOffset: 0 }, 5)).toBe(100);
   });
 });
 

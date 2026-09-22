@@ -33,30 +33,28 @@ describe('ReaderData', () => {
   afterEach(() => {
     vi.useRealTimers();
     document.documentElement.removeAttribute('data-tier');
-    document.documentElement.removeAttribute('data-theme');
   });
 
-  it('loads books and settings, then applies tier and theme to the document', async () => {
+  it('loads books and settings, then applies the tier to the document', async () => {
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 140, theme: 'yellow-on-black' });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 140 });
     await settle();
 
     expect(data.books()).toEqual(BOOKS);
     expect(data.unreachable()).toBe(false);
     expect(document.documentElement.dataset['tier']).toBe('140');
-    expect(document.documentElement.dataset['theme']).toBe('yellow-on-black');
   });
 
   it('polls both resources every ten seconds', async () => {
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100, theme: 'dark-on-light' });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
     await settle();
 
     vi.advanceTimersByTime(POLL_INTERVAL_MS);
     TestBed.tick();
 
     http.expectOne(API_ENDPOINTS.books).flush([]);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 72, theme: 'light-on-dark' });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 72 });
     await settle();
     expect(data.books()).toEqual([]);
     expect(document.documentElement.dataset['tier']).toBe('72');
@@ -64,7 +62,7 @@ describe('ReaderData', () => {
 
   it('keeps the last valid response when a poll fails', async () => {
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100, theme: 'dark-on-light' });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
     await settle();
 
     vi.advanceTimersByTime(POLL_INTERVAL_MS);
@@ -89,7 +87,7 @@ describe('ReaderData', () => {
     data.retry();
     TestBed.tick();
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100, theme: 'dark-on-light' });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
     await settle();
     expect(data.unreachable()).toBe(false);
   });

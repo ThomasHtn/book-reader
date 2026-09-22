@@ -23,14 +23,10 @@ export interface BookContent {
   readonly blocks: readonly Block[];
 }
 
-/** Reader colour theme, applied as `data-theme` on `<html>`. */
-export type Theme = 'dark-on-light' | 'light-on-dark' | 'yellow-on-black';
-
 /** Font tier in pixels, applied as `data-tier` on `<html>`. */
 export type FontTier = 48 | 72 | 100 | 140;
 
 /** Response of `GET /api/settings`. */
 export interface ReaderSettings {
   readonly fontTier: FontTier;
-  readonly theme: Theme;
 }

@@ -2,9 +2,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
 /* Design tokens for the accessible reader.
-   Three layers: primitives (raw values), semantic (purpose, switched per theme), component.
+   Three layers: primitives (raw values), semantic (purpose), component.
    Attributes on <html>:
-     data-theme   = dark-on-light (default) | light-on-dark | yellow-on-black
      data-tier    = 48 | 72 | 100 | 140 (default 100), the tier value itself as served by GET /api/settings
      data-density = admin, on backoffice routes only
    Every text/background pair below is >= 7:1, every control edge >= 3:1 against its surroundings. */
@@ -18,7 +17,7 @@
   --color-ink-900: #141414;
   --color-ink-700: #4a4a4a;
 
-  /* Night theme */
+  /* Night colours, used by the backoffice's dark colour scheme only */
   --color-night-950: #101010;
   --color-night-900: #1a1a1a;
   --color-night-800: #262626;
@@ -26,13 +25,7 @@
   --color-snow-100: #f2f2f2;
   --color-snow-300: #bdbdbd;
 
-  /* Amber theme */
-  --color-black: #000000;
-  --color-coal-900: #222222;
-  --color-amber-300: #ffd84d;
-  --color-amber-500: #cfaf3a;
-
-  /* Accent: one rose shared by every theme, dark text on it; the pressed state inverts.
+  /* Accent: dark text on rose, the pressed state inverts.
      Reserved for controls, so rose on screen always means "you can press this". */
   --color-rose-200: #ffc2d6;
   --color-rose-300: #ffa6c1;
@@ -114,7 +107,7 @@
   --color-surface-raised-strong: var(--color-paper-200);
   --color-marker: var(--color-rose-300);
   /* Commands share the blocks' surface; their ink edge is what tells them from the page, and both
-     edge and label follow the text colour so the three themes stay legible. */
+     edge and label follow the text colour. */
   --color-control-bg: var(--color-surface-raised);
   --color-control-bg-hover: var(--color-surface-raised-strong);
   --color-control-bg-active: var(--color-fg);
@@ -136,28 +129,6 @@
   --text-control: clamp(20px, calc(var(--text-body) * 0.55), 72px);
   --text-meta: clamp(16px, calc(var(--text-body) * 0.5), 64px);
   --gap-paragraph: 0.6em;
-}
-
-:root[data-theme='light-on-dark'] {
-  --color-bg: var(--color-night-950);
-  --color-fg: var(--color-snow-100);
-  --color-fg-muted: var(--color-snow-300);
-  --color-surface-raised: var(--color-night-800);
-  --color-surface-raised-strong: var(--color-night-700);
-  --color-focus-ring: var(--color-snow-100);
-  --color-focus-gap: var(--color-night-950);
-  --color-error: var(--color-salmon-300);
-}
-
-:root[data-theme='yellow-on-black'] {
-  --color-bg: var(--color-black);
-  --color-fg: var(--color-amber-300);
-  --color-fg-muted: var(--color-amber-500);
-  --color-surface-raised: var(--color-coal-900);
-  --color-surface-raised-strong: var(--color-night-700);
-  --color-focus-ring: var(--color-amber-300);
-  --color-focus-gap: var(--color-black);
-  --color-error: var(--color-amber-300);
 }
 
 :root[data-tier='48'] {
@@ -231,7 +202,7 @@
   --book-block-current-bg: var(--color-marker);
   /* The rose block deepens too, on the same rose ramp, and keeps its ink text at 8,3:1 */
   --book-block-current-bg-hover: var(--color-rose-400);
-  /* Ink whatever the theme: the rose plate is the same in all three, and the text colour is not */
+  /* Ink text on the rose plate */
   --book-block-current-fg: var(--color-ink-900);
   --book-block-finished-fg: var(--color-fg-muted);
   --book-block-finished-border: var(--border-card) solid var(--color-fg-muted);
@@ -507,15 +478,10 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
   <button type="button" data-tier="72" aria-pressed="false">72</button>
   <button type="button" data-tier="100" aria-pressed="true">100</button>
   <button type="button" data-tier="140" aria-pressed="false">140</button>
-  <span class="sep"></span>
-  <b>Thème</b>
-  <button type="button" data-theme="dark-on-light" aria-pressed="true">Noir sur blanc</button>
-  <button type="button" data-theme="light-on-dark" aria-pressed="false">Blanc sur noir</button>
-  <button type="button" data-theme="yellow-on-black" aria-pressed="false">Jaune sur noir</button>
 </div>
 
 <section class="screen" id="screen-reading" data-active aria-label="Lecture">
-  <div class="page-head"><p class="page-indicator" aria-live="polite" id="indicator">Page 1 sur 1</p></div>
+  <div class="page-head"><p class="page-indicator" aria-live="polite" id="indicator">100 %</p></div>
   <main class="reading" id="reading" lang="fr" aria-label="Texte du livre"></main>
   <footer class="nav-footer">
     <div class="nav-row nav-row--exit">
@@ -588,7 +554,6 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
         <h2>Réglages d'affichage<small>Appliqués à la liseuse au prochain démarrage</small></h2>
         <div style="display:grid;gap:16px">
           <div class="a-field"><label for="a-seg-tier">Palier de taille</label><div class="a-seg" id="a-seg-tier" role="group"><button type="button" data-atier="48">48</button><button type="button" data-atier="72">72</button><button type="button" data-atier="100" aria-pressed="true">100</button><button type="button" data-atier="140">140</button></div></div>
-          <div class="a-field"><label for="a-seg-theme">Thème</label><div class="a-seg" id="a-seg-theme" role="group"><button type="button" data-atheme="dark-on-light" aria-pressed="true">Noir sur blanc</button><button type="button" data-atheme="light-on-dark">Blanc sur noir</button><button type="button" data-atheme="yellow-on-black">Jaune sur noir</button></div></div>
           <button type="button" class="a-btn a-btn--primary">Enregistrer</button>
         </div>
         <div class="a-preview" id="a-preview">Il n'était ni industriel, ni négociant, ni marchand.<small>Aperçu à l'échelle de cet écran. Sur son écran, ce texte fait 100 px.</small></div>
@@ -696,7 +661,7 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
   function render() {
     reading.innerHTML = '';
     pages[current].forEach(function (s) { reading.appendChild(makeNode(s.b, s.b.text.split(' ').slice(s.from, s.to).join(' '))); });
-    indicator.textContent = 'Page ' + (current + 1) + ' sur ' + pages.length;
+    indicator.textContent = Math.round(((current + 1) / pages.length) * 100) + ' %';
     // A bar that leads nowhere is removed, not disabled.
     document.getElementById('prev').hidden = current === 0;
     document.getElementById('next').hidden = current === pages.length - 1;
@@ -730,11 +695,9 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.screen) showScreen(b.dataset.screen);
     if (b.dataset.tier) { setTier(b.dataset.tier); }
-    if (b.dataset.theme) { setTheme(b.dataset.theme); }
     if (b.id === 'panel-toggle') { var hidden = panel.classList.toggle('is-hidden'); b.textContent = hidden ? 'Réglages' : 'Masquer'; b.setAttribute('aria-expanded', hidden ? 'false' : 'true'); }
   });
   function setTier(t) { root.setAttribute('data-tier', t); pressed('[data-tier]', 'tier', t); pressed('[data-atier]', 'atier', t); if (isActive('reading')) paginate(); if (isActive('sheet')) fillSheet(); fillAdminPreview(); }
-  function setTheme(t) { root.setAttribute('data-theme', t); pressed('[data-theme]', 'theme', t); pressed('[data-atheme]', 'atheme', t); if (isActive('sheet')) fillSheet(); fillAdminPreview(); }
   function pressed(sel, key, value) { document.querySelectorAll(sel).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset[key] === value ? 'true' : 'false'); }); }
 
   /* Backoffice tabs and settings controls */
@@ -748,14 +711,11 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
   document.getElementById('aview-settings').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.atier) setTier(b.dataset.atier);
-    if (b.dataset.atheme) setTheme(b.dataset.atheme);
   });
-  var themes = { 'dark-on-light': ['#f4efe6', '#141414'], 'light-on-dark': ['#101010', '#f2f2f2'], 'yellow-on-black': ['#000000', '#ffd84d'] };
   function fillAdminPreview() {
     var p = document.getElementById('a-preview');
-    var t = themes[root.getAttribute('data-theme') || 'dark-on-light'];
     var size = Number(root.getAttribute('data-tier') || '100');
-    p.style.background = t[0]; p.style.color = t[1];
+    p.style.background = '#f4efe6'; p.style.color = '#141414';
     p.style.fontSize = Math.max(20, Math.round(size * Math.min(1, window.innerWidth / 1280))) + 'px';
     p.querySelector('small').textContent = "Aperçu à l'échelle de cet écran. Sur son écran, ce texte fait " + size + ' px.';
   }

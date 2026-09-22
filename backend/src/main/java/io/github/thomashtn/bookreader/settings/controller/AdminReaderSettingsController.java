@@ -44,7 +44,7 @@ public class AdminReaderSettingsController {
     @PutMapping
     @Operation(summary = "Change the reader display settings")
     @ApiResponse(responseCode = "200", description = "Settings applied.")
-    @ApiResponse(responseCode = "400", description = "Unknown tier or theme.")
+    @ApiResponse(responseCode = "400", description = "Unknown tier.")
     public ReaderSettingsResponse updateSettings(@Valid @RequestBody UpdateReaderSettingsRequest request) {
         return service.updateSettings(request);
     }

@@ -1,12 +1,4 @@
-import {
-  bookPageNumber,
-  bookPageTotal,
-  nextLocation,
-  pageAt,
-  pageCount,
-  previousLocation,
-  visibleRange,
-} from './page-math';
+import { nextLocation, pageAt, pageCount, previousLocation, visibleRange } from './page-math';
 
 describe('pageAt', () => {
   it('returns the column holding a horizontal offset from the start of the chapter', () => {
@@ -30,23 +22,6 @@ describe('pageCount', () => {
     expect(pageCount(12 * 1224, 1224)).toBe(12);
     expect(pageCount(12 * 1224 + 0.5, 1224)).toBe(12);
     expect(pageCount(0, 1224)).toBe(1);
-  });
-});
-
-describe('bookPageNumber', () => {
-  it('adds the pages of the previous chapters once they are all counted', () => {
-    expect(bookPageNumber([3, 5, undefined], 2, 1)).toBe(10);
-  });
-
-  it('is unknown while a previous chapter is still being counted', () => {
-    expect(bookPageNumber([3, undefined, 4], 2, 1)).toBeUndefined();
-  });
-});
-
-describe('bookPageTotal', () => {
-  it('sums every chapter once all are counted', () => {
-    expect(bookPageTotal([3, 5, 4])).toBe(12);
-    expect(bookPageTotal([3, undefined, 4])).toBeUndefined();
   });
 });
 

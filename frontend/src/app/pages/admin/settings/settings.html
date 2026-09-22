@@ -1,5 +1,5 @@
 <section class="a-view" aria-labelledby="settings-title">
-  <h2 id="settings-title">Réglages<small>Palier de taille et thème de la liseuse</small></h2>
+  <h2 id="settings-title">Réglages<small>Palier de taille de la liseuse</small></h2>
   <div class="grid gap-4 min-[900px]:grid-cols-2 min-[900px]:items-start">
     <div class="grid gap-4">
       <div class="a-field">
@@ -12,20 +12,6 @@
               (click)="tier.set(option)"
             >
               {{ option }}
-            </button>
-          }
-        </div>
-      </div>
-      <div class="a-field">
-        <span class="a-label" id="theme-label">Thème</span>
-        <div class="a-seg" role="group" aria-labelledby="theme-label">
-          @for (option of themes; track option.value) {
-            <button
-              type="button"
-              [attr.aria-pressed]="theme() === option.value"
-              (click)="theme.set(option.value)"
-            >
-              {{ option.label }}
             </button>
           }
         </div>
@@ -47,7 +33,7 @@
         }
       </div>
     </div>
-    <div class="a-preview" lang="fr" [attr.data-theme]="theme()" [style.--preview-tier]="tier()">
+    <div class="a-preview" lang="fr" [style.--preview-tier]="tier()">
       <p class="a-preview__text">Il n'était ni industriel, ni négociant, ni marchand.</p>
       <small>Aperçu à l'échelle de cet écran. Sur son écran, ce texte fait {{ tier() }} px.</small>
     </div>

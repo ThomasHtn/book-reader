@@ -4,8 +4,6 @@ import { buildEpub } from './support/epub';
 
 const OUTPUT = '../docs/screenshots';
 
-const THEMES = ['dark-on-light', 'light-on-dark', 'yellow-on-black'] as const;
-
 /** README captures; run on demand with SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts. */
 test.skip(!process.env['SCREENSHOTS'], 'Captures are generated on demand only');
 
@@ -28,24 +26,18 @@ test('README screenshots', async ({ page }) => {
     (await (await page.request.get('/api/books')).json()) as { id: string; title: string }[]
   ).find((book) => book.title === 'Le Horla')!;
 
-  for (const theme of THEMES) {
-    await page.request.put('/api/admin/settings', {
-      headers: admin,
-      data: { fontTier: 100, theme },
-    });
-    for (const width of [1920, 400]) {
-      await page.setViewportSize(
-        width === 1920 ? { width: 1920, height: 1080 } : { width: 400, height: 860 },
-      );
-      await openAt(page, horla.id, 6);
-      await page.screenshot({ path: `${OUTPUT}/lecture-${width}-${theme}.png` });
-    }
-  }
-
   await page.request.put('/api/admin/settings', {
     headers: admin,
-    data: { fontTier: 100, theme: 'dark-on-light' },
+    data: { fontTier: 100 },
   });
+  for (const width of [1920, 400]) {
+    await page.setViewportSize(
+      width === 1920 ? { width: 1920, height: 1080 } : { width: 400, height: 860 },
+    );
+    await openAt(page, horla.id, 6);
+    await page.screenshot({ path: `${OUTPUT}/lecture-${width}.png` });
+  }
+
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto('/livres');
   await expect(page.locator('button.book-card')).toHaveCount(2);
@@ -76,7 +68,7 @@ async function openAt(page: Page, bookId: string, blockIndex: number): Promise<v
     [bookId, blockIndex] as const,
   );
   await page.goto(`/lire/${bookId}`);
-  await expect(page.locator('.page-indicator')).toHaveText(/sur \d+/);
+  await expect(page.locator('.page-indicator')).toHaveText(/^\d+ %$/);
   // Rest the pointer on the text, where nothing reacts to hovering.
   const viewport = page.viewportSize()!;
   await page.mouse.move(viewport.width / 2, viewport.height / 2);

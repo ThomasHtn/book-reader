@@ -3,22 +3,25 @@
   <div class="a-drop" (dragover)="$event.preventDefault()" (drop)="drop($event)">
     <b>Glissez un fichier EPUB ici</b>
     <span>ou</span>
-    <label for="upload-file" class="a-btn a-btn--secondary">Choisir un fichier EPUB</label>
+    <label for="upload-file" class="a-btn a-btn--secondary">Choisir des fichiers EPUB</label>
     <input
       id="upload-file"
       class="sr-only"
       type="file"
       accept=".epub,application/epub+zip"
+      multiple
       (change)="choose($event)"
     />
-    @if (file(); as chosen) {
-      <span>{{ chosen.name }}</span>
+    @if (files().length) {
+      <span>{{
+        files().length === 1 ? files()[0].name : files().length + ' fichiers sélectionnés'
+      }}</span>
     }
   </div>
   <button
     type="button"
     class="a-btn a-btn--primary"
-    [disabled]="!file() || sending()"
+    [disabled]="!files().length || sending()"
     [attr.aria-busy]="sending() || null"
     (click)="send()"
   >

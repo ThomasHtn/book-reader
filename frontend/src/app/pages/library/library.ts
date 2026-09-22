@@ -20,6 +20,9 @@ import { BookCard } from '@shared/book-card/book-card';
 import { NavBar } from '@shared/nav-bar/nav-bar';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
+/** Two rows of the three-column grid, so a page never shows more than six titles. */
+const MAX_ROWS_PER_PAGE = 2;
+
 /** Route `/livres`: three title blocks per row, paged by whole rows with the same two bars as the text. */
 @Component({
   selector: 'app-library',
@@ -176,6 +179,7 @@ export class Library {
         return { top: box.top - origin, height: box.height };
       }),
       height,
+      MAX_ROWS_PER_PAGE,
     );
     this.offsets.set(offsets);
     this.cardPages.set([...pages]);

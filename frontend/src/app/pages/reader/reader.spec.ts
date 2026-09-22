@@ -111,11 +111,6 @@ describe('Reader', () => {
     return { fixture, element, prev, next, indicator };
   }
 
-  async function countAllChapters(fixture: { detectChanges(): void }): Promise<void> {
-    await vi.runAllTimersAsync();
-    await flush(fixture);
-  }
-
   it('opens a never read book at its first page, with the title page before the text', async () => {
     const { prev, next, indicator, fixture } = await open();
 
@@ -132,15 +127,12 @@ describe('Reader', () => {
     expect(visible().shownPage).toBe(0);
     expect(prev()).toBeNull();
     expect(next()).not.toBeNull();
-    expect(indicator()).toBe('Page 1');
-
-    await countAllChapters(fixture);
-    expect(indicator()).toBe('Page 1 sur 5');
+    expect(indicator()).toBe('20 %');
   });
 
   it('resumes at the stored position and marks the book finished on its last page', async () => {
     store.progress.set('b1', { blockIndex: 4, charOffset: 0, finished: false, updatedAt: 't' });
-    const { next, indicator, fixture } = await open();
+    const { next, indicator } = await open();
 
     expect(visible().content?.firstBlock).toBe(3);
     expect(visible().content?.endOfBook).toBe(true);
@@ -152,9 +144,7 @@ describe('Reader', () => {
       finished: true,
     });
 
-    expect(indicator()).toBe('');
-    await countAllChapters(fixture);
-    expect(indicator()).toBe('Page 5 sur 5');
+    expect(indicator()).toBe('100 %');
   });
 
   it('turns pages across chapters and saves the first character of each page', async () => {
@@ -258,7 +248,7 @@ describe('Reader', () => {
     const { fixture } = await open();
     const renders = visible().renders;
 
-    data.settings.set({ fontTier: 140, theme: 'yellow-on-black' });
+    data.settings.set({ fontTier: 140 });
     await flush(fixture);
 
     expect(visible().renders).toBe(renders + 1);

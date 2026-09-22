@@ -1,7 +1,6 @@
 package io.github.thomashtn.bookreader.settings.entity;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -31,10 +30,6 @@ public class ReaderSettings {
     @Column(name = "font_tier", nullable = false)
     private int fontTier;
 
-    @Convert(converter = ThemeConverter.class)
-    @Column(nullable = false)
-    private Theme theme;
-
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -54,24 +49,13 @@ public class ReaderSettings {
     }
 
     /**
-     * Returns the theme.
-     *
-     * @return colour theme
-     */
-    public Theme getTheme() {
-        return theme;
-    }
-
-    /**
      * Replaces the settings.
      *
      * @param newFontTier one of {@link #FONT_TIERS}
-     * @param newTheme    colour theme
      * @param now         instant of the change
      */
-    public void update(int newFontTier, Theme newTheme, Instant now) {
+    public void update(int newFontTier, Instant now) {
         this.fontTier = newFontTier;
-        this.theme = newTheme;
         this.updatedAt = now;
     }
 }

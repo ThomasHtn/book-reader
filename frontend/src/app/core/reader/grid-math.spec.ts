@@ -59,6 +59,13 @@ describe('paginateGrid', () => {
     expect(offsets).toEqual([0, 248]);
   });
 
+  it('breaks after the row cap even when more rows would still fit the viewport', () => {
+    const { offsets, pages } = paginateGrid(rows(4, 3, 100), 1000, 2);
+
+    expect(offsets).toEqual([0, 200]);
+    expect(pages).toEqual([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]);
+  });
+
   it('answers one empty page when there is nothing to lay out or nothing to lay out in', () => {
     expect(paginateGrid([], 400)).toEqual({ offsets: [0], pages: [] });
     expect(paginateGrid(rows(2, 3, 100), 0)).toEqual({

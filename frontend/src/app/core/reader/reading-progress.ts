@@ -59,6 +59,17 @@ export function startPosition(
 }
 
 /**
+ * Returns the reading progress in the book, as a rounded percentage.
+ *
+ * @param position - Current position.
+ * @param blockCount - Number of blocks of the book.
+ * @returns Percentage from 1 to 100.
+ */
+export function readingProgressPercent(position: TextPosition, blockCount: number): number {
+  return Math.round(((position.blockIndex + 1) / blockCount) * 100);
+}
+
+/**
  * Orders "Mes livres": read books by last reading, then never opened ones by activation.
  *
  * @param books - Active books.

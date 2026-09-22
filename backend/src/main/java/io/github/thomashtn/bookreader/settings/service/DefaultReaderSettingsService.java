@@ -39,7 +39,7 @@ public class DefaultReaderSettingsService implements ReaderSettingsService {
     @Transactional
     public ReaderSettingsResponse updateSettings(UpdateReaderSettingsRequest request) {
         ReaderSettings settings = loadSettings();
-        settings.update(request.fontTier(), request.theme(), clock.instant());
+        settings.update(request.fontTier(), clock.instant());
         return ReaderSettingsResponse.from(settings);
     }
 

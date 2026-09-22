@@ -36,42 +36,6 @@ export function pageCount(scrollWidth: number, columnWidth: number): number {
 }
 
 /**
- * Returns the one-based page number in the whole book.
- *
- * @param counts - Page count of each chapter, `undefined` while not counted yet.
- * @param chapter - Current chapter.
- * @param page - Zero-based page in the current chapter.
- * @returns Page number, or `undefined` while a previous chapter is not counted.
- */
-export function bookPageNumber(
-  counts: readonly (number | undefined)[],
-  chapter: number,
-  page: number,
-): number | undefined {
-  let previous = 0;
-  for (let index = 0; index < chapter; index++) {
-    const count = counts[index];
-    if (count === undefined) {
-      return undefined;
-    }
-    previous += count;
-  }
-  return previous + page + 1;
-}
-
-/**
- * Returns the page count of the whole book.
- *
- * @param counts - Page count of each chapter.
- * @returns Total, or `undefined` while a chapter is not counted.
- */
-export function bookPageTotal(counts: readonly (number | undefined)[]): number | undefined {
-  return counts.every((count) => count !== undefined)
-    ? counts.reduce<number>((total, count) => total + count, 0)
-    : undefined;
-}
-
-/**
  * Returns where "Suivant" leads.
  *
  * @param location - Current page.

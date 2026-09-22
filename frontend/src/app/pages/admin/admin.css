@@ -327,7 +327,7 @@
   font-weight: var(--admin-weight-strong);
 }
 
-/* Real reader rendering of the chosen tier and theme, scaled down to this box. The reader sizes its
+/* Real reader rendering of the chosen tier, scaled down to this box. The reader sizes its
    text against the viewport (tier px at 1280px wide); here the box is the viewport, hence `cqi`. */
 .a-preview {
   --preview-tier: 100;
@@ -348,16 +348,6 @@
   font-size: clamp(12px, calc(var(--preview-tier) / 12.8 * 1cqi), calc(var(--preview-tier) * 1px));
   line-height: var(--leading-body);
   overflow-wrap: anywhere;
-}
-
-.a-preview[data-theme='light-on-dark'] {
-  background: var(--color-night-950);
-  color: var(--color-snow-100);
-}
-
-.a-preview[data-theme='yellow-on-black'] {
-  background: var(--color-black);
-  color: var(--color-amber-300);
 }
 
 .a-preview small {

@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { AdminApi } from '@core/admin/admin-api';
-import { AdminMessage, failureMessage, successMessage } from '@core/admin/admin-message';
+import { failureReason } from '@core/admin/admin-errors';
+import { AdminMessage } from '@core/admin/admin-message';
 
-/** Upload of an EPUB: conversion and immediate activation. */
+/** Upload of one or more EPUB files: conversion and immediate activation, one request per file. */
 @Component({
   selector: 'app-admin-upload',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,7 +12,7 @@ import { AdminMessage, failureMessage, successMessage } from '@core/admin/admin-
 export class Upload {
   private readonly api = inject(AdminApi);
 
-  protected readonly file = signal<File | null>(null);
+  protected readonly files = signal<readonly File[]>([]);
 
   protected readonly sending = signal(false);
 
@@ -19,32 +20,67 @@ export class Upload {
 
   protected choose(event: Event): void {
     const files = (event.target as HTMLInputElement).files;
-    this.file.set(files?.[0] ?? null);
+    this.files.set(files ? Array.from(files) : []);
     this.message.set(null);
   }
 
   protected drop(event: DragEvent): void {
     event.preventDefault();
-    const file = event.dataTransfer?.files[0];
-    if (file) {
-      this.file.set(file);
+    const files = event.dataTransfer?.files;
+    if (files?.length) {
+      this.files.set(Array.from(files));
       this.message.set(null);
     }
   }
 
   protected async send(): Promise<void> {
-    const file = this.file();
-    if (!file || this.sending()) {
+    const files = this.files();
+    if (!files.length || this.sending()) {
       return;
     }
     this.sending.set(true);
-    try {
-      const book = await this.api.upload(file);
-      this.message.set(successMessage(`Livre ajouté et activé : ${book.title}`));
-      this.file.set(null);
-    } catch (error) {
-      this.message.set(failureMessage(error));
+    const titles: string[] = [];
+    const failures: { name: string; reason: string }[] = [];
+    for (const file of files) {
+      try {
+        const book = await this.api.upload(file);
+        titles.push(book.title);
+      } catch (error) {
+        failures.push({ name: file.name, reason: failureReason(error) });
+      }
+    }
+    this.message.set(uploadResultMessage(titles, failures, files.length > 1));
+    if (failures.length === 0) {
+      this.files.set([]);
     }
     this.sending.set(false);
   }
+}
+
+/**
+ * Builds the summary line for a batch of uploads.
+ *
+ * @param titles - Titles of the books that were added and activated.
+ * @param failures - Files that failed, with their reason.
+ * @param batch - Whether more than one file was submitted, to name failed files individually.
+ * @returns Success line when everything went through, failure line otherwise.
+ */
+function uploadResultMessage(
+  titles: readonly string[],
+  failures: readonly { name: string; reason: string }[],
+  batch: boolean,
+): AdminMessage {
+  if (failures.length === 0) {
+    const text = batch
+      ? `${titles.length} livres ajoutés et activés : ${titles.join(', ')}`
+      : `Livre ajouté et activé : ${titles[0]}`;
+    return { kind: 'success', text };
+  }
+  const failureText = batch
+    ? failures.map((failure) => `${failure.name} (${failure.reason})`).join(' ; ')
+    : failures[0].reason;
+  const addedPrefix = titles.length
+    ? `${titles.length} livre(s) ajouté(s) : ${titles.join(', ')}. `
+    : '';
+  return { kind: 'failure', text: `${addedPrefix}Échec : ${failureText}` };
 }

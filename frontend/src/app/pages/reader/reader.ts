@@ -18,28 +18,17 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { BookContent } from '@core/http/api.model';
 import { Chapter, chapterOfBlock, splitIntoChapters } from '@core/reader/chapters';
 import { COMMAND_INTERVAL_MS, CommandGate } from '@core/reader/command-gate';
-import {
-  bookPageNumber,
-  bookPageTotal,
-  Location,
-  nextLocation,
-  PendingLocation,
-  previousLocation,
-} from '@core/reader/page-math';
+import { Location, nextLocation, PendingLocation, previousLocation } from '@core/reader/page-math';
 import { ProgressStore } from '@core/reader/progress-store';
 import { POLL_INTERVAL_MS, ReaderData } from '@core/reader/reader-data';
-import { startPosition, TextPosition } from '@core/reader/reading-progress';
+import { readingProgressPercent, startPosition, TextPosition } from '@core/reader/reading-progress';
 import { NavBar } from '@shared/nav-bar/nav-bar';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './chapter-layout';
 
-/** Delay before counting other chapters, so the first page is painted before any extra layout. */
-const COUNT_START_DELAY_MS = 100;
-
 /**
  * Route `/lire/:id`: three commands only, all in the footer (Mes livres, Précédent, Suivant); the
- * text owns everything above them. The current chapter is laid out in columns; the other chapters
- * are counted one by one in a hidden twin for "Page 12 sur 840".
+ * text owns everything above them. The current chapter is laid out in columns.
  */
 @Component({
   selector: 'app-reader',
@@ -50,17 +39,6 @@ const COUNT_START_DELAY_MS = 100;
     @if (unavailable()) {
       <app-status-screen (retry)="retry()" />
     } @else {
-      <button
-        type="button"
-        class="button--restart"
-        aria-label="Revenir au début du livre"
-        (click)="restart()"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <polyline points="1 4 1 10 7 10" />
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-        </svg>
-      </button>
       <div
         class="screen"
         [style.visibility]="location() ? null : 'hidden'"
@@ -74,9 +52,6 @@ const COUNT_START_DELAY_MS = 100;
           <section class="paged reading" lang="fr" aria-label="Texte du livre" tabindex="-1" #text>
             <div class="paged-viewport" #viewport>
               <div class="paged-columns" #columns></div>
-            </div>
-            <div class="paged-viewport paged-viewport--measure" aria-hidden="true" #measureViewport>
-              <div class="paged-columns" #measureColumns></div>
             </div>
           </section>
         </main>
@@ -119,17 +94,11 @@ export class Reader {
 
   private readonly columns = viewChild<ElementRef<HTMLElement>>('columns');
 
-  private readonly measureViewport = viewChild<ElementRef<HTMLElement>>('measureViewport');
-
-  private readonly measureColumns = viewChild<ElementRef<HTMLElement>>('measureColumns');
-
   private readonly gate = new CommandGate(COMMAND_INTERVAL_MS, () => Date.now());
 
   protected readonly title = computed(() => (this.book.hasValue() ? this.book.value().title : ''));
 
   protected readonly location = signal<Location | null>(null);
-
-  private readonly counts = signal<(number | undefined)[]>([]);
 
   private readonly chapterPages = signal(0);
 
@@ -141,11 +110,7 @@ export class Reader {
 
   private visibleLayout: ChapterLayout | null = null;
 
-  private measureLayout: ChapterLayout | null = null;
-
   private layoutKey = '';
-
-  private generation = 0;
 
   private relayoutScheduled = false;
 
@@ -161,29 +126,20 @@ export class Reader {
 
   protected readonly isLast = computed(() => {
     const location = this.location();
-    return !location || nextLocation(location, this.chapterPages(), this.counts().length) === null;
+    return !location || nextLocation(location, this.chapterPages(), this.chapters.length) === null;
   });
 
   protected readonly indicator = computed(() => {
-    const location = this.location();
-    if (!location) {
+    if (!this.location() || !this.content) {
       return '';
     }
-    const number = bookPageNumber(this.counts(), location.chapter, location.page);
-    if (number === undefined) {
-      return '';
-    }
-    const total = bookPageTotal(this.counts());
-    return total === undefined ? `Page ${number}` : `Page ${number} sur ${total}`;
+    return `${readingProgressPercent(this.position, this.content.blocks.length)} %`;
   });
 
   constructor() {
     const destroyRef = inject(DestroyRef);
     const observer = new ResizeObserver(() => this.scheduleRelayout());
-    destroyRef.onDestroy(() => {
-      observer.disconnect();
-      this.generation++;
-    });
+    destroyRef.onDestroy(() => observer.disconnect());
 
     effect(() => {
       const error = this.book.error();
@@ -236,15 +192,6 @@ export class Reader {
     void this.router.navigateByUrl('/livres');
   }
 
-  protected restart(): void {
-    if (!this.location()) {
-      return;
-    }
-    this.layoutAt({ blockIndex: 0, charOffset: 0 });
-    this.save();
-    this.text()?.nativeElement.focus();
-  }
-
   protected retry(): void {
     this.book.reload();
   }
@@ -255,10 +202,6 @@ export class Reader {
     this.visibleLayout = this.layoutFactory(
       this.viewport()!.nativeElement,
       this.columns()!.nativeElement,
-    );
-    this.measureLayout = this.layoutFactory(
-      this.measureViewport()!.nativeElement,
-      this.measureColumns()!.nativeElement,
     );
     this.chapters = splitIntoChapters(book.blocks);
     this.store.markOpened(book.id);
@@ -292,46 +235,19 @@ export class Reader {
     this.position = layout.positionOfPage(page);
   }
 
-  /** Lays the chapter of a position out again and shows the page holding it; restarts the page count. */
+  /** Lays the chapter of a position out again and shows the page holding it. */
   private layoutAt(position: TextPosition): void {
     const chapter = chapterOfBlock(this.chapters, position.blockIndex);
-    this.counts.set(this.chapters.map(() => undefined));
     this.renderChapter(chapter);
     const page = Math.min(this.visibleLayout!.pageOf(position), this.chapterPages() - 1);
     this.visibleLayout!.show(page);
     this.location.set({ chapter, page });
     this.position = position;
     this.layoutKey = this.currentLayoutKey();
-    this.countOtherChapters(chapter);
   }
 
   private renderChapter(chapter: number): void {
-    const pages = this.visibleLayout!.render(this.contentOf(chapter));
-    this.chapterPages.set(pages);
-    this.counts.update((counts) =>
-      counts.map((count, index) => (index === chapter ? pages : count)),
-    );
-  }
-
-  /** Counts the other chapters one per task, previous ones first, abandoning on any new layout. */
-  private countOtherChapters(current: number): void {
-    const generation = ++this.generation;
-    const order = this.chapters
-      .map((_, index) => index)
-      .filter((index) => index !== current)
-      .sort((a, b) => (a < current ? 0 : 1) - (b < current ? 0 : 1) || a - b);
-    const step = (position: number) => {
-      if (generation !== this.generation || position >= order.length) {
-        return;
-      }
-      const chapter = order[position];
-      const pages = this.measureLayout!.render(this.contentOf(chapter));
-      this.counts.update((counts) =>
-        counts.map((count, index) => (index === chapter ? pages : count)),
-      );
-      setTimeout(() => step(position + 1));
-    };
-    setTimeout(() => step(0), COUNT_START_DELAY_MS);
+    this.chapterPages.set(this.visibleLayout!.render(this.contentOf(chapter)));
   }
 
   private contentOf(chapter: number): ChapterContent {

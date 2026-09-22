@@ -23,7 +23,7 @@ describe('Settings', () => {
       fixture.detectChanges();
     };
     await settle();
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100, theme: 'dark-on-light' });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
     await settle();
     const element = fixture.nativeElement as HTMLElement;
     const option = (label: string) =>
@@ -33,13 +33,12 @@ describe('Settings', () => {
     return { element, settle, option };
   }
 
-  it('shows the current tier and theme as pressed options', async () => {
+  it('shows the current tier as the pressed option', async () => {
     const { element, option } = await render();
 
     expect(option('100').getAttribute('aria-pressed')).toBe('true');
     expect(option('48').getAttribute('aria-pressed')).toBe('false');
-    expect(option('Noir sur blanc').getAttribute('aria-pressed')).toBe('true');
-    expect(element.querySelectorAll('[role="group"][aria-labelledby]')).toHaveLength(2);
+    expect(element.querySelectorAll('[role="group"][aria-labelledby]')).toHaveLength(1);
   });
 
   it('credits the fonts and the book source, as their licences require', async () => {
@@ -57,11 +56,9 @@ describe('Settings', () => {
     const { element, settle, option } = await render();
 
     option('140').click();
-    option('Jaune sur noir').click();
     await settle();
 
     const preview = element.querySelector<HTMLElement>('.a-preview')!;
-    expect(preview.dataset['theme']).toBe('yellow-on-black');
     expect(preview.style.getPropertyValue('--preview-tier')).toBe('140');
     expect(preview.textContent).toContain('Sur son écran, ce texte fait 140 px.');
   });
@@ -69,7 +66,6 @@ describe('Settings', () => {
   it('saves the settings, which the reader applies within ten seconds', async () => {
     const { element, settle, option } = await render();
     option('72').click();
-    option('Blanc sur noir').click();
     await settle();
 
     const save = [...element.querySelectorAll<HTMLButtonElement>('button')].find(
@@ -80,8 +76,8 @@ describe('Settings', () => {
     expect(save.disabled).toBe(true);
     const request = http.expectOne(API_ENDPOINTS.admin.settings);
     expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({ fontTier: 72, theme: 'light-on-dark' });
-    request.flush({ fontTier: 72, theme: 'light-on-dark' });
+    expect(request.request.body).toEqual({ fontTier: 72 });
+    request.flush({ fontTier: 72 });
     await settle();
 
     expect(element.textContent).toContain(

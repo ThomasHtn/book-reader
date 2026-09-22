@@ -11,7 +11,7 @@ retrouve sa page et lit. Un backoffice permet à l'aidant de choisir les livres 
 
 Instance : [book-reader.thomashtn.dev](https://book-reader.thomashtn.dev) (non indexée).
 
-![Écran de lecture, noir sur blanc cassé, 1920 px](docs/screenshots/lecture-1920-dark-on-light.png)
+![Écran de lecture, noir sur blanc cassé, 1920 px](docs/screenshots/lecture-1920.png)
 
 ## Trois commandes, rien d'autre
 
@@ -28,10 +28,9 @@ maintenue aussi. La position est mémorisée à chaque page ; au démarrage, le 
 
 ## Captures
 
-| | Noir sur blanc cassé | Blanc sur noir | Jaune sur noir |
-|---|---|---|---|
-| 1920 px | ![](docs/screenshots/lecture-1920-dark-on-light.png) | ![](docs/screenshots/lecture-1920-light-on-dark.png) | ![](docs/screenshots/lecture-1920-yellow-on-black.png) |
-| 400 px | ![](docs/screenshots/lecture-400-dark-on-light.png) | ![](docs/screenshots/lecture-400-light-on-dark.png) | ![](docs/screenshots/lecture-400-yellow-on-black.png) |
+| Lecture (1920 px) | Lecture (400 px) |
+|---|---|
+| ![](docs/screenshots/lecture-1920.png) | ![](docs/screenshots/lecture-400.png) |
 
 | Mes livres (1920 px) | Backoffice, réglages (400 px) |
 |---|---|
@@ -56,12 +55,12 @@ flowchart LR
   brut, titre ou paragraphe ; la liseuse n'affiche que des nœuds texte.
 - **Pagination par chapitre en colonnes CSS** : une page est une colonne de la largeur exacte de la zone
   de texte. Le livre entier dans un seul conteneur dépassait le plafond de mise en page de Blink et
-  prenait plus d'une seconde sur un PC modeste ([essai](docs/specification.md#52-pagination)) ; les
-  autres chapitres sont comptés en tâche de fond pour afficher « Page 12 sur 840 ».
+  prenait plus d'une seconde sur un PC modeste ([essai](docs/specification.md#52-pagination)).
 - **Position indépendante de l'affichage** : (index de bloc, décalage en caractères), retrouvée avec
-  `Range`, stockée dans `localStorage`.
-- **Réglages globaux pilotés par le serveur** : palier (48, 72, 100, 140 px) et thème, relus toutes les
-  dix secondes avec ETag, appliqués sans perdre la page.
+  `Range`, stockée dans `localStorage` ; c'est aussi elle qui donne le pourcentage de progression affiché
+  dans le coin supérieur droit.
+- **Réglages globaux pilotés par le serveur** : palier (48, 72, 100, 140 px), relu toutes les dix
+  secondes avec ETag, appliqué sans perdre la page.
 
 ## Développement
 

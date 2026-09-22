@@ -29,7 +29,7 @@ empêcher une lecture à voix haute plus tard.
 ## 3. Périmètre
 
 **Version 1** : reprise automatique du dernier livre, écran de lecture, écran "Mes livres" ; palier de
-taille et thème réglés depuis le backoffice ; backoffice avec recherche dans le catalogue d'Ebooks
+taille réglé depuis le backoffice ; backoffice avec recherche dans le catalogue d'Ebooks
 libres et gratuits, dépôt d'EPUB, retrait et réactivation, réglages ; conversion des EPUB côté
 serveur ; rendu proportionnel sur tout écran.
 
@@ -57,8 +57,8 @@ Aucun autre parcours n'existe côté lectrice.
 
 ### 5.1 Écran de lecture
 
-De haut en bas : "Page 12 sur 840" seul dans le coin supérieur droit, en petit et en texte atténué,
-sans titre à gauche, le livre se nommant lui-même sur sa page de titre,
+De haut en bas : le pourcentage de progression (ex. "42 %") seul dans le coin supérieur droit, en petit
+et en texte atténué, sans titre à gauche, le livre se nommant lui-même sur sa page de titre,
 puis la zone de texte (une page, sans défilement) sur tout le reste, puis le pied. Pas d'en-tête. Le
 pied ne porte que les trois commandes, sur une rangée : "Mes livres" à gauche, à la largeur de son
 libellé, "Précédent" au centre et "Suivant" à droite (flèche puis libellé), ces deux-là se partageant
@@ -90,10 +90,9 @@ Règles :
 - Chapitre : suite de blocs commençant à un titre (les blocs avant le premier titre forment le
   premier chapitre), coupée entre deux paragraphes au-delà de 80 000 caractères pour les livres
   sans titres.
-- Total de pages : un conteneur caché de même taille met en page les autres chapitres un par un,
-  sans bloquer les commandes, les chapitres précédant la position d'abord. L'indicateur affiche
-  "Page 12" dès que les chapitres précédents sont comptés, "Page 12 sur 840" quand tous le sont ;
-  vide avant. Tout changement de palier, de thème ou de taille de fenêtre relance le comptage.
+- L'indicateur affiche le pourcentage de blocs lus (index de bloc de la page sur le nombre de blocs
+  du livre), connu dès l'ouverture, indépendant du palier et de la taille de fenêtre ; aucun comptage
+  de pages en fond n'est nécessaire.
 - Titres jamais séparés du paragraphe suivant (`break-after: avoid`). `lang="fr"`, `hyphens: auto`,
   `overflow-wrap: anywhere` en filet (à 140 px une ligne fait quinze caractères).
 - Premier calcul après `document.fonts.ready`.
@@ -110,7 +109,7 @@ Règles :
 ### 5.3 Position de lecture
 
 - Mémorisée comme (index de bloc, décalage en caractères) du premier caractère de la page, à chaque
-  changement de page. Indépendante du palier et du thème.
+  changement de page. Indépendante du palier.
 - Lecture : dans le chapitre affiché, premier bloc dont le rectangle intersecte la colonne affichée, puis recherche
   dichotomique sur le décalage avec un `Range` d'un caractère comparé au bord gauche de la colonne.
   Restauration : le même `Range` donne un rectangle dont le bord gauche divisé par la largeur de
@@ -143,8 +142,7 @@ Globaux, lus depuis le serveur, modifiables seulement dans le backoffice. À cal
 | Réglage | Valeurs | Défaut |
 |---|---|---|
 | Palier | 48, 72, 100, 140 (pixels sur tout écran d'au moins 1280 px CSS ; en dessous, proportionnel, plancher 20 px) | 100 |
-| Thème | noir sur blanc cassé, blanc sur noir, jaune sur noir | noir sur blanc cassé |
-| Fixes | police Luciole 700, interligne 1,4, repère "en cours" rose à texte sombre | |
+| Fixes | thème unique noir sur blanc cassé, surfaces beige, police Luciole 700, interligne 1,4, repère "en cours" rose à texte sombre | |
 
 La référence à 1280 px couvre son PC à 100 % comme à 125 % de mise à l'échelle Windows. Ctrl plus et
 Ctrl moins restent le zoom de Chrome : un zoom avant ne change rien, un zoom arrière rétrécit le texte
@@ -166,7 +164,7 @@ Ctrl moins restent le zoom de Chrome : un zoom avant ne change rien, un zoom arr
 Le PC reste allumé des jours. L'application relit `GET /api/settings` et `GET /api/books` toutes les
 dix secondes (`ETag`, `304` si inchangé) :
 
-- palier ou thème modifié : appliqué immédiatement, même position ;
+- palier modifié : appliqué immédiatement, même position ;
 - livre ajouté : apparaît dans la liste ; livre retiré : disparaît de la liste, sans interrompre une
   lecture en cours ;
 - nouvelle version de l'application (service worker) : appliquée après dix minutes sans commande,
@@ -174,7 +172,7 @@ dix secondes (`ETag`, `304` si inchangé) :
 
 ## 6. Accessibilité
 
-WCAG 2.2 AA, plus : contraste texte et fond 7:1 dans tous les thèmes, cibles de 44 px minimum, aucun
+WCAG 2.2 AA, plus : contraste texte et fond 7:1, cibles de 44 px minimum, aucun
 contenu au survol, aucune animation ni transition. HTML sémantique (boutons réels, région `main`,
 `aria-live` sur l'indicateur), clavier complet, focus visible épais, aucune icône sans libellé,
 interface en français seulement. Lighthouse "Accessibility" à 100 sur `/livres`, `/lire/:id` et
@@ -275,7 +273,7 @@ temporaire par adresse après plusieurs échecs. Écran : un champ mot de passe,
   "Retirer", "Réactiver", modification du titre et de l'auteur.
 - Dépôt : envoi d'un EPUB, conversion, activation immédiate ; titre et auteur corrigés ensuite dans
   la Bibliothèque si besoin.
-- Réglages : palier et thème, avec un aperçu du rendu indiquant la taille réelle sur son écran.
+- Réglages : palier, avec un aperçu du rendu indiquant la taille réelle sur son écran.
 
 Toute action longue désactive son bouton ("en cours") puis affiche succès ou échec avec la raison
 (chiffré, sans texte, trop volumineux, catalogue injoignable, catalogue qui refuse les
@@ -291,7 +289,7 @@ compression.
 |---|---|
 | `GET /api/books` | livres actifs : `id`, `title`, `author`, `activatedAt` |
 | `GET /api/books/{id}` | livre au format interne ; `404` si inactif ou inconnu |
-| `GET /api/settings` | `{ "fontTier": 100, "theme": "dark-on-light" }` |
+| `GET /api/settings` | `{ "fontTier": 100 }` |
 
 | Administration (`X-Admin-Key`) | Effet |
 |---|---|
@@ -300,7 +298,7 @@ compression.
 | `POST /api/admin/books/upload` | multipart EPUB ; conversion, activation, `201` |
 | `GET /api/admin/books` | tous les livres |
 | `PATCH /api/admin/books/{id}` | `title`, `author`, `active` |
-| `PUT /api/admin/settings` | `fontTier`, `theme` |
+| `PUT /api/admin/settings` | `fontTier` |
 
 ## 11. Architecture
 
@@ -322,7 +320,7 @@ Client OPDS `WebClient` avec délais courts et un réessai. Compression HTTP act
 | Table | Colonnes |
 |---|---|
 | `book` | `id`, `title`, `author`, `source` (`catalogue` ou `upload`), `source_id` (identifiant OPDS, unique, nul pour un dépôt), `source_url`, `content` (JSONB), `block_count`, `active`, `activated_at`, `created_at` |
-| `reader_settings` | une ligne : `font_tier`, `theme`, `updated_at` |
+| `reader_settings` | une ligne : `font_tier`, `updated_at` |
 
 **Déploiement** : `https://book-reader.thomashtn.dev`. Deux images Docker (nginx pour le bundle, jar
 Spring) derrière Traefik sur le VPS, même origine, `/api/*` vers le backend, base PostgreSQL existante avec base et rôle dédiés. `.env`
@@ -373,6 +371,7 @@ La version 1 est livrable quand :
 | Commandes sur la surface beige du thème | commandes en aplat rose | 22 septembre 2026 : demande de l'utilisateur ; le rose ne désigne plus que le livre en cours, qui devient la seule surface colorée de l'écran |
 | Filet permanent de 2 px sur les blocs, aplat un ton plus soutenu au survol | filet de 4 px, filet épaissi au survol | 22 septembre 2026 : demande de l'utilisateur ; 4 px alourdissaient la grille alors que la gouttière de 24 px sépare déjà les blocs, donc le survol passe par le fond, comme sur les commandes, sans rien déplacer ni révéler ; il reste un supplément pour la souris, le clavier et le tactile gardent le filet et l'anneau de focus |
 | Titre de l'écran en haut à gauche de "Mes livres" | titre lu par le seul lecteur d'écran | 22 septembre 2026 : demande de l'utilisateur ; la ligne existait déjà pour l'indicateur, donc elle ne coûte pas de place |
+| Indicateur de lecture en pourcentage de blocs lus | indicateur "Page 12 sur 840", pourcentage de pages comptées en fond | 22 septembre 2026 : demande de l'utilisateur ; le nombre de pages varie avec le palier de police (5.2) et son comptage en fond pouvait laisser l'indicateur vide plusieurs minutes sur un gros livre (90 chapitres, essai en local), alors que l'index de bloc est connu dès l'ouverture |
 | Une application Angular avec `/admin` | deux applications | un front, un back |
 | `localStorage` seul, en ligne | IndexedDB, hors ligne | simplicité, perte acceptée |
 | API publique | clé par poste | une seule utilisatrice |
@@ -382,11 +381,12 @@ La version 1 est livrable quand :
 | Mode kiosque | `--start-fullscreen`, PWA installée | pas de bulle ni de raccourci de sortie ; la PWA ignore les drapeaux |
 | Bouton engrenage discret, libellé accessible seulement, en haut à droite de `/livres` | aucun lien depuis la liseuse, bouton avec libellé visible | 22 septembre 2026 : demande de l'utilisateur ; destiné à l'aidant, pas à l'utilisatrice, seul point d'entrée vers `/admin` depuis la liseuse |
 | `page-title` fixé au palier 100, indépendant du palier choisi | `page-title` proportionnel au corps du texte (un tiers) | 22 septembre 2026 : demande de l'utilisateur ; "Mes livres" est du décor d'écran, pas du texte de lecture, il ne doit pas grossir ni rétrécir avec le palier |
+| Thème unique, noir sur blanc cassé, surfaces beige | trois thèmes (noir sur blanc, blanc sur noir, jaune sur noir), choisis dans le backoffice | 22 septembre 2026 : demande de l'utilisateur ; le thème clair suffit, les deux autres n'étaient jamais utilisés |
 
 ## 15. Vitrine
 
 Le dépôt est public. Fait partie de "terminé" : un README (la lectrice, les trois commandes, captures
-à 1920 et 400 px dans les trois thèmes, schéma d'architecture, lien vers l'instance, badges CI,
+à 1920 et 400 px, schéma d'architecture, lien vers l'instance, badges CI,
 crédits Luciole CC BY, Atkinson Hyperlegible SIL OFL, Ebooks libres et gratuits) ; ce document et le
 design system ; le module de pages et le convertisseur testés comme des spécifications, avec fixtures
 EPUB versionnées ; CI, images Docker, Compose de production, OpenAPI en développement, licence.

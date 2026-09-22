@@ -147,8 +147,8 @@ app-book-card {
   box-shadow: var(--focus-shadow);
 }
 
-/* Head line above the content: title on the left, "Page 12 sur 840" on the right. With no title the
-   indicator stays right, which is why the row is flush-end and the title pushes itself over. */
+/* Head line above the content: title on the left, progress percentage on the right. With no title
+   the indicator stays right, which is why the row is flush-end and the title pushes itself over. */
 .page-head {
   display: flex;
   align-items: center;
@@ -248,48 +248,6 @@ app-book-card {
   fill: currentColor;
 }
 
-/* Same treatment as the footer's nav-bar (Précédent/Suivant): background, border and press states.
-   Square, and a touch smaller than the nav-bar's own height: this is a single icon, not a page turn. */
-.button--restart {
-  position: fixed;
-  top: var(--space-3);
-  left: var(--grid-padding);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(var(--nav-bar-height) * 0.85);
-  height: calc(var(--nav-bar-height) * 0.85);
-  padding: 0;
-  background: var(--nav-bar-bg);
-  color: var(--nav-bar-fg);
-  border: var(--nav-bar-border);
-  border-radius: var(--radius-none);
-}
-
-.button--restart:hover {
-  background: var(--nav-bar-bg-hover);
-}
-
-.button--restart:active {
-  background: var(--nav-bar-bg-active);
-  color: var(--nav-bar-fg-active);
-}
-
-.button--restart:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-shadow);
-}
-
-.button--restart svg {
-  width: var(--nav-bar-arrow-size);
-  height: var(--nav-bar-arrow-size);
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 /* ---- Paginated surfaces: one page is one column of exactly the viewport width ---- */
 .paged {
   position: relative;
@@ -308,14 +266,6 @@ app-book-card {
 .paged-viewport {
   height: 100%;
   overflow: hidden;
-}
-
-/* Twin container used to count pages of other chapters without touching the visible one. */
-.paged-viewport--measure {
-  position: absolute;
-  inset: var(--reading-padding);
-  height: auto;
-  visibility: hidden;
 }
 
 .paged-columns {

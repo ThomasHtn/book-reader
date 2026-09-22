@@ -9,6 +9,9 @@ const COMMAND_GAP_MS = 450;
 /** Poll cadence of books and settings, plus a margin. */
 const POLL_MS = 12_000;
 
+/** The progress indicator, a percentage of the book. */
+const PROGRESS_PATTERN = /^\d+ %$/;
+
 const FAKE_ENTRY = {
   entryId: 'https://www.ebooksgratuits.com/details.php?book=476',
   title: 'Le Horla',
@@ -101,14 +104,14 @@ test('reader journey', async ({ page }) => {
     await page.locator('button.book-card', { hasText: 'Le Horla' }).click();
     await expect(page).toHaveURL(/\/lire\//);
     horlaUrl = new URL(page.url()).pathname;
-    await expect(readerIndicator).toHaveText(/^Page 1( sur \d+)?$/);
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
     await expect(prevBar).toHaveCount(0);
 
     for (let turn = 0; turn < 10; turn++) {
       await page.keyboard.press(turn % 2 === 0 ? 'ArrowRight' : 'Space');
       await page.waitForTimeout(COMMAND_GAP_MS);
     }
-    await expect(readerIndicator).toHaveText(/^Page 11 sur \d+$/);
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
     await expectAccessible(page);
   });
 
@@ -123,40 +126,36 @@ test('reader journey', async ({ page }) => {
 
   await test.step('switches to another book, then comes back to the same page', async () => {
     await page.locator('button.book-card', { hasText: 'Amour' }).click();
-    await expect(readerIndicator).toHaveText(/^Page 1( sur \d+)?$/);
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
     await page.keyboard.press('ArrowRight');
     await page.waitForTimeout(COMMAND_GAP_MS);
     await page.getByRole('button', { name: 'Mes livres' }).click();
     await expect(page.locator('button.book-card').first()).toContainText('Amour');
 
     await page.locator('button.book-card', { hasText: 'Le Horla' }).click();
-    await expect(readerIndicator).toHaveText(/^Page 11 sur \d+$/);
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
   });
 
   await test.step('resumes after a reload and from the home route', async () => {
     await page.reload();
-    await expect(readerIndicator).toHaveText(/^Page 11 sur \d+$/);
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
     await page.goto('/');
     await expect(page).toHaveURL(new RegExp(`${horlaUrl}$`));
-    await expect(readerIndicator).toHaveText(/^Page 11 sur \d+$/);
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
   });
 
   await test.step('applies a new tier without reloading, keeping the position', async () => {
     const before = await storedProgress(page, horlaUrl);
-    const totalBefore = Number((await readerIndicator.textContent())!.match(/sur (\d+)/)![1]);
+    const indicatorBefore = await readerIndicator.textContent();
     const saved = await page.request.put('/api/admin/settings', {
       headers: { 'X-Admin-Key': E2E_ADMIN_KEY },
-      data: { fontTier: 140, theme: 'yellow-on-black' },
+      data: { fontTier: 140 },
     });
     expect(saved.ok()).toBe(true);
 
     await expect(page.locator('html')).toHaveAttribute('data-tier', '140', { timeout: POLL_MS });
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'yellow-on-black');
-    await expect
-      .poll(async () =>
-        Number(((await readerIndicator.textContent()) ?? '').match(/sur (\d+)/)?.[1] ?? 0),
-      )
-      .toBeGreaterThan(totalBefore);
+    // The percentage tracks the position in the book, not the page layout, so a tier change never moves it.
+    await expect(readerIndicator).toHaveText(indicatorBefore!, { timeout: POLL_MS });
     expect(await storedProgress(page, horlaUrl)).toMatchObject({
       blockIndex: before.blockIndex,
       charOffset: before.charOffset,
@@ -173,7 +172,7 @@ test('reader journey', async ({ page }) => {
     await expectAccessible(page);
 
     await page.unroute('**/api/**');
-    await expect(readerIndicator).toHaveText(/^Page \d+/, { timeout: POLL_MS });
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN, { timeout: POLL_MS });
   });
 
   await test.step('marks the book finished on its last page, and unmarks it when turning back', async () => {
@@ -191,7 +190,7 @@ test('reader journey', async ({ page }) => {
       );
     }, horlaUrl);
     await page.reload();
-    await expect(readerIndicator).toHaveText(/^Page \d+/);
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
 
     for (let turn = 0; turn < 60 && (await nextBar.count()) > 0; turn++) {
       await page.keyboard.press('ArrowRight');

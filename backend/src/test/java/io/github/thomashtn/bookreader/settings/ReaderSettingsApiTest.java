@@ -32,16 +32,15 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
      */
     @AfterEach
     void restoreDefaults() throws Exception {
-        putSettings("{\"fontTier\": 100, \"theme\": \"dark-on-light\"}");
+        putSettings("{\"fontTier\": 100}");
     }
 
     @Test
-    @DisplayName("Serves the default settings: tier 100, dark text on light paper")
+    @DisplayName("Serves the default settings: tier 100")
     void servesDefaults() throws Exception {
         mockMvc.perform(get("/api/settings"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.fontTier").value(100))
-            .andExpect(jsonPath("$.theme").value("dark-on-light"));
+            .andExpect(jsonPath("$.fontTier").value(100));
     }
 
     @Test
@@ -61,7 +60,7 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void setsCacheControl() throws Exception {
         mockMvc.perform(get("/api/settings"))
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache"));
-        putSettings("{\"fontTier\": 100, \"theme\": \"dark-on-light\"}")
+        putSettings("{\"fontTier\": 100}")
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
     }
 
@@ -70,31 +69,21 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void updatesSettings() throws Exception {
         String before = mockMvc.perform(get("/api/settings")).andReturn().getResponse().getHeader(HttpHeaders.ETAG);
 
-        putSettings("{\"fontTier\": 140, \"theme\": \"yellow-on-black\"}")
+        putSettings("{\"fontTier\": 140}")
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.fontTier").value(140))
-            .andExpect(jsonPath("$.theme").value("yellow-on-black"));
+            .andExpect(jsonPath("$.fontTier").value(140));
 
         mockMvc.perform(get("/api/settings").header(HttpHeaders.IF_NONE_MATCH, before))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.fontTier").value(140))
-            .andExpect(jsonPath("$.theme").value("yellow-on-black"));
+            .andExpect(jsonPath("$.fontTier").value(140));
     }
 
     @Test
     @DisplayName("Rejects a font tier outside 48, 72, 100 and 140")
     void rejectsUnknownTier() throws Exception {
-        putSettings("{\"fontTier\": 90, \"theme\": \"light-on-dark\"}")
+        putSettings("{\"fontTier\": 90}")
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
-    }
-
-    @Test
-    @DisplayName("Rejects an unknown theme")
-    void rejectsUnknownTheme() throws Exception {
-        putSettings("{\"fontTier\": 100, \"theme\": \"pink\"}")
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
     }
 
     @Test
@@ -102,8 +91,7 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void rejectsMissingFields() throws Exception {
         putSettings("{}")
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.errors.fontTier").exists())
-            .andExpect(jsonPath("$.errors.theme").exists());
+            .andExpect(jsonPath("$.errors.fontTier").exists());
     }
 
     @Test
@@ -111,7 +99,7 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void requiresAdminKey() throws Exception {
         mockMvc.perform(put("/api/admin/settings")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"fontTier\": 48, \"theme\": \"dark-on-light\"}"))
+                .content("{\"fontTier\": 48}"))
             .andExpect(status().isUnauthorized());
     }
 
@@ -120,7 +108,7 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void refusesWritesOnPublicApi() throws Exception {
         mockMvc.perform(post("/api/settings")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"fontTier\": 48, \"theme\": \"dark-on-light\"}"))
+                .content("{\"fontTier\": 48}"))
             .andExpect(status().isForbidden());
     }
 

@@ -1,7 +1,6 @@
 /* Design tokens for the accessible reader.
-   Three layers: primitives (raw values), semantic (purpose, switched per theme), component.
+   Three layers: primitives (raw values), semantic (purpose), component.
    Attributes on <html>:
-     data-theme   = dark-on-light (default) | light-on-dark | yellow-on-black
      data-tier    = 48 | 72 | 100 | 140 (default 100), the tier value itself as served by GET /api/settings
      data-density = admin, on backoffice routes only
    Every text/background pair below is >= 7:1, every control edge >= 3:1 against its surroundings. */
@@ -15,7 +14,7 @@
   --color-ink-900: #141414;
   --color-ink-700: #4a4a4a;
 
-  /* Night theme */
+  /* Night colours, used by the backoffice's dark colour scheme only */
   --color-night-950: #101010;
   --color-night-900: #1a1a1a;
   --color-night-800: #262626;
@@ -23,13 +22,7 @@
   --color-snow-100: #f2f2f2;
   --color-snow-300: #bdbdbd;
 
-  /* Amber theme */
-  --color-black: #000000;
-  --color-coal-900: #222222;
-  --color-amber-300: #ffd84d;
-  --color-amber-500: #cfaf3a;
-
-  /* Accent: one rose shared by every theme, dark text on it; the pressed state inverts.
+  /* Accent: dark text on rose, the pressed state inverts.
      Reserved for controls, so rose on screen always means "you can press this". */
   --color-rose-200: #ffc2d6;
   --color-rose-300: #ffa6c1;
@@ -48,15 +41,11 @@
   --color-salmon-300: #ff8a80;
   --color-moss-700: #2f6b3a;
   --color-moss-300: #8fd19a;
-  --color-ochre-700: #8a5a00;
-  --color-ochre-300: #f3c76b;
-
   /* Typography */
   --font-reading:
     'Luciole', 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', Arial, sans-serif;
   --font-admin:
     'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, 'Segoe UI', Arial, sans-serif;
-  --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
   /* Tiers are unitless: the size in px on any viewport of 1280px CSS or more */
   --tier-current: 100;
   --text-floor: 20px;
@@ -73,7 +62,6 @@
   --space-3: 24px;
   --space-4: 32px;
   --space-6: 48px;
-  --space-8: 64px;
 
   /* Shape and motion for the reader: none by design */
   --radius-none: 0;
@@ -81,7 +69,6 @@
      the separating between blocks, so their edge only has to close the shape. */
   --border-control: 2px;
   --border-card: 2px;
-  --duration-none: 0ms;
 
   /* Focus: inset double ring, gap in page colour then ring in text colour */
   --focus-ring-width: 8px;
@@ -111,7 +98,7 @@
   --color-surface-raised-strong: var(--color-paper-200);
   --color-marker: var(--color-rose-300);
   /* Commands share the blocks' surface; their ink edge is what tells them from the page, and both
-     edge and label follow the text colour so the three themes stay legible. */
+     edge and label follow the text colour. */
   --color-control-bg: var(--color-surface-raised);
   --color-control-bg-hover: var(--color-surface-raised-strong);
   --color-control-bg-active: var(--color-fg);
@@ -133,28 +120,6 @@
   --text-control: clamp(20px, calc(var(--text-body) * 0.55), 72px);
   --text-meta: clamp(16px, calc(var(--text-body) * 0.5), 64px);
   --gap-paragraph: 0.6em;
-}
-
-:root[data-theme='light-on-dark'] {
-  --color-bg: var(--color-night-950);
-  --color-fg: var(--color-snow-100);
-  --color-fg-muted: var(--color-snow-300);
-  --color-surface-raised: var(--color-night-800);
-  --color-surface-raised-strong: var(--color-night-700);
-  --color-focus-ring: var(--color-snow-100);
-  --color-focus-gap: var(--color-night-950);
-  --color-error: var(--color-salmon-300);
-}
-
-:root[data-theme='yellow-on-black'] {
-  --color-bg: var(--color-black);
-  --color-fg: var(--color-amber-300);
-  --color-fg-muted: var(--color-amber-500);
-  --color-surface-raised: var(--color-coal-900);
-  --color-surface-raised-strong: var(--color-night-700);
-  --color-focus-ring: var(--color-amber-300);
-  --color-focus-gap: var(--color-black);
-  --color-error: var(--color-amber-300);
 }
 
 :root[data-tier='48'] {
@@ -229,7 +194,7 @@
   --book-block-current-bg: var(--color-marker);
   /* The rose block deepens too, on the same rose ramp, and keeps its ink text at 8,3:1 */
   --book-block-current-bg-hover: var(--color-rose-400);
-  /* Ink whatever the theme: the rose plate is the same in all three, and the text colour is not */
+  /* Ink text on the rose plate */
   --book-block-current-fg: var(--color-ink-900);
   --book-block-finished-fg: var(--color-fg-muted);
   --book-block-finished-border: var(--border-card) solid var(--color-fg-muted);
@@ -268,7 +233,6 @@
   --admin-accent-fg: var(--color-white);
   --admin-accent-soft: var(--color-peach-50);
   --admin-success: var(--color-moss-700);
-  --admin-warning: var(--color-ochre-700);
   --admin-danger: var(--color-rust-700);
   --admin-focus: var(--color-ember-600);
 
@@ -277,7 +241,6 @@
   --admin-text-base: 16px;
   --admin-text-lg: 18px;
   --admin-text-xl: 22px;
-  --admin-text-2xl: 28px;
   --admin-leading: 1.5;
   --admin-weight: 400;
   --admin-weight-strong: 700;
@@ -308,7 +271,6 @@
     --admin-accent-fg: var(--color-ink-900);
     --admin-accent-soft: var(--color-cocoa-900);
     --admin-success: var(--color-moss-300);
-    --admin-warning: var(--color-ochre-300);
     --admin-danger: var(--color-salmon-300);
     --admin-focus: var(--color-peach-200);
     --admin-shadow: none;
