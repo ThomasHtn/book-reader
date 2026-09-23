@@ -1,5 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, linkedSignal, signal } from '@angular/core';
+import { LucideSave } from '@lucide/angular';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminMessage, failureMessage, successMessage } from '@core/admin/admin-message';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
@@ -9,6 +10,7 @@ import { FontTier, ReaderSettings } from '@core/http/api.model';
 @Component({
   selector: 'app-admin-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LucideSave],
   templateUrl: './settings.html',
 })
 export class Settings {

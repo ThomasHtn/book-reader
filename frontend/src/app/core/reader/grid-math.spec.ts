@@ -59,6 +59,16 @@ describe('paginateGrid', () => {
     expect(offsets).toEqual([0, 248]);
   });
 
+  it('counts the top padding against the page height, so the last row is never cut', () => {
+    // 24 of padding + 100 + 24 + 100 = 248 overflows a 240 viewport by 8.
+    const items: GridItem[] = rows(2, 3, 100, 24).map((item) => ({ ...item, top: item.top + 24 }));
+
+    const { offsets, pages } = paginateGrid(items, 240);
+
+    expect(offsets).toEqual([0, 124]);
+    expect(pages).toEqual([0, 0, 0, 1, 1, 1]);
+  });
+
   it('breaks after the row cap even when more rows would still fit the viewport', () => {
     const { offsets, pages } = paginateGrid(rows(4, 3, 100), 1000, 2);
 

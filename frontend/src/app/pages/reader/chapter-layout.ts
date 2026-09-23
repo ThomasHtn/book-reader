@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Block } from '@core/http/api.model';
+import { PageGeometry } from '@core/reader/page-count';
 import { TextPosition } from '@core/reader/reading-progress';
 import { DomChapterLayout } from './dom-chapter-layout';
 
@@ -28,6 +29,9 @@ export interface ChapterLayout {
 
   /** Returns the first character of a page of the rendered chapter. */
   positionOfPage(page: number): TextPosition;
+
+  /** Returns the page size and body font metrics that page count estimates run on. */
+  geometry(): PageGeometry;
 }
 
 /** Creates a layout over a viewport and its multi-column child. */

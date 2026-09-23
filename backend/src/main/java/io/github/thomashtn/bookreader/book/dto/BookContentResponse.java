@@ -3,19 +3,23 @@ package io.github.thomashtn.bookreader.book.dto;
 import io.github.thomashtn.bookreader.book.entity.Book;
 import io.github.thomashtn.bookreader.conversion.model.Block;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * A book in the internal format (specification section 7.3).
  *
- * @param id     identifier
- * @param title  title
- * @param author author
- * @param blocks blocks in reading order
+ * @param id         identifier
+ * @param title      title
+ * @param author     author
+ * @param blocks     blocks in reading order
+ * @param finishedAt when marked as read from the backoffice, {@code null} otherwise
  */
 @Schema(description = "Book in the internal format.")
-public record BookContentResponse(UUID id, String title, String author, List<Block> blocks) {
+public record BookContentResponse(
+    UUID id, String title, String author, List<Block> blocks, Instant finishedAt
+) {
 
     /**
      * Copies the blocks so the response stays immutable.
@@ -31,6 +35,8 @@ public record BookContentResponse(UUID id, String title, String author, List<Blo
      * @return response
      */
     public static BookContentResponse from(Book book) {
-        return new BookContentResponse(book.getId(), book.getTitle(), book.getAuthor(), book.getContent());
+        return new BookContentResponse(
+            book.getId(), book.getTitle(), book.getAuthor(), book.getContent(), book.getFinishedAt()
+        );
     }
 }

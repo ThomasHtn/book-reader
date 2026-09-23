@@ -1,8 +1,18 @@
 <section class="a-view" aria-labelledby="upload-title">
-  <h2 id="upload-title">Dépôt<small>EPUB sans DRM, 20 Mo maximum</small></h2>
-  <div class="a-drop" (dragover)="$event.preventDefault()" (drop)="drop($event)">
-    <b>Glissez un fichier EPUB ici</b>
-    <span>ou</span>
+  <header class="a-view-head">
+    <h2 id="upload-title">Dépôt</h2>
+    <p class="a-view-sub">EPUB sans DRM, 20 Mo maximum par fichier</p>
+  </header>
+  <div
+    class="a-drop"
+    [class.a-drop--over]="dragging()"
+    (dragenter)="dragging.set(true)"
+    (dragover)="$event.preventDefault()"
+    (dragleave)="dragging.set(false)"
+    (drop)="drop($event)"
+  >
+    <svg aria-hidden="true" lucideFileUp></svg>
+    <b>Glissez un ou plusieurs fichiers EPUB ici</b>
     <label for="upload-file" class="a-btn a-btn--secondary">Choisir des fichiers EPUB</label>
     <input
       id="upload-file"
@@ -12,25 +22,37 @@
       multiple
       (change)="choose($event)"
     />
-    @if (files().length) {
-      <span>{{
-        files().length === 1 ? files()[0].name : files().length + ' fichiers sélectionnés'
-      }}</span>
-    }
   </div>
-  <button
-    type="button"
-    class="a-btn a-btn--primary"
-    [disabled]="!files().length || sending()"
-    [attr.aria-busy]="sending() || null"
-    (click)="send()"
-  >
-    {{ sending() ? 'Envoi en cours' : 'Envoyer' }}
-  </button>
-  <p class="a-help">
-    Le livre est converti puis activé ; corrigez le titre et l'auteur dans la Bibliothèque si
-    besoin.
-  </p>
+  @if (files().length) {
+    <div class="a-files">
+      <p class="a-label">
+        {{ files().length === 1 ? files()[0].name : files().length + ' fichiers sélectionnés' }}
+      </p>
+      @if (files().length > 1) {
+        <ul>
+          @for (file of files(); track $index) {
+            <li>{{ file.name }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+  <div class="actions">
+    <button
+      type="button"
+      class="a-btn a-btn--primary"
+      [disabled]="!files().length || sending()"
+      [attr.aria-busy]="sending() || null"
+      (click)="send()"
+    >
+      <svg aria-hidden="true" lucideUpload></svg>
+      {{ sending() ? 'Envoi en cours' : 'Envoyer' }}
+    </button>
+    <p class="a-help">
+      Chaque livre est converti puis activé ; corrigez le titre et l'auteur dans la Bibliothèque si
+      besoin.
+    </p>
+  </div>
   <div aria-live="polite">
     @if (message(); as current) {
       <p class="a-message" [class.a-message--failure]="current.kind === 'failure'">

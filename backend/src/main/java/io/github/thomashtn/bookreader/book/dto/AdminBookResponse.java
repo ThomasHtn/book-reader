@@ -19,6 +19,7 @@ import java.util.UUID;
  * @param blockCount  number of blocks
  * @param activatedAt last activation
  * @param createdAt   import instant
+ * @param finishedAt  when marked as read from the backoffice, {@code null} otherwise
  */
 @Schema(description = "Imported book, active or withdrawn.")
 public record AdminBookResponse(
@@ -30,7 +31,8 @@ public record AdminBookResponse(
     boolean active,
     int blockCount,
     Instant activatedAt,
-    Instant createdAt
+    Instant createdAt,
+    Instant finishedAt
 ) {
 
     /**
@@ -41,7 +43,8 @@ public record AdminBookResponse(
      */
     public static AdminBookResponse from(BookSummary book) {
         return new AdminBookResponse(book.getId(), book.getTitle(), book.getAuthor(), book.getSource(),
-            book.getSourceUrl(), book.isActive(), book.getBlockCount(), book.getActivatedAt(), book.getCreatedAt());
+            book.getSourceUrl(), book.isActive(), book.getBlockCount(), book.getActivatedAt(), book.getCreatedAt(),
+            book.getFinishedAt());
     }
 
     /**
@@ -52,6 +55,7 @@ public record AdminBookResponse(
      */
     public static AdminBookResponse from(Book book) {
         return new AdminBookResponse(book.getId(), book.getTitle(), book.getAuthor(), book.getSource(),
-            book.getSourceUrl(), book.isActive(), book.getBlockCount(), book.getActivatedAt(), book.getCreatedAt());
+            book.getSourceUrl(), book.isActive(), book.getBlockCount(), book.getActivatedAt(), book.getCreatedAt(),
+            book.getFinishedAt());
     }
 }

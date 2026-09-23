@@ -35,7 +35,7 @@ export class AdminApi {
   }
 
   /**
-   * Changes title, author or activation of a book.
+   * Changes title, author, activation or read mark of a book.
    *
    * @param bookId - Book identifier.
    * @param patch - Fields to change.
@@ -43,6 +43,15 @@ export class AdminApi {
    */
   public updateBook(bookId: string, patch: BookPatch): Promise<AdminBook> {
     return firstValueFrom(this.http.patch<AdminBook>(API_ENDPOINTS.admin.book(bookId), patch));
+  }
+
+  /**
+   * Deletes a book for good.
+   *
+   * @param bookId - Book identifier.
+   */
+  public async deleteBook(bookId: string): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(API_ENDPOINTS.admin.book(bookId)));
   }
 
   /**

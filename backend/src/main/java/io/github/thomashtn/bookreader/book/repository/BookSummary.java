@@ -71,4 +71,11 @@ public interface BookSummary {
      * @return creation instant
      */
     Instant getCreatedAt();
+
+    /**
+     * Returns when the book was marked as read from the backoffice.
+     *
+     * @return marking instant or {@code null}
+     */
+    Instant getFinishedAt();
 }

@@ -32,7 +32,7 @@ export const API_ENDPOINTS = {
     books: '/api/admin/books',
 
     /**
-     * `PATCH` title, author or activation of a book.
+     * `PATCH` title, author, activation or read mark of a book; `DELETE` it for good.
      *
      * @param bookId - Book identifier.
      * @returns The endpoint URL.

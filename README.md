@@ -57,8 +57,10 @@ flowchart LR
   de texte. Le livre entier dans un seul conteneur dépassait le plafond de mise en page de Blink et
   prenait plus d'une seconde sur un PC modeste ([essai](docs/specification.md#52-pagination)).
 - **Position indépendante de l'affichage** : (index de bloc, décalage en caractères), retrouvée avec
-  `Range`, stockée dans `localStorage` ; c'est aussi elle qui donne le pourcentage de progression affiché
-  dans le coin supérieur droit.
+  `Range`, stockée dans `localStorage`.
+- **"Page 12 sur 840" sans tout mettre en page** : seul le chapitre affiché passe par le navigateur ;
+  les autres sont estimés par un calcul pur (largeurs de caractères, coupure des lignes, remplissage des
+  colonnes) à moins de 2 % du réel, puis remplacés par leur compte exact une fois affichés.
 - **Réglages globaux pilotés par le serveur** : palier (48, 72, 100, 140 px), relu toutes les dix
   secondes avec ETag, appliqué sans perdre la page.
 

@@ -72,6 +72,13 @@ describe('AdminShell', () => {
     expect(element.querySelector('nav')).toBeNull();
   });
 
+  it('offers a way back to the book list from the sign-in screen', async () => {
+    const { element } = await render();
+
+    const back = element.querySelector<HTMLAnchorElement>('a[href="/livres"]');
+    expect(back?.textContent?.trim()).toBe('Retour aux livres');
+  });
+
   it('opens the backoffice once the key is accepted', async () => {
     const { element, fixture } = await render();
 

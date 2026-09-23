@@ -1,12 +1,17 @@
 <section class="a-view" aria-labelledby="catalogue-title">
-  <h2 id="catalogue-title">Catalogue<small>Ebooks libres et gratuits</small></h2>
+  <header class="a-view-head">
+    <h2 id="catalogue-title">Catalogue</h2>
+    <p class="a-view-sub">Recherche en direct dans Ebooks libres et gratuits</p>
+  </header>
   <form class="a-search" role="search" (submit)="search($event)">
-    <div class="a-field">
-      <label for="catalogue-query">Titre ou auteur</label>
+    <label for="catalogue-query" class="sr-only">Titre ou auteur</label>
+    <div class="a-filter">
+      <svg aria-hidden="true" lucideSearch></svg>
       <input
         id="catalogue-query"
         class="a-input"
         type="search"
+        placeholder="Titre ou auteur"
         [value]="query()"
         (input)="query.set($any($event.target).value)"
       />
@@ -16,58 +21,69 @@
 
   <div aria-live="polite">
     @if (results.isLoading()) {
-      <p class="a-help">Recherche en cours</p>
+      <p class="a-help a-pending">Recherche en cours</p>
     } @else if (searchFailure(); as failure) {
-      <div class="a-card">
+      <div class="a-empty">
         <p class="a-message a-message--failure">{{ failure }}</p>
         <div class="actions">
           <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="retry()">
+            <svg aria-hidden="true" lucideRotateCw></svg>
             Réessayer
           </button>
         </div>
       </div>
     } @else if (results.hasValue() && results.value().length === 0) {
-      <p class="a-help">Aucun résultat</p>
-    } @else if (!results.hasValue()) {
-      <p class="a-help">Cherchez un titre ou un auteur pour l'ajouter à sa bibliothèque.</p>
+      <p class="a-empty">Aucun résultat pour « {{ submitted() }} »</p>
+    } @else if (results.hasValue()) {
+      <p class="a-help">
+        {{ results.value().length }}
+        {{ results.value().length === 1 ? 'résultat' : 'résultats' }} pour « {{ submitted() }} »
+      </p>
+    } @else {
+      <p class="a-empty">Cherchez un titre ou un auteur pour l'ajouter à sa bibliothèque.</p>
     }
   </div>
 
-  @if (results.hasValue()) {
-    @for (entry of results.value(); track entry.entryId) {
-      <article class="a-card">
-        <h3 class="t">{{ entry.title }}</h3>
-        @if (entry.author) {
-          <p class="m">{{ entry.author }}</p>
-        }
-        @if (entry.summary) {
-          <p class="s">{{ entry.summary }}</p>
-        }
-        <div class="actions">
-          @if (stateOf(entry) === 'active') {
-            <span class="a-chip a-chip--ok">Déjà active</span>
-          } @else {
-            <button
-              type="button"
-              class="a-btn a-btn--primary a-btn--sm"
-              [disabled]="busy()[entry.entryId]"
-              [attr.aria-busy]="busy()[entry.entryId] || null"
-              (click)="activate(entry)"
+  @if (results.hasValue() && results.value().length) {
+    <div class="a-results">
+      @for (entry of results.value(); track entry.entryId) {
+        <article class="a-card a-result">
+          <div class="a-result__text">
+            <h3 class="t">{{ entry.title }}</h3>
+            @if (entry.author) {
+              <p class="m">{{ entry.author }}</p>
+            }
+            @if (entry.summary) {
+              <p class="s">{{ entry.summary }}</p>
+            }
+          </div>
+          <div class="actions">
+            @if (stateOf(entry) === 'active') {
+              <span class="a-chip a-chip--ok">Déjà active</span>
+            } @else {
+              <button
+                type="button"
+                class="a-btn a-btn--primary a-btn--sm"
+                [disabled]="busy()[entry.entryId]"
+                [attr.aria-busy]="busy()[entry.entryId] || null"
+                (click)="activate(entry)"
+              >
+                <svg aria-hidden="true" lucideDownload></svg>
+                {{ busy()[entry.entryId] ? 'Activation en cours' : 'Activer' }}
+              </button>
+            }
+          </div>
+          @if (messages()[entry.entryId]; as message) {
+            <p
+              class="a-message"
+              [class.a-message--failure]="message.kind === 'failure'"
+              role="status"
             >
-              {{ busy()[entry.entryId] ? 'Activation en cours' : 'Activer' }}
-            </button>
+              {{ message.text }}
+            </p>
           }
-        </div>
-        @if (messages()[entry.entryId]; as message) {
-          <p
-            class="a-message"
-            [class.a-message--failure]="message.kind === 'failure'"
-            role="status"
-          >
-            {{ message.text }}
-          </p>
-        }
-      </article>
-    }
+        </article>
+      }
+    </div>
   }
 </section>

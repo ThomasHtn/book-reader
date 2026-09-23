@@ -77,7 +77,19 @@ public class DefaultBookService implements BookService {
         } else if (Boolean.FALSE.equals(request.active())) {
             book.withdraw();
         }
+        if (Boolean.TRUE.equals(request.finished())) {
+            book.markFinished(clock.instant());
+        } else if (Boolean.FALSE.equals(request.finished())) {
+            book.markUnfinished();
+        }
         return AdminBookResponse.from(book);
+    }
+
+    @Override
+    @Transactional
+    public void deleteBook(UUID id) {
+        Book book = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND));
+        repository.delete(book);
     }
 
     /**

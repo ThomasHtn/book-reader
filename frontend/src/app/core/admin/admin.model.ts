@@ -21,6 +21,7 @@ export interface AdminBook {
   readonly blockCount: number;
   readonly activatedAt: string;
   readonly createdAt: string;
+  readonly finishedAt: string | null;
 }
 
 /** Body of `PATCH /api/admin/books/{id}`; omitted fields stay unchanged. */
@@ -28,4 +29,5 @@ export interface BookPatch {
   readonly title?: string;
   readonly author?: string;
   readonly active?: boolean;
+  readonly finished?: boolean;
 }

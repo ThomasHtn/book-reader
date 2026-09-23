@@ -1,5 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { LucideDownload, LucideRotateCw, LucideSearch } from '@lucide/angular';
 import { AdminApi } from '@core/admin/admin-api';
 import { failureReason } from '@core/admin/admin-errors';
 import { AdminMessage, failureMessage, successMessage } from '@core/admin/admin-message';
@@ -10,6 +11,7 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
 @Component({
   selector: 'app-admin-catalogue',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LucideDownload, LucideRotateCw, LucideSearch],
   templateUrl: './catalogue.html',
 })
 export class Catalogue {
@@ -17,7 +19,7 @@ export class Catalogue {
 
   protected readonly query = signal('');
 
-  private readonly submitted = signal<string | null>(null);
+  protected readonly submitted = signal<string | null>(null);
 
   protected readonly results = httpResource<CatalogueEntry[]>(() => {
     const query = this.submitted();

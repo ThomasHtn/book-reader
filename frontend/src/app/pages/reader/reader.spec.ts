@@ -6,6 +6,7 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { BookContent } from '@core/http/api.model';
 import { ProgressStore } from '@core/reader/progress-store';
 import { ReaderData } from '@core/reader/reader-data';
+import { PageGeometry } from '@core/reader/page-count';
 import { TextPosition } from '@core/reader/reading-progress';
 import { FakeProgressStore, FakeReaderData, stubResizeObserver } from '../../testing/reader-fakes';
 import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './chapter-layout';
@@ -23,6 +24,7 @@ const BOOK: BookContent = {
     { kind: 'heading', text: 'II' },
     { kind: 'paragraph', text: 'c' },
   ],
+  finishedAt: null,
 };
 
 /** One page per block, so pages and positions are easy to predict. */
@@ -48,7 +50,15 @@ class FakeLayout implements ChapterLayout {
   public positionOfPage(page: number): TextPosition {
     return { blockIndex: this.content!.firstBlock + page, charOffset: 0 };
   }
+
+  /** One line per block, one line per page, so estimates match one page per block. */
+  public geometry(): PageGeometry {
+    return { width: 1000, height: 14, fontSize: 10, charWidth: () => 1 };
+  }
 }
+
+/** Layout key in jsdom at tier 100: no layout, so no size. */
+const JSDOM_LAYOUT = '0x0:100';
 
 describe('Reader', () => {
   let http: HttpTestingController;
@@ -127,7 +137,8 @@ describe('Reader', () => {
     expect(visible().shownPage).toBe(0);
     expect(prev()).toBeNull();
     expect(next()).not.toBeNull();
-    expect(indicator()).toBe('20 %');
+    // Chapter II is estimated with the end mark the fake layout leaves out: 3 + 3.
+    expect(indicator()).toBe('Page 1 sur 6');
   });
 
   it('resumes at the stored position and marks the book finished on its last page', async () => {
@@ -144,7 +155,8 @@ describe('Reader', () => {
       finished: true,
     });
 
-    expect(indicator()).toBe('100 %');
+    // Chapter I is estimated with its title page, which the fake layout leaves out: 5 + 2.
+    expect(indicator()).toBe('Page 7 sur 7');
   });
 
   it('turns pages across chapters and saves the first character of each page', async () => {
@@ -169,6 +181,38 @@ describe('Reader', () => {
     expect(store.saves.at(-1)?.position).toEqual({ blockIndex: 2, charOffset: 0 });
   });
 
+  it('replaces estimates with the counts measured on the way, and keeps them', async () => {
+    data.settings.set({ fontTier: 100 });
+    const { fixture, next, indicator } = await open();
+    expect(store.pageCounts.get('b1')).toEqual({ layout: JSDOM_LAYOUT, counts: [3, undefined] });
+
+    for (let turn = 0; turn < 3; turn++) {
+      next()!.click();
+      await flush(fixture);
+      vi.advanceTimersByTime(400);
+    }
+
+    expect(indicator()).toBe('Page 4 sur 5');
+    expect(store.pageCounts.get('b1')).toEqual({ layout: JSDOM_LAYOUT, counts: [3, 2] });
+  });
+
+  it('numbers pages from the counts measured in an earlier session', async () => {
+    store.progress.set('b1', { blockIndex: 4, charOffset: 0, finished: false, updatedAt: 't' });
+    store.pageCounts.set('b1', { layout: JSDOM_LAYOUT, counts: [7, undefined] });
+    data.settings.set({ fontTier: 100 });
+    const { indicator } = await open();
+
+    expect(indicator()).toBe('Page 9 sur 9');
+  });
+
+  it('neither reads nor overwrites stored counts before the settings are known', async () => {
+    store.pageCounts.set('b1', { layout: JSDOM_LAYOUT, counts: [7, undefined] });
+    const { indicator } = await open();
+
+    expect(indicator()).toBe('Page 1 sur 6');
+    expect(store.pageCounts.get('b1')).toEqual({ layout: JSDOM_LAYOUT, counts: [7, undefined] });
+  });
+
   it('clears the finished flag when turning back from the last page', async () => {
     store.progress.set('b1', { blockIndex: 4, charOffset: 0, finished: false, updatedAt: 't' });
     const { fixture, prev } = await open();
@@ -188,6 +232,18 @@ describe('Reader', () => {
     await open();
     expect(visible().shownPage).toBe(0);
     expect(visible().content?.firstBlock).toBe(0);
+  });
+
+  it('restarts at the first page a book marked as read after the last reading', async () => {
+    store.progress.set('b1', {
+      blockIndex: 4,
+      charOffset: 0,
+      finished: false,
+      updatedAt: '2026-09-17T10:00:00.000Z',
+    });
+    await open({ ...BOOK, finishedAt: '2026-09-18T10:00:00Z' });
+    expect(visible().content?.firstBlock).toBe(0);
+    expect(visible().shownPage).toBe(0);
   });
 
   it('ignores a command within 400 ms of the previous one', async () => {

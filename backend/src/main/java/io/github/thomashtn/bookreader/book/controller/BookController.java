@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader.book.controller;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.bookreader.book.dto.BookContentResponse;
 import io.github.thomashtn.bookreader.book.dto.BookSummaryResponse;
 import io.github.thomashtn.bookreader.book.service.BookService;
@@ -28,6 +29,10 @@ public class BookController {
      *
      * @param service book service
      */
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "Spring-managed singleton service, shared by design; its delete method trips the heuristic."
+    )
     public BookController(BookService service) {
         this.service = service;
     }

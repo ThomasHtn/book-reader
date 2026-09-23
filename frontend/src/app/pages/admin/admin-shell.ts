@@ -8,7 +8,15 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { LucideLibrary, LucideSearch, LucideSettings, LucideUpload } from '@lucide/angular';
+import {
+  LucideArrowLeft,
+  LucideLibrary,
+  LucideLogIn,
+  LucideLogOut,
+  LucideSearch,
+  LucideSettings,
+  LucideUpload,
+} from '@lucide/angular';
 import { AdminSession, SignInOutcome } from '@core/admin/admin-session';
 
 const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
@@ -29,7 +37,10 @@ const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+    LucideArrowLeft,
     LucideLibrary,
+    LucideLogIn,
+    LucideLogOut,
     LucideSearch,
     LucideSettings,
     LucideUpload,

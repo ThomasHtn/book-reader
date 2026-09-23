@@ -6,7 +6,13 @@ import { BookSummary } from '@core/http/api.model';
 import { POLL_INTERVAL_MS, ReaderData } from './reader-data';
 
 const BOOKS: BookSummary[] = [
-  { id: 'a', title: 'Le Horla', author: 'Guy de Maupassant', activatedAt: '2026-09-17T10:00:00Z' },
+  {
+    id: 'a',
+    title: 'Le Horla',
+    author: 'Guy de Maupassant',
+    activatedAt: '2026-09-17T10:00:00Z',
+    finishedAt: null,
+  },
 ];
 
 describe('ReaderData', () => {

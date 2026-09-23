@@ -1,5 +1,6 @@
 import { TextPosition } from '@core/reader/reading-progress';
 import { lowerBound } from '@core/reader/lower-bound';
+import { PageGeometry } from '@core/reader/page-count';
 import { pageAt, pageCount } from '@core/reader/page-math';
 import { ChapterContent, ChapterLayout } from './chapter-layout';
 
@@ -79,6 +80,23 @@ export class DomChapterLayout implements ChapterLayout {
     return {
       blockIndex: this.firstBlock + index,
       charOffset: Math.min(charOffset, Math.max(0, length - 1)),
+    };
+  }
+
+  public geometry(): PageGeometry {
+    const style = getComputedStyle(this.columns);
+    const fontSize = parseFloat(style.fontSize);
+    const context = this.columns.ownerDocument.createElement('canvas').getContext('2d');
+    if (context) {
+      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      context.letterSpacing = style.letterSpacing;
+    }
+    return {
+      width: this.columnWidth,
+      height: this.viewport.clientHeight,
+      fontSize,
+      // Without a canvas, an average Luciole advance keeps the estimate in range.
+      charWidth: (char) => context?.measureText(char).width ?? fontSize * 0.55,
     };
   }
 

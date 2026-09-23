@@ -9,8 +9,8 @@ const COMMAND_GAP_MS = 450;
 /** Poll cadence of books and settings, plus a margin. */
 const POLL_MS = 12_000;
 
-/** The progress indicator, a percentage of the book. */
-const PROGRESS_PATTERN = /^\d+ %$/;
+/** The page indicator, "Page 12 sur 840". */
+const PROGRESS_PATTERN = /^Page \d+ sur \d+$/;
 
 const FAKE_ENTRY = {
   entryId: 'https://www.ebooksgratuits.com/details.php?book=476',
@@ -104,14 +104,14 @@ test('reader journey', async ({ page }) => {
     await page.locator('button.book-card', { hasText: 'Le Horla' }).click();
     await expect(page).toHaveURL(/\/lire\//);
     horlaUrl = new URL(page.url()).pathname;
-    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
+    await expect(readerIndicator).toHaveText(/^Page 1 sur \d+$/);
     await expect(prevBar).toHaveCount(0);
 
     for (let turn = 0; turn < 10; turn++) {
       await page.keyboard.press(turn % 2 === 0 ? 'ArrowRight' : 'Space');
       await page.waitForTimeout(COMMAND_GAP_MS);
     }
-    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
+    await expect(readerIndicator).toHaveText(/^Page 11 sur \d+$/);
     await expectAccessible(page);
   });
 
@@ -154,8 +154,9 @@ test('reader journey', async ({ page }) => {
     expect(saved.ok()).toBe(true);
 
     await expect(page.locator('html')).toHaveAttribute('data-tier', '140', { timeout: POLL_MS });
-    // The percentage tracks the position in the book, not the page layout, so a tier change never moves it.
-    await expect(readerIndicator).toHaveText(indicatorBefore!, { timeout: POLL_MS });
+    // Bigger text means more pages: the numbers change, the position in the text does not.
+    await expect(readerIndicator).not.toHaveText(indicatorBefore!, { timeout: POLL_MS });
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
     expect(await storedProgress(page, horlaUrl)).toMatchObject({
       blockIndex: before.blockIndex,
       charOffset: before.charOffset,
@@ -198,6 +199,8 @@ test('reader journey', async ({ page }) => {
     }
     await expect(nextBar).toHaveCount(0);
     await expect(page.getByText('Fin du livre')).toBeInViewport();
+    const [, last, total] = /^Page (\d+) sur (\d+)$/.exec((await readerIndicator.textContent())!)!;
+    expect(last).toBe(total);
     expect((await storedProgress(page, horlaUrl)).finished).toBe(true);
 
     await page.keyboard.press('ArrowLeft');

@@ -1,4 +1,5 @@
 import { DOCUMENT, inject, InjectionToken, Service } from '@angular/core';
+import { MeasuredCounts, parsePageCounts, serializePageCounts } from './page-count';
 import { parseProgress, ReadingProgress, TextPosition } from './reading-progress';
 
 /** Browser `localStorage`, `null` where it is unavailable. */
@@ -15,6 +16,7 @@ export const BROWSER_STORAGE = new InjectionToken<Storage | null>('BROWSER_STORA
 
 const LAST_BOOK_KEY = 'reader.lastBookId';
 const PROGRESS_KEY_PREFIX = 'reader.progress.';
+const PAGES_KEY_PREFIX = 'reader.pages.';
 
 /**
  * Reading progress in `localStorage` only (specification section 8). Losing it is accepted, so every
@@ -66,6 +68,33 @@ export class ProgressStore {
       updatedAt: new Date().toISOString(),
     };
     this.write(PROGRESS_KEY_PREFIX + bookId, JSON.stringify(progress));
+  }
+
+  /**
+   * Returns the page counts measured for a book under a layout.
+   *
+   * @param bookId - Book identifier.
+   * @param layout - Layout key (viewport size and font tier).
+   * @param chapterCount - Number of chapters of the book.
+   * @returns One entry per chapter, `undefined` where unknown.
+   */
+  public pageCountsOf(
+    bookId: string,
+    layout: string,
+    chapterCount: number,
+  ): (number | undefined)[] {
+    return parsePageCounts(this.read(PAGES_KEY_PREFIX + bookId), layout, chapterCount);
+  }
+
+  /**
+   * Saves the page counts measured for a book, replacing those of any other layout.
+   *
+   * @param bookId - Book identifier.
+   * @param layout - Layout key.
+   * @param counts - Measured counts.
+   */
+  public savePageCounts(bookId: string, layout: string, counts: MeasuredCounts): void {
+    this.write(PAGES_KEY_PREFIX + bookId, serializePageCounts(layout, counts));
   }
 
   private read(key: string): string | null {

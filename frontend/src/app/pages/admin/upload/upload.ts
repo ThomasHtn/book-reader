@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { LucideFileUp, LucideUpload } from '@lucide/angular';
 import { AdminApi } from '@core/admin/admin-api';
 import { failureReason } from '@core/admin/admin-errors';
 import { AdminMessage } from '@core/admin/admin-message';
@@ -7,12 +8,15 @@ import { AdminMessage } from '@core/admin/admin-message';
 @Component({
   selector: 'app-admin-upload',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LucideFileUp, LucideUpload],
   templateUrl: './upload.html',
 })
 export class Upload {
   private readonly api = inject(AdminApi);
 
   protected readonly files = signal<readonly File[]>([]);
+
+  protected readonly dragging = signal(false);
 
   protected readonly sending = signal(false);
 
@@ -26,6 +30,7 @@ export class Upload {
 
   protected drop(event: DragEvent): void {
     event.preventDefault();
+    this.dragging.set(false);
     const files = event.dataTransfer?.files;
     if (files?.length) {
       this.files.set(Array.from(files));

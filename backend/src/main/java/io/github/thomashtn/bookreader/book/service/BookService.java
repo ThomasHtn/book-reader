@@ -46,6 +46,14 @@ public interface BookService {
     AdminBookResponse updateBook(UUID id, UpdateBookRequest request);
 
     /**
+     * Deletes a book and its content for good.
+     *
+     * @param id book identifier
+     * @throws io.github.thomashtn.bookreader.shared.exception.ResourceNotFoundException when unknown
+     */
+    void deleteBook(UUID id);
+
+    /**
      * Converts an uploaded EPUB and activates it immediately.
      *
      * @param epub archive bytes

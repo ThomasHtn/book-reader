@@ -2,6 +2,7 @@ package io.github.thomashtn.bookreader.book;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.startsWith;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -109,6 +110,39 @@ class BookApiTest extends PostgreSqlIntegrationTest {
     }
 
     @Test
+    @DisplayName("Marks a book as read for the reader, then as unread")
+    void marksReadAndUnread() throws Exception {
+        String id = uploadId(EpubFixtures.epub("feedbooks"));
+        mockMvc.perform(get("/api/books")).andExpect(jsonPath("$[0].finishedAt").isEmpty());
+
+        patchBook(id, "{\"finished\": true}")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.finishedAt").isNotEmpty())
+            .andExpect(jsonPath("$.active").value(true));
+
+        mockMvc.perform(get("/api/books")).andExpect(jsonPath("$[0].finishedAt").isNotEmpty());
+        mockMvc.perform(get("/api/books/{id}", id)).andExpect(jsonPath("$.finishedAt").isNotEmpty());
+
+        patchBook(id, "{\"finished\": false}").andExpect(jsonPath("$.finishedAt").isEmpty());
+        mockMvc.perform(get("/api/books/{id}", id)).andExpect(jsonPath("$.finishedAt").isEmpty());
+    }
+
+    @Test
+    @DisplayName("Deletes a book for good")
+    void deletesBook() throws Exception {
+        String id = uploadId(EpubFixtures.epub("feedbooks"));
+
+        deleteBook(id).andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/books")).andExpect(jsonPath("$", hasSize(0)));
+        mockMvc.perform(get("/api/books/{id}", id)).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/admin/books").header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
+            .andExpect(jsonPath("$", hasSize(0)));
+        deleteBook(id).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/admin/books/{id}", id)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("Corrects title and author, leaving omitted fields unchanged")
     void editsMetadata() throws Exception {
         String id = uploadId(EpubFixtures.epub("epub3"));
@@ -174,6 +208,10 @@ class BookApiTest extends PostgreSqlIntegrationTest {
     private String uploadId(byte[] epub) throws Exception {
         String json = upload(epub).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return JsonPath.read(json, "$.id");
+    }
+
+    private ResultActions deleteBook(String id) throws Exception {
+        return mockMvc.perform(delete("/api/admin/books/{id}", id).header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY));
     }
 
     private ResultActions patchBook(String id, String body) throws Exception {

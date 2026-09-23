@@ -55,6 +55,9 @@ public class Book {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "finished_at")
+    private Instant finishedAt;
+
     /**
      * Constructor required by JPA.
      */
@@ -133,6 +136,22 @@ public class Book {
      */
     public void withdraw() {
         this.active = false;
+    }
+
+    /**
+     * Marks the book as read from the backoffice; the reader then shows it finished.
+     *
+     * @param now marking instant
+     */
+    public void markFinished(Instant now) {
+        this.finishedAt = now;
+    }
+
+    /**
+     * Removes the read mark set from the backoffice.
+     */
+    public void markUnfinished() {
+        this.finishedAt = null;
     }
 
     /**
@@ -223,5 +242,14 @@ public class Book {
      */
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    /**
+     * Returns when the book was marked as read from the backoffice.
+     *
+     * @return marking instant, {@code null} when unmarked
+     */
+    public Instant getFinishedAt() {
+        return finishedAt;
     }
 }

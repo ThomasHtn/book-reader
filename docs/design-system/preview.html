@@ -16,6 +16,20 @@
   --color-paper-200: #cfc6b0;
   --color-ink-900: #141414;
   --color-ink-700: #4a4a4a;
+  --color-ink-800: #333333;
+
+  /* Book cloths, spread round the hue circle: cream text on each is 7,6:1 or more, and each
+     stands as far off the page */
+  --color-cloth-oxblood: #7a2233;
+  --color-cloth-rust: #803014;
+  --color-cloth-umber: #5a3a1a;
+  --color-cloth-olive: #4a4a14;
+  --color-cloth-green: #1f4d3d;
+  --color-cloth-teal: #16535a;
+  --color-cloth-navy: #223a63;
+  --color-cloth-indigo: #3a3079;
+  --color-cloth-plum: #553059;
+  --color-cloth-magenta: #7a1f5c;
 
   /* Night colours, used by the backoffice's dark colour scheme only */
   --color-night-950: #101010;
@@ -44,21 +58,19 @@
   --color-salmon-300: #ff8a80;
   --color-moss-700: #2f6b3a;
   --color-moss-300: #8fd19a;
-  --color-ochre-700: #8a5a00;
-  --color-ochre-300: #f3c76b;
-
   /* Typography */
   --font-reading:
     'Luciole', 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', Arial, sans-serif;
   --font-admin:
     'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, 'Segoe UI', Arial, sans-serif;
-  --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
   /* Tiers are unitless: the size in px on any viewport of 1280px CSS or more */
   --tier-current: 100;
   --text-floor: 20px;
-  /* Luciole ships 400 and 700 only; headings share the body weight */
+  /* Luciole ships 400 and 700 only. Bold is kept for reading text and book titles; the chrome
+     around them (commands, authors, labels, head line) is regular. */
   --weight-body: 700;
   --weight-heading: 700;
+  --weight-regular: 400;
   --leading-body: 1.4;
   --leading-tight: 1.15;
   --tracking-body: 0.01em;
@@ -69,19 +81,17 @@
   --space-3: 24px;
   --space-4: 32px;
   --space-6: 48px;
-  --space-8: 64px;
 
-  /* Shape and motion for the reader: none by design */
+  /* Shape for the reader: no rules and no motion; a fill dark enough to stand off the page draws
+     each target, and one soft corner radius rounds commands and blocks alike. */
   --radius-none: 0;
-  /* Thin rules everywhere: the flat fills carry the commands, and the grid gutter does most of
-     the separating between blocks, so their edge only has to close the shape. */
-  --border-control: 2px;
-  --border-card: 2px;
-  --duration-none: 0ms;
+  --radius-reader: 12px;
+  --radius-tag: 6px;
 
-  /* Focus: inset double ring, gap in page colour then ring in text colour */
-  --focus-ring-width: 8px;
-  --focus-gap-width: 4px;
+  /* Focus: inset double ring, ink outside then cream inside, so one of the two always shows on a
+     light fill as on a dark one */
+  --focus-ring-width: 6px;
+  --focus-gap-width: 6px;
 
   /* Large hand (64px), same treatment as the arrow, hotspot at the fingertip. Desktop only, and
      the system pointer takes over everywhere else. */
@@ -95,6 +105,10 @@
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><path d='M6 4 L6 52 L18 40 L28 60 L38 55 L28 36 L44 36 Z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>")
       6 4,
     auto;
+  /* Preview only: backoffice warning state and code samples */
+  --color-ochre-700: #8a5a00;
+  --color-ochre-300: #f3c76b;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
 }
 
 /* === SEMANTIC ============================================================ */
@@ -108,12 +122,14 @@
   --color-marker: var(--color-rose-300);
   /* Commands share the blocks' surface; their ink edge is what tells them from the page, and both
      edge and label follow the text colour. */
-  --color-control-bg: var(--color-surface-raised);
-  --color-control-bg-hover: var(--color-surface-raised-strong);
-  --color-control-bg-active: var(--color-fg);
-  --color-control-fg: var(--color-fg);
-  --color-control-fg-active: var(--color-bg);
-  --color-control-border: var(--color-fg);
+  /* Commands are solid ink plates with cream labels (16,1:1): with no rule around them, the fill
+     alone has to set them off the page. Hover lifts the plate one tone (12,1:1), pressed turns it
+     to the paper surface with ink text (10,8:1). */
+  --color-control-bg: var(--color-ink-900);
+  --color-control-bg-hover: var(--color-ink-800);
+  --color-control-bg-active: var(--color-surface-raised-strong);
+  --color-control-fg: var(--color-bg);
+  --color-control-fg-active: var(--color-fg);
   --color-focus-ring: var(--color-ink-900);
   --color-focus-gap: var(--color-paper-50);
   --color-error: var(--color-rust-700);
@@ -159,7 +175,9 @@
   --nav-bar-bg-active: var(--color-control-bg-active);
   --nav-bar-fg: var(--color-control-fg);
   --nav-bar-fg-active: var(--color-control-fg-active);
-  --nav-bar-border: var(--border-control) solid var(--color-control-border);
+  /* Bars stand apart on a strip of page instead of sharing a rule */
+  --nav-row-gap: var(--space-1);
+  --nav-row-padding: var(--space-1) var(--grid-padding) var(--grid-padding);
 
   /* Primary button ("Mes livres", "Réessayer") */
   --button-bg: var(--color-control-bg);
@@ -167,7 +185,6 @@
   --button-bg-active: var(--color-control-bg-active);
   --button-fg: var(--color-control-fg);
   --button-fg-active: var(--color-control-fg-active);
-  --button-border: var(--border-control) solid var(--color-control-border);
   --button-min-height: max(56px, calc(var(--text-control) * 2));
   --button-padding-x: clamp(16px, 2.5vw, 48px);
 
@@ -178,34 +195,48 @@
   --reading-max-width: 1500px;
 
   /* Head line: screen title on the left, page indicator on the right. Both are status, never a
-     command, so both stay small next to the reading text. */
-  --page-title-size: clamp(20px, calc(var(--text-body) * 0.35), 44px);
+     command, so both stay small next to the reading text. The title is chrome, not reading text: it
+     keeps the tier-100 size at every tier, or "Mes livres" would grow and shrink with her font size. */
+  --page-title-size: clamp(20px, 2.734vw, 35px);
   --indicator-size: clamp(16px, calc(var(--text-body) * 0.25), 32px);
-  --head-padding: var(--space-2) var(--reading-padding);
+  --head-padding: var(--space-3) var(--reading-padding) var(--space-2);
 
-  /* Book grid: three blocks per row, each carrying a title and its state. No cover: the title is
-     the whole of what identifies a book, so it gets the block's full width. */
+  /* Book grid: three blocks per row, each carrying a title and its state. No cover image: the title
+     and a cloth colour identify a book, so the title gets the block's full width. */
   --grid-columns: 3;
   --grid-gap: var(--space-3);
   /* Same axis as the reading text, on a narrow side padding of its own: the blocks are the content
      here, so they take the width the margins give up. */
   --grid-max-width: 1500px;
   --grid-padding: clamp(8px, 1vw, 20px);
-  --book-block-bg: var(--color-surface-raised);
-  /* Same rule as the commands: pointing at a block deepens its fill by one tone, nothing moves */
-  --book-block-bg-hover: var(--color-surface-raised-strong);
-  --book-block-fg: var(--color-fg);
-  --book-block-border: var(--border-card) solid var(--color-fg);
+  /* Each book is bound in one of ten cloths, chosen from its id (`coverTone`): colour survives in
+     peripheral vision where the title does not, so a book can be found by colour first. */
+  --book-cover-1: var(--color-cloth-green);
+  --book-cover-2: var(--color-cloth-navy);
+  --book-cover-3: var(--color-cloth-oxblood);
+  --book-cover-4: var(--color-cloth-plum);
+  --book-cover-5: var(--color-cloth-umber);
+  --book-cover-6: var(--color-cloth-teal);
+  --book-cover-7: var(--color-cloth-magenta);
+  --book-cover-8: var(--color-cloth-olive);
+  --book-cover-9: var(--color-cloth-indigo);
+  --book-cover-10: var(--color-cloth-rust);
+  --book-block-fg: var(--color-bg);
+  /* Pointing at a block darkens its cloth, which only raises the text contrast; nothing moves */
+  --book-block-hover-darken: 30%;
   --book-block-padding: var(--space-3);
   --book-block-min-height: calc(var(--button-min-height) * 2);
-  /* The book in progress is the only rose block of the grid, so it also reads as "resume here" */
+  /* The book in progress is the only light, rose block among the cloths, so it reads as "resume
+     here" from across the room */
   --book-block-current-bg: var(--color-marker);
   /* The rose block deepens too, on the same rose ramp, and keeps its ink text at 8,3:1 */
   --book-block-current-bg-hover: var(--color-rose-400);
   /* Ink text on the rose plate */
   --book-block-current-fg: var(--color-ink-900);
-  --book-block-finished-fg: var(--color-fg-muted);
-  --book-block-finished-border: var(--border-card) solid var(--color-fg-muted);
+  /* A finished book loses its cloth: pale surface, ink text (13,5:1), put back on the shelf */
+  --book-block-finished-bg: var(--color-surface-raised);
+  --book-block-finished-bg-hover: var(--color-surface-raised-strong);
+  --book-block-finished-fg: var(--color-fg);
   /* Blocks are containers, so their text is sized against the column, never the viewport. The
      factor is capped so a wide column does not cost a row of the grid. */
   --card-title-size: clamp(var(--text-floor), 8cqi, var(--text-body));
@@ -215,14 +246,17 @@
   --card-meta-size: clamp(14px, 8cqi, var(--text-meta));
   --card-gap: var(--space-2);
 
-  /* Status tag ("Terminé") */
-  --tag-border: var(--border-card) solid currentColor;
-  --tag-padding: 0 var(--space-1);
+  /* Status tag ("En cours", "Terminé"): an ink chip with cream text (16,1:1), only ever on the two
+     light blocks */
+  --tag-bg: var(--color-ink-900);
+  --tag-fg: var(--color-bg);
+  --tag-padding: 0.1em 0.45em;
 
-  /* Focus ring, applied as inset box-shadow so it works on edge-to-edge bars */
+  /* Focus ring, applied as inset box-shadow so it follows the corner radius: ink on the edge, cream
+     inside it */
   --focus-shadow:
-    inset 0 0 0 var(--focus-gap-width) var(--color-focus-gap),
-    inset 0 0 0 calc(var(--focus-gap-width) + var(--focus-ring-width)) var(--color-focus-ring);
+    inset 0 0 0 var(--focus-ring-width) var(--color-focus-ring),
+    inset 0 0 0 calc(var(--focus-ring-width) + var(--focus-gap-width)) var(--color-focus-gap);
 }
 
 /* === BACKOFFICE ========================================================== */
@@ -310,20 +344,19 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
 .screen[data-active] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
 .screen[data-active] > main { display: grid; grid-template-rows: minmax(0, 1fr); min-height: 0; }
 
-.nav-row { display: flex; }
+.nav-row { display: flex; gap: var(--nav-row-gap); padding: var(--nav-row-padding); }
 .nav-row .nav-bar { flex: 1; }
 .nav-row .nav-bar--exit { flex: 0 1 auto; }
 .nav-row .nav-bar--exit:only-child { flex: 1; }
-.nav-row > * + * { margin-left: calc(-1 * var(--border-control)); }
 
 .nav-bar {
   display: flex; align-items: center; justify-content: center; gap: var(--space-2);
-  background: var(--nav-bar-bg); color: var(--nav-bar-fg); border: var(--nav-bar-border);
+  background: var(--nav-bar-bg); color: var(--nav-bar-fg); border: none;
   font-size: var(--text-control); font-weight: var(--weight-heading);
-  padding: var(--space-2); min-height: var(--nav-bar-height); border-radius: var(--radius-none);
+  padding: var(--space-2); min-height: var(--nav-bar-height); border-radius: var(--radius-reader);
 }
 .nav-bar--exit { padding: var(--space-2) var(--button-padding-x); }
-.nav-bar svg { width: var(--nav-bar-arrow-size); height: var(--nav-bar-arrow-size); fill: none; stroke: currentColor; stroke-width: 12; stroke-linecap: square; }
+.nav-bar svg { width: var(--nav-bar-arrow-size); height: var(--nav-bar-arrow-size); fill: none; stroke: currentColor; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
 .nav-bar span { font-size: var(--nav-bar-label-size); white-space: nowrap; }
 .nav-bar:hover { background: var(--nav-bar-bg-hover); }
 .nav-bar:active { background: var(--nav-bar-bg-active); color: var(--nav-bar-fg-active); }
@@ -331,14 +364,14 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
 
 .page-head { display: flex; align-items: baseline; justify-content: flex-end; gap: var(--space-3); padding: var(--head-padding); max-width: var(--reading-max-width); width: 100%; margin: 0 auto; }
 .page-head--grid { max-width: var(--grid-max-width); }
-.page-title { margin: 0 auto 0 0; font-size: var(--page-title-size); font-weight: var(--weight-heading); line-height: var(--leading-tight); }
-.page-indicator { margin: 0; color: var(--color-fg-muted); font-size: var(--indicator-size); font-weight: var(--weight-heading); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.page-title { margin: 0 auto 0 0; font-size: var(--page-title-size); font-weight: var(--weight-regular); line-height: var(--leading-tight); }
+.page-indicator { margin: 0; color: var(--color-fg-muted); font-size: var(--indicator-size); font-weight: var(--weight-regular); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .button {
   display: inline-flex; align-items: center; gap: var(--space-2);
   min-height: var(--button-min-height); padding: 0 var(--button-padding-x);
-  background: var(--button-bg); color: var(--button-fg); border: var(--button-border);
-  font-size: var(--text-control); font-weight: var(--weight-heading); border-radius: var(--radius-none);
+  background: var(--button-bg); color: var(--button-fg); border: none;
+  font-size: var(--text-control); font-weight: var(--weight-regular); border-radius: var(--radius-reader);
 }
 .button:hover { background: var(--button-bg-hover); }
 .button:active { background: var(--button-bg-active); color: var(--button-fg-active); }
@@ -353,28 +386,38 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
 .book-grid-viewport { height: 100%; overflow: hidden; padding: 0 var(--reading-padding); max-width: var(--grid-max-width); width: 100%; margin: 0 auto; }
 .book-grid { display: grid; grid-template-columns: repeat(var(--grid-columns), 1fr); grid-auto-rows: 1fr; gap: var(--grid-gap); align-content: start; padding-top: var(--reading-padding); }
 .book-card {
+  --book-cover: var(--book-cover-1);
   container-type: inline-size; width: 100%; display: grid; align-content: start; gap: var(--card-gap);
   min-height: var(--book-block-min-height); padding: var(--book-block-padding);
-  background: var(--book-block-bg); color: var(--book-block-fg); border: var(--book-block-border);
-  text-align: left; font-weight: var(--weight-body); line-height: var(--leading-tight); border-radius: var(--radius-none);
+  background: var(--book-cover); color: var(--book-block-fg); border: none;
+  text-align: left; font-weight: var(--weight-regular); line-height: var(--leading-tight); border-radius: var(--radius-reader);
 }
-.book-card .title { font-size: var(--card-title-size); overflow-wrap: anywhere; }
+.book-card[data-tone="2"] { --book-cover: var(--book-cover-2); }
+.book-card[data-tone="3"] { --book-cover: var(--book-cover-3); }
+.book-card[data-tone="4"] { --book-cover: var(--book-cover-4); }
+.book-card[data-tone="5"] { --book-cover: var(--book-cover-5); }
+.book-card[data-tone="6"] { --book-cover: var(--book-cover-6); }
+.book-card[data-tone="7"] { --book-cover: var(--book-cover-7); }
+.book-card[data-tone="8"] { --book-cover: var(--book-cover-8); }
+.book-card[data-tone="9"] { --book-cover: var(--book-cover-9); }
+.book-card[data-tone="10"] { --book-cover: var(--book-cover-10); }
+.book-card .title { font-size: var(--card-title-size); font-weight: var(--weight-heading); overflow-wrap: anywhere; }
 .book-card .author { font-size: var(--card-author-size); overflow-wrap: anywhere; }
+.book-card:hover { background: color-mix(in srgb, var(--book-cover), var(--color-ink-900) var(--book-block-hover-darken)); }
 .book-card--current { background: var(--book-block-current-bg); color: var(--book-block-current-fg); }
-.book-card--finished { color: var(--book-block-finished-fg); border: var(--book-block-finished-border); }
-.book-card:hover { background: var(--book-block-bg-hover); }
 .book-card--current:hover { background: var(--book-block-current-bg-hover); }
-.book-card--finished:hover { color: var(--book-block-fg); border: var(--book-block-border); }
+.book-card--finished { background: var(--book-block-finished-bg); color: var(--book-block-finished-fg); }
+.book-card--finished:hover { background: var(--book-block-finished-bg-hover); }
 .book-card:active { background: var(--color-control-bg-active); color: var(--color-control-fg-active); }
 .book-card:focus-visible { outline: none; box-shadow: var(--focus-shadow); }
-.book-card .tag { justify-self: start; font-size: var(--card-meta-size); border: var(--tag-border); padding: var(--tag-padding); white-space: nowrap; }
+.book-card .tag { justify-self: start; margin-top: var(--space-1); font-size: var(--card-meta-size); background: var(--tag-bg); color: var(--tag-fg); padding: var(--tag-padding); border-radius: var(--radius-tag); white-space: nowrap; }
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .status { display: grid; place-content: center; text-align: center; gap: var(--space-6); padding: var(--reading-padding); grid-column: 1 / -1; grid-row: 1 / -1; }
 .status p { font-size: var(--text-body); line-height: var(--leading-body); margin: 0; max-width: 24ch; text-wrap: balance; }
 .status .button { justify-self: center; }
 
-@media (max-width: 480px) { :root { --grid-gap: var(--space-2); } }
+@media (max-width: 480px) { :root { --grid-gap: var(--space-2); --book-block-padding: var(--space-1) var(--space-1) var(--space-2); } }
 
 /* ---- Tokens sheet ------------------------------------------------------- */
 .sheet { grid-column: 1 / -1; grid-row: 1 / -1; overflow: auto; padding: var(--space-4) clamp(16px, 3vw, 48px) 120px; font-family: var(--font-admin); font-weight: 400; font-size: 16px; line-height: 1.5; }
@@ -505,10 +548,10 @@ button { font: inherit; letter-spacing: inherit; cursor: pointer; }
     <div class="book-grid">
     <button type="button" class="book-card book-card--current" data-goto="reading"><span class="title">Le Tour du monde en quatre-vingts jours</span><span class="author">Jules Verne</span><span class="tag">En cours</span></button>
     <button type="button" class="book-card book-card--finished"><span class="title">Boule de Suif</span><span class="author">Guy de Maupassant</span><span class="tag">Terminé</span></button>
-    <button type="button" class="book-card"><span class="title">Le Grand Meaulnes</span><span class="author">Alain-Fournier</span></button>
-    <button type="button" class="book-card"><span class="title">La Guerre des boutons</span><span class="author">Louis Pergaud</span></button>
-    <button type="button" class="book-card"><span class="title">Vingt mille lieues sous les mers</span><span class="author">Jules Verne</span></button>
-    <button type="button" class="book-card"><span class="title">Une vie</span><span class="author">Guy de Maupassant</span></button>
+    <button type="button" class="book-card" data-tone="1"><span class="title">Le Grand Meaulnes</span><span class="author">Alain-Fournier</span></button>
+    <button type="button" class="book-card" data-tone="10"><span class="title">La Guerre des boutons</span><span class="author">Louis Pergaud</span></button>
+    <button type="button" class="book-card" data-tone="2"><span class="title">Vingt mille lieues sous les mers</span><span class="author">Jules Verne</span></button>
+    <button type="button" class="book-card" data-tone="9"><span class="title">Une vie</span><span class="author">Guy de Maupassant</span></button>
     </div>
   </main>
   <footer class="nav-footer">

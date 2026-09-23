@@ -18,17 +18,19 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { BookContent } from '@core/http/api.model';
 import { Chapter, chapterOfBlock, splitIntoChapters } from '@core/reader/chapters';
 import { COMMAND_INTERVAL_MS, CommandGate } from '@core/reader/command-gate';
+import { bookPageNumber, bookPageTotal, estimatePageCounts } from '@core/reader/page-count';
 import { Location, nextLocation, PendingLocation, previousLocation } from '@core/reader/page-math';
 import { ProgressStore } from '@core/reader/progress-store';
 import { POLL_INTERVAL_MS, ReaderData } from '@core/reader/reader-data';
-import { readingProgressPercent, startPosition, TextPosition } from '@core/reader/reading-progress';
+import { startPosition, TextPosition, withReadMark } from '@core/reader/reading-progress';
 import { NavBar } from '@shared/nav-bar/nav-bar';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './chapter-layout';
 
 /**
  * Route `/lire/:id`: three commands only, all in the footer (Mes livres, Précédent, Suivant); the
- * text owns everything above them. The current chapter is laid out in columns.
+ * text owns everything above them. The current chapter is laid out in columns; other chapters are
+ * never laid out for "Page 12 sur 840": their counts are remembered once shown, estimated until then.
  */
 @Component({
   selector: 'app-reader',
@@ -102,6 +104,12 @@ export class Reader {
 
   private readonly chapterPages = signal(0);
 
+  /** Page count of every chapter, measured or estimated. */
+  private readonly pageCounts = signal<number[]>([]);
+
+  /** Counts measured under the current layout, persisted per book. */
+  private measured: (number | undefined)[] = [];
+
   private content: BookContent | null = null;
 
   private chapters: Chapter[] = [];
@@ -130,10 +138,13 @@ export class Reader {
   });
 
   protected readonly indicator = computed(() => {
-    if (!this.location() || !this.content) {
+    const location = this.location();
+    const counts = this.pageCounts();
+    if (!location || counts.length === 0) {
       return '';
     }
-    return `${readingProgressPercent(this.position, this.content.blocks.length)} %`;
+    const number = bookPageNumber(counts, location.chapter, location.page);
+    return `Page ${number} sur ${bookPageTotal(counts)}`;
   });
 
   constructor() {
@@ -205,7 +216,8 @@ export class Reader {
     );
     this.chapters = splitIntoChapters(book.blocks);
     this.store.markOpened(book.id);
-    this.layoutAt(startPosition(this.store.progressOf(book.id), book.blocks.length));
+    const progress = withReadMark(this.store.progressOf(book.id), book.finishedAt);
+    this.layoutAt(startPosition(progress, book.blocks.length));
     this.save();
   }
 
@@ -235,19 +247,41 @@ export class Reader {
     this.position = layout.positionOfPage(page);
   }
 
-  /** Lays the chapter of a position out again and shows the page holding it. */
+  /** Lays the chapter of a position out again, shows the page holding it and estimates the others. */
   private layoutAt(position: TextPosition): void {
+    const book = this.content!;
+    const layout = this.visibleLayout!;
+    this.layoutKey = this.currentLayoutKey();
+    this.measured = this.countsPersist()
+      ? this.store.pageCountsOf(book.id, this.layoutKey, this.chapters.length)
+      : this.chapters.map(() => undefined);
     const chapter = chapterOfBlock(this.chapters, position.blockIndex);
     this.renderChapter(chapter);
-    const page = Math.min(this.visibleLayout!.pageOf(position), this.chapterPages() - 1);
-    this.visibleLayout!.show(page);
+    this.pageCounts.set(estimatePageCounts(book, this.chapters, this.measured, layout.geometry()));
+    const page = Math.min(layout.pageOf(position), this.chapterPages() - 1);
+    layout.show(page);
     this.location.set({ chapter, page });
     this.position = position;
-    this.layoutKey = this.currentLayoutKey();
   }
 
+  /** Lays a chapter out and records its page count in place of any estimate. */
   private renderChapter(chapter: number): void {
-    this.chapterPages.set(this.visibleLayout!.render(this.contentOf(chapter)));
+    const pages = this.visibleLayout!.render(this.contentOf(chapter));
+    this.chapterPages.set(pages);
+    this.pageCounts.update((counts) =>
+      counts.map((count, index) => (index === chapter ? pages : count)),
+    );
+    if (this.measured[chapter] !== pages) {
+      this.measured[chapter] = pages;
+      if (this.countsPersist()) {
+        this.store.savePageCounts(this.content!.id, this.layoutKey, this.measured);
+      }
+    }
+  }
+
+  /** Counts are stored per tier, so none is read or written before the settings are known. */
+  private countsPersist(): boolean {
+    return this.data.settings() !== undefined;
   }
 
   private contentOf(chapter: number): ChapterContent {

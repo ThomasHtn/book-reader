@@ -13,6 +13,8 @@ export interface BookSummary {
   readonly title: string;
   readonly author: string;
   readonly activatedAt: string;
+  /** Set when the caregiver marked the book as read; `null` otherwise. */
+  readonly finishedAt: string | null;
 }
 
 /** Response of `GET /api/books/{id}`. */
@@ -21,6 +23,7 @@ export interface BookContent {
   readonly title: string;
   readonly author: string;
   readonly blocks: readonly Block[];
+  readonly finishedAt: string | null;
 }
 
 /** Font tier in pixels, applied as `data-tier` on `<html>`. */

@@ -2,17 +2,18 @@ import { BookSummary } from '@core/http/api.model';
 import {
   ReadingProgress,
   parseProgress,
-  readingProgressPercent,
   resumableBookId,
   sortLibrary,
   startPosition,
+  withReadMark,
 } from './reading-progress';
 
-const book = (id: string, activatedAt: string): BookSummary => ({
+const book = (id: string, activatedAt: string, finishedAt: string | null = null): BookSummary => ({
   id,
   title: `Titre ${id}`,
   author: 'Auteur',
   activatedAt,
+  finishedAt,
 });
 
 const progress = (updatedAt: string, finished = false): ReadingProgress => ({
@@ -44,6 +45,33 @@ describe('parseProgress', () => {
   });
 });
 
+describe('withReadMark', () => {
+  it('keeps the stored progress when the book is not marked as read', () => {
+    expect(withReadMark(progress('2026-09-17T10:00:00.000Z'), null)).toEqual(
+      progress('2026-09-17T10:00:00.000Z'),
+    );
+    expect(withReadMark(undefined, null)).toBeUndefined();
+  });
+
+  it('turns a book marked as read after the last reading into a finished book', () => {
+    expect(
+      withReadMark(progress('2026-09-17T10:00:00.000Z'), '2026-09-18T08:00:00.123456Z'),
+    ).toEqual({
+      blockIndex: 0,
+      charOffset: 0,
+      finished: true,
+      updatedAt: '2026-09-18T08:00:00.123Z',
+    });
+    expect(withReadMark(undefined, '2026-09-18T08:00:00Z')?.finished).toBe(true);
+  });
+
+  it('lets a reading after the mark win', () => {
+    expect(withReadMark(progress('2026-09-19T10:00:00.000Z'), '2026-09-18T08:00:00Z')).toEqual(
+      progress('2026-09-19T10:00:00.000Z'),
+    );
+  });
+});
+
 describe('startPosition', () => {
   it('resumes at the stored position', () => {
     expect(startPosition(progress('t'), 10)).toEqual({ blockIndex: 3, charOffset: 12 });
@@ -56,13 +84,6 @@ describe('startPosition', () => {
 
   it('starts at the beginning when the block index exceeds the book', () => {
     expect(startPosition(progress('t'), 3)).toEqual({ blockIndex: 0, charOffset: 0 });
-  });
-});
-
-describe('readingProgressPercent', () => {
-  it('rounds the current block over the total', () => {
-    expect(readingProgressPercent({ blockIndex: 0, charOffset: 0 }, 5)).toBe(20);
-    expect(readingProgressPercent({ blockIndex: 4, charOffset: 0 }, 5)).toBe(100);
   });
 });
 
@@ -99,6 +120,19 @@ describe('sortLibrary', () => {
     expect(entries.map((entry) => entry.finished)).toEqual([false, true, false, false, false]);
   });
 
+  it('lists a book marked as read as finished, by the date of the mark', () => {
+    const marked = [...books, book('marked', '2026-01-01T00:00:00Z', '2026-09-07T00:00:00Z')];
+    const entries = sortLibrary(marked, (id) => stored[id]);
+
+    expect(entries.map((entry) => entry.book.id).slice(0, 4)).toEqual([
+      'read-new',
+      'marked',
+      'finished',
+      'read-old',
+    ]);
+    expect(entries[1].finished).toBe(true);
+  });
+
   it('marks no row as current when the last read book is finished', () => {
     const entries = sortLibrary(books, (id) => (id === 'finished' ? stored[id] : undefined));
 
@@ -118,6 +152,12 @@ describe('resumableBookId', () => {
     expect(resumableBookId('a', books, () => progress('t', true))).toBeNull();
     expect(resumableBookId('gone', books, () => progress('t'))).toBeNull();
     expect(resumableBookId(null, books, () => progress('t'))).toBeNull();
+  });
+
+  it('does not resume a book marked as read since the last reading', () => {
+    const marked = [book('a', '2026-01-01T00:00:00Z', '2026-09-18T00:00:00Z')];
+    expect(resumableBookId('a', marked, () => progress('2026-09-17T00:00:00Z'))).toBeNull();
+    expect(resumableBookId('a', marked, () => progress('2026-09-19T00:00:00Z'))).toBe('a');
   });
 
   it('resumes a last opened book without stored progress at its first page', () => {

@@ -1,9 +1,12 @@
 <section class="a-view" aria-labelledby="settings-title">
-  <h2 id="settings-title">Réglages<small>Palier de taille de la liseuse</small></h2>
-  <div class="grid gap-4 min-[900px]:grid-cols-2 min-[900px]:items-start">
-    <div class="grid gap-4">
+  <header class="a-view-head">
+    <h2 id="settings-title">Réglages</h2>
+    <p class="a-view-sub">Taille du texte sur l'écran de la lectrice</p>
+  </header>
+  <div class="a-settings">
+    <div class="a-settings__controls">
       <div class="a-field">
-        <span class="a-label" id="tier-label">Palier de taille</span>
+        <span class="a-label" id="tier-label">Palier de taille, en pixels</span>
         <div class="a-seg" role="group" aria-labelledby="tier-label">
           @for (option of tiers; track option) {
             <button
@@ -23,6 +26,7 @@
         [attr.aria-busy]="saving() || null"
         (click)="save()"
       >
+        <svg aria-hidden="true" lucideSave></svg>
         Enregistrer
       </button>
       <div aria-live="polite">
@@ -33,12 +37,18 @@
         }
       </div>
     </div>
-    <div class="a-preview" lang="fr" [style.--preview-tier]="tier()">
-      <p class="a-preview__text">Il n'était ni industriel, ni négociant, ni marchand.</p>
-      <small>Aperçu à l'échelle de cet écran. Sur son écran, ce texte fait {{ tier() }} px.</small>
-    </div>
+    <figure class="a-preview" lang="fr" [style.--preview-tier]="tier()">
+      <div class="a-preview__screen">
+        <div class="a-preview__paper">
+          <p class="a-preview__text">Il n'était ni industriel, ni négociant, ni marchand.</p>
+        </div>
+      </div>
+      <figcaption>
+        Aperçu à l'échelle de cet écran. Sur son écran, ce texte fait {{ tier() }} px.
+      </figcaption>
+    </figure>
   </div>
-  <footer class="a-help">
+  <footer class="a-credits">
     Polices :
     <a href="https://www.luciole-vision.com/" rel="noopener">Luciole</a> © Laurent Bourcellier et
     Jonathan Perez,

@@ -38,6 +38,17 @@ function storeWith(storage: Storage | null): ProgressStore {
 }
 
 describe('ProgressStore', () => {
+  it('keeps the page counts measured for the current layout of a book', () => {
+    const storage = new MemoryStorage();
+    const store = storeWith(storage);
+
+    store.savePageCounts('book-1', '800x600:100', [3, undefined]);
+
+    expect(store.pageCountsOf('book-1', '800x600:100', 2)).toEqual([3, undefined]);
+    expect(store.pageCountsOf('book-1', '800x600:140', 2)).toEqual([undefined, undefined]);
+    expect(storage.getItem('reader.pages.book-1')).not.toBeNull();
+  });
+
   it('remembers the last opened book', () => {
     const storage = new MemoryStorage();
     const store = storeWith(storage);

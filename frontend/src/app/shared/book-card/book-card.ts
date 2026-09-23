@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 /**
- * One book in the grid: a filled block carrying its title, its author and, when there is one, its
- * state. No cover and no placeholder for one: title and author identify the book on their own.
+ * One book in the grid: a cover-coloured block carrying its title, its author and, when there is
+ * one, its state. No cover image: title, author and colour identify the book on their own.
  */
 @Component({
   selector: 'app-book-card',
@@ -13,6 +13,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       class="book-card"
       [class.book-card--current]="current()"
       [class.book-card--finished]="finished()"
+      [attr.data-tone]="tone()"
       (click)="activate.emit()"
     >
       <span class="title">{{ title() }}</span>
@@ -36,6 +37,9 @@ export class BookCard {
   public readonly current = input(false);
 
   public readonly finished = input(false);
+
+  /** Cover colour from 1 to 10, see `assignCoverTones`; `null` for a current or finished book. */
+  public readonly tone = input<number | null>(null);
 
   public readonly activate = output<void>();
 }

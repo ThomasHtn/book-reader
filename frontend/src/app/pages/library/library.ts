@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { COMMAND_INTERVAL_MS, CommandGate } from '@core/reader/command-gate';
+import { assignCoverTones } from '@core/reader/cover-tone';
 import { paginateGrid } from '@core/reader/grid-math';
 import { visibleRange } from '@core/reader/page-math';
 import { ProgressStore } from '@core/reader/progress-store';
@@ -22,6 +23,9 @@ import { StatusScreen } from '@shared/status-screen/status-screen';
 
 /** Two rows of the three-column grid, so a page never shows more than six titles. */
 const MAX_ROWS_PER_PAGE = 2;
+
+/** Books per row, as `--grid-columns` in tokens.css. */
+const GRID_COLUMNS = 3;
 
 /** Route `/livres`: three title blocks per row, paged by whole rows with the same two bars as the text. */
 @Component({
@@ -54,6 +58,7 @@ const MAX_ROWS_PER_PAGE = 2;
                   [author]="entry.book.author"
                   [current]="entry.current"
                   [finished]="entry.finished"
+                  [tone]="tones()[index]"
                   [attr.inert]="cardPages()[index] === page() ? null : ''"
                   (activate)="open(entry.book.id)"
                 />
@@ -98,6 +103,14 @@ export class Library {
 
   protected readonly entries = computed(() =>
     sortLibrary(this.data.books() ?? [], (id) => this.store.progressOf(id)),
+  );
+
+  /** Current and finished books show no cloth, so they neither take a tone nor block one. */
+  protected readonly tones = computed(() =>
+    assignCoverTones(
+      this.entries().map((entry) => (entry.current || entry.finished ? null : entry.book.id)),
+      GRID_COLUMNS,
+    ),
   );
 
   protected readonly page = signal(0);

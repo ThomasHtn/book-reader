@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { assignCoverTones } from '@core/reader/cover-tone';
 import { ProgressStore } from '@core/reader/progress-store';
 import { ReaderData } from '@core/reader/reader-data';
 import {
@@ -80,6 +81,23 @@ describe('Library', () => {
     element.querySelector<HTMLButtonElement>('button.book-card')!.click();
 
     expect(navigate).toHaveBeenCalledWith('/lire/a');
+  });
+
+  it('binds every book in a cloth of its own, none for the book in progress', async () => {
+    data.books.set([book('a'), book('reading'), book('b')]);
+    store.progress.set('reading', {
+      blockIndex: 1,
+      charOffset: 0,
+      finished: false,
+      updatedAt: '2026-09-17T08:00:00Z',
+    });
+    const element = await render();
+    const cards = [...element.querySelectorAll<HTMLButtonElement>('button.book-card')];
+
+    const expected = assignCoverTones([null, 'a', 'b'], 3);
+    expect(cards.map((card) => card.dataset['tone'] ?? null)).toEqual(
+      expected.map((tone) => (tone === null ? null : String(tone))),
+    );
   });
 
   it('shows the range of titles and drops the whole footer when everything fits on one page', async () => {

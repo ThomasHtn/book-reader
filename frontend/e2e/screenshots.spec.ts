@@ -68,7 +68,7 @@ async function openAt(page: Page, bookId: string, blockIndex: number): Promise<v
     [bookId, blockIndex] as const,
   );
   await page.goto(`/lire/${bookId}`);
-  await expect(page.locator('.page-indicator')).toHaveText(/^\d+ %$/);
+  await expect(page.locator('.page-indicator')).toHaveText(/^Page \d+ sur \d+$/);
   // Rest the pointer on the text, where nothing reacts to hovering.
   const viewport = page.viewportSize()!;
   await page.mouse.move(viewport.width / 2, viewport.height / 2);

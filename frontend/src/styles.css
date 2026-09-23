@@ -51,9 +51,37 @@ button {
   :root:not([data-density='admin']) button {
     cursor: var(--cursor-large-pointer);
   }
+
+  /* Near the window edge Chrome would fall back to the small system cursor: LargeCursor draws it */
+  :root[data-cursor] body,
+  :root[data-cursor] body * {
+    cursor: none;
+  }
+}
+
+.large-cursor {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  width: var(--cursor-size);
+  height: var(--cursor-size);
+  pointer-events: none;
+}
+
+:root[data-cursor='arrow'] .large-cursor {
+  display: block;
+  background: var(--cursor-arrow-image);
+}
+
+:root[data-cursor='hand'] .large-cursor {
+  display: block;
+  background: var(--cursor-hand-image);
 }
 
 app-root,
+app-large-cursor,
 app-nav-bar,
 app-book-card {
   display: contents;
@@ -77,6 +105,8 @@ app-book-card {
 /* Commands: "Mes livres" takes its text width, "Précédent" and "Suivant" share the rest */
 .nav-row {
   display: flex;
+  gap: var(--nav-row-gap);
+  padding: var(--nav-row-padding);
 }
 
 /* The bars share whatever is left; a bar that leads nowhere is not rendered at all, so the row
@@ -99,11 +129,6 @@ app-book-card {
   padding: var(--space-2) var(--button-padding-x);
 }
 
-/* Collapse the adjacent ink edges into a single rule between two bars */
-.nav-row > * + * {
-  margin-left: calc(-1 * var(--border-control));
-}
-
 .nav-bar {
   display: flex;
   align-items: center;
@@ -111,12 +136,12 @@ app-book-card {
   gap: var(--space-2);
   background: var(--nav-bar-bg);
   color: var(--nav-bar-fg);
-  border: var(--nav-bar-border);
+  border: none;
   font-size: var(--text-control);
-  font-weight: var(--weight-heading);
+  font-weight: var(--weight-regular);
   padding: var(--space-2);
   min-height: var(--nav-bar-height);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-reader);
 }
 
 .nav-bar svg {
@@ -124,8 +149,9 @@ app-book-card {
   height: var(--nav-bar-arrow-size);
   fill: none;
   stroke: currentColor;
-  stroke-width: 12;
-  stroke-linecap: square;
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .nav-bar span {
@@ -170,7 +196,7 @@ app-book-card {
 .page-title {
   margin: 0 auto 0 0;
   font-size: var(--page-title-size);
-  font-weight: var(--weight-heading);
+  font-weight: var(--weight-regular);
   line-height: var(--leading-tight);
 }
 
@@ -178,7 +204,7 @@ app-book-card {
   margin: 0;
   color: var(--color-fg-muted);
   font-size: var(--indicator-size);
-  font-weight: var(--weight-heading);
+  font-weight: var(--weight-regular);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -191,11 +217,11 @@ app-book-card {
   padding: 0 var(--button-padding-x);
   background: var(--button-bg);
   color: var(--button-fg);
-  border: var(--button-border);
+  border: none;
   font-size: var(--text-control);
-  font-weight: var(--weight-heading);
+  font-weight: var(--weight-regular);
   white-space: nowrap;
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-reader);
 }
 
 .button:hover {
@@ -346,8 +372,9 @@ app-book-card {
   visibility: hidden;
 }
 
-/* One book, one filled block: title at the top, state at the bottom, nothing else. */
+/* One book, one cloth-coloured block: title, then author and state, nothing else. */
 .book-card {
+  --book-cover: var(--book-cover-1);
   container-type: inline-size;
   width: 100%;
   display: grid;
@@ -355,24 +382,63 @@ app-book-card {
   gap: var(--card-gap);
   min-height: var(--book-block-min-height);
   padding: var(--book-block-padding);
-  background: var(--book-block-bg);
+  background: var(--book-cover);
   color: var(--book-block-fg);
-  border: var(--book-block-border);
+  border: none;
   text-align: left;
-  font-weight: var(--weight-body);
+  font-weight: var(--weight-regular);
   line-height: var(--leading-tight);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-reader);
 }
 
+.book-card[data-tone='2'] {
+  --book-cover: var(--book-cover-2);
+}
+.book-card[data-tone='3'] {
+  --book-cover: var(--book-cover-3);
+}
+.book-card[data-tone='4'] {
+  --book-cover: var(--book-cover-4);
+}
+.book-card[data-tone='5'] {
+  --book-cover: var(--book-cover-5);
+}
+.book-card[data-tone='6'] {
+  --book-cover: var(--book-cover-6);
+}
+.book-card[data-tone='7'] {
+  --book-cover: var(--book-cover-7);
+}
+.book-card[data-tone='8'] {
+  --book-cover: var(--book-cover-8);
+}
+.book-card[data-tone='9'] {
+  --book-cover: var(--book-cover-9);
+}
+.book-card[data-tone='10'] {
+  --book-cover: var(--book-cover-10);
+}
+
+/* Only the title is bold: it is what she reads, the rest only confirms it */
 .book-card .title {
   font-size: var(--card-title-size);
+  font-weight: var(--weight-heading);
   overflow-wrap: anywhere;
 }
 
-/* Same ink as the title, one size down: the muted ink would fall under 7:1 on the block fill. */
+/* Same ink as the title, one size and one weight down */
 .book-card .author {
   font-size: var(--card-author-size);
   overflow-wrap: anywhere;
+}
+
+/* Pointing at a block darkens its cloth: no movement, nothing revealed. */
+.book-card:hover {
+  background: color-mix(
+    in srgb,
+    var(--book-cover),
+    var(--color-ink-900) var(--book-block-hover-darken)
+  );
 }
 
 .book-card--current {
@@ -380,25 +446,17 @@ app-book-card {
   color: var(--book-block-current-fg);
 }
 
-.book-card--finished {
-  color: var(--book-block-finished-fg);
-  border: var(--book-block-finished-border);
-}
-
-/* Pointing at a block deepens its fill only: no movement, no edge change, nothing revealed. */
-.book-card:hover {
-  background: var(--book-block-bg-hover);
-}
-
 .book-card--current:hover {
   background: var(--book-block-current-bg-hover);
 }
 
-/* The deeper fill would take the muted ink of a finished book under 7:1, so hovering it restores
-   the full-strength text and edge. */
+.book-card--finished {
+  background: var(--book-block-finished-bg);
+  color: var(--book-block-finished-fg);
+}
+
 .book-card--finished:hover {
-  color: var(--book-block-fg);
-  border: var(--book-block-border);
+  background: var(--book-block-finished-bg-hover);
 }
 
 .book-card:active {
@@ -413,9 +471,12 @@ app-book-card {
 
 .book-card .tag {
   justify-self: start;
+  margin-top: var(--space-1);
   font-size: var(--card-meta-size);
-  border: var(--tag-border);
+  background: var(--tag-bg);
+  color: var(--tag-fg);
   padding: var(--tag-padding);
+  border-radius: var(--radius-tag);
   white-space: nowrap;
 }
 
@@ -446,5 +507,7 @@ app-book-card {
 @media (max-width: 480px) {
   :root {
     --grid-gap: var(--space-2);
+    /* A third of a phone leaves no room for a 24px inset: titles broke mid-word */
+    --book-block-padding: var(--space-1) var(--space-1) var(--space-2);
   }
 }

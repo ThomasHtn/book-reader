@@ -1,41 +1,45 @@
 @if (session.key()) {
   <div class="admin">
     <header class="a-header">
-      <span class="brand" aria-hidden="true">L</span>
-      <h1>Administration</h1>
-      <button
-        type="button"
-        class="a-btn a-btn--secondary a-btn--sm ml-auto"
-        (click)="session.signOut()"
-      >
+      <div class="a-brand">
+        <span class="a-brand__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <h1>Liseuse <small>administration</small></h1>
+      </div>
+      <nav class="a-nav" aria-label="Sections du backoffice">
+        <a routerLink="/admin/catalogue" routerLinkActive ariaCurrentWhenActive="page">
+          <svg aria-hidden="true" lucideSearch></svg>
+          Catalogue
+        </a>
+        <a routerLink="/admin/bibliotheque" routerLinkActive ariaCurrentWhenActive="page">
+          <svg aria-hidden="true" lucideLibrary></svg>
+          Bibliothèque
+        </a>
+        <a routerLink="/admin/depot" routerLinkActive ariaCurrentWhenActive="page">
+          <svg aria-hidden="true" lucideUpload></svg>
+          Dépôt
+        </a>
+        <a routerLink="/admin/reglages" routerLinkActive ariaCurrentWhenActive="page">
+          <svg aria-hidden="true" lucideSettings></svg>
+          Réglages
+        </a>
+      </nav>
+      <button type="button" class="a-signout" (click)="session.signOut()">
+        <svg aria-hidden="true" lucideLogOut></svg>
         Se déconnecter
       </button>
     </header>
     <main class="a-main">
       <router-outlet />
     </main>
-    <nav class="a-nav" aria-label="Sections du backoffice">
-      <a routerLink="/admin/catalogue" routerLinkActive ariaCurrentWhenActive="page">
-        <svg aria-hidden="true" lucideSearch></svg>
-        Catalogue
-      </a>
-      <a routerLink="/admin/bibliotheque" routerLinkActive ariaCurrentWhenActive="page">
-        <svg aria-hidden="true" lucideLibrary></svg>
-        Bibliothèque
-      </a>
-      <a routerLink="/admin/depot" routerLinkActive ariaCurrentWhenActive="page">
-        <svg aria-hidden="true" lucideUpload></svg>
-        Dépôt
-      </a>
-      <a routerLink="/admin/reglages" routerLinkActive ariaCurrentWhenActive="page">
-        <svg aria-hidden="true" lucideSettings></svg>
-        Réglages
-      </a>
-    </nav>
   </div>
 } @else {
   <main class="admin a-login">
-    <form class="a-card" (submit)="signIn($event)">
+    <a routerLink="/livres" class="a-login-back">
+      <svg aria-hidden="true" lucideArrowLeft></svg>
+      Retour aux livres
+    </a>
+    <form class="a-card a-login__card" (submit)="signIn($event)">
+      <span class="a-brand__mark" aria-hidden="true"><i></i><i></i><i></i></span>
       <h1>Liseuse, administration</h1>
       <div class="a-field">
         <label for="admin-key">Clé d'administration</label>
@@ -54,6 +58,7 @@
         [disabled]="checking()"
         [attr.aria-busy]="checking() || null"
       >
+        <svg aria-hidden="true" lucideLogIn></svg>
         Entrer
       </button>
       @if (error(); as message) {

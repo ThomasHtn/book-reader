@@ -49,7 +49,8 @@ livres.
 5. Fin de livre : la dernière page affiche "Fin du livre" sous le dernier paragraphe, le livre passe
    "terminé" mais reste en tête de liste tant qu'il est le dernier lu. Il n'est plus repris
    automatiquement ; le rouvrir repart de la première page ; reculer depuis la dernière page retire
-   "terminé".
+   "terminé". Un livre marqué lu dans le backoffice après sa dernière lecture se comporte comme s'il
+   venait d'être terminé à la date de la marque ; une lecture postérieure à la marque l'emporte.
 
 Aucun autre parcours n'existe côté lectrice.
 
@@ -57,7 +58,7 @@ Aucun autre parcours n'existe côté lectrice.
 
 ### 5.1 Écran de lecture
 
-De haut en bas : le pourcentage de progression (ex. "42 %") seul dans le coin supérieur droit, en petit
+De haut en bas : l'indicateur de page (ex. "Page 12 sur 840") seul dans le coin supérieur droit, en petit
 et en texte atténué, sans titre à gauche, le livre se nommant lui-même sur sa page de titre,
 puis la zone de texte (une page, sans défilement) sur tout le reste, puis le pied. Pas d'en-tête. Le
 pied ne porte que les trois commandes, sur une rangée : "Mes livres" à gauche, à la largeur de son
@@ -79,7 +80,10 @@ Règles :
   sur la première ou la dernière page, la barre inutile disparaît et celle qui reste occupe la place
   libérée ; sur "Mes livres", le pied disparaît entièrement quand tout tient sur une page ;
 - texte aligné à gauche, jamais justifié ; `user-select: none` ; menu contextuel désactivé ; curseur
-  agrandi (64 px) sur PC, flèche sur la page et main sur tout ce qui se presse.
+  agrandi (64 px) sur PC, flèche sur la page et main sur tout ce qui se presse. Chrome remplace par le
+  petit curseur système tout curseur de plus de 32 px dont l'image déborderait de la fenêtre, donc sur
+  le bas des commandes du pied : à ces endroits, le curseur système est masqué et la même image est
+  dessinée sous le pointeur (`shared/large-cursor`).
 
 ### 5.2 Pagination
 
@@ -90,9 +94,18 @@ Règles :
 - Chapitre : suite de blocs commençant à un titre (les blocs avant le premier titre forment le
   premier chapitre), coupée entre deux paragraphes au-delà de 80 000 caractères pour les livres
   sans titres.
-- L'indicateur affiche le pourcentage de blocs lus (index de bloc de la page sur le nombre de blocs
-  du livre), connu dès l'ouverture, indépendant du palier et de la taille de fenêtre ; aucun comptage
-  de pages en fond n'est nécessaire.
+- L'indicateur affiche "Page 12 sur 840" dès l'ouverture, sans mettre en page d'autre chapitre que
+  celui affiché. Un chapitre déjà affiché compte pour son nombre réel de pages, mémorisé par livre et
+  par mise en page (taille de la zone de texte et palier) ; les autres sont estimés par un calcul pur
+  (`core/reader/page-count.ts`) : largeurs de caractères lues une fois au canvas, coupure des lignes
+  entre les mots avec une césure approchée (mots de 7 lettres et plus, 3 de chaque côté), remplissage
+  des colonnes avec deux lignes au moins de part et d'autre d'une coupure, sauf un paragraphe de trois
+  lignes coupé deux et un, comme Blink. Les numéros se suivent de un en un ; seul le total s'ajuste
+  (d'une page ou deux) quand un chapitre estimé est affiché pour la première fois.
+- **Essai du 23 septembre 2026** (5 livres, paliers 48 à 140, zone de 1404 x 543 px, deux à neuf lignes
+  par page) : total estimé à moins de 2 % du total réel, rarement plus de 5 % d'écart sur un chapitre ;
+  l'estimation d'un livre entier prend 3 à 40 ms, contre 50 à 300 ms pour mettre en page tous ses
+  chapitres.
 - Titres jamais séparés du paragraphe suivant (`break-after: avoid`). `lang="fr"`, `hyphens: auto`,
   `overflow-wrap: anywhere` en filet (à 140 px une ligne fait quinze caractères).
 - Premier calcul après `document.fonts.ready`.
@@ -142,7 +155,7 @@ Globaux, lus depuis le serveur, modifiables seulement dans le backoffice. À cal
 | Réglage | Valeurs | Défaut |
 |---|---|---|
 | Palier | 48, 72, 100, 140 (pixels sur tout écran d'au moins 1280 px CSS ; en dessous, proportionnel, plancher 20 px) | 100 |
-| Fixes | thème unique noir sur blanc cassé, surfaces beige, police Luciole 700, interligne 1,4, repère "en cours" rose à texte sombre | |
+| Fixes | thème unique noir sur blanc cassé, surfaces beige, police Luciole (700 pour le texte lu et les titres de livres, 400 pour l'habillage), interligne 1,4, repère "en cours" rose à texte sombre, une couleur de couverture par livre | |
 
 La référence à 1280 px couvre son PC à 100 % comme à 125 % de mise à l'échelle Windows. Ctrl plus et
 Ctrl moins restent le zoom de Chrome : un zoom avant ne change rien, un zoom arrière rétrécit le texte
@@ -251,6 +264,7 @@ Titre et auteur pris dans l'OPF, modifiables dans le backoffice.
 |---|---|
 | `reader.lastBookId` | dernier livre ouvert |
 | `reader.progress.<bookId>` | `{ "blockIndex": 0, "charOffset": 0, "finished": false, "updatedAt": "…" }` |
+| `reader.pages.<bookId>` | `{ "layout": "1404x543:100", "counts": [4, null, 150] }`, pages des chapitres déjà affichés sous la dernière mise en page (5.2) |
 
 ## 9. Backoffice
 
@@ -261,7 +275,7 @@ du système, quatre onglets : Catalogue, Bibliothèque, Dépôt, Réglages.
 
 **Authentification** (schéma valoquests) : clé d'administration en variable d'environnement, saisie
 une fois, mémorisée dans le navigateur, envoyée dans `X-Admin-Key` sur `/api/admin/**` ; verrouillage
-temporaire par adresse après plusieurs échecs. Écran : un champ mot de passe, bouton "Entrer",
+temporaire par adresse après plusieurs échecs. Écran : un champ mot de passe, bouton "Entrer", lien "Retour aux livres" vers `/livres`,
 "Clé incorrecte" ou "Trop d'essais, réessayez dans une minute" ; "Se déconnecter" dans l'en-tête.
 
 **Fonctions** :
@@ -269,8 +283,11 @@ temporaire par adresse après plusieurs échecs. Écran : un champ mot de passe,
 - Catalogue : recherche par titre ou auteur, résumé, bouton "Activer" (téléchargement, conversion,
   activation) ; entrée déjà active : "Déjà active" ; entrée retirée : "Activer" la réactive sans
   reconversion.
-- Bibliothèque : tous les livres importés, actifs ou retirés (titre, auteur, source, date, état) ;
-  "Retirer", "Réactiver", modification du titre et de l'auteur.
+- Bibliothèque : tous les livres importés, actifs ou retirés (titre, auteur, source, date, état,
+  "Lu" s'il est marqué), filtrables par texte (titre ou auteur, sans casse ni accents) et par état
+  (Tous, Actifs, Retirés, Lus, chacun avec son effectif) ; "Retirer", "Réactiver", modification du
+  titre et de l'auteur ; "Marquer comme lu" et "Marquer comme non lu" (section 4) ; "Supprimer", confirmé par "Confirmer la suppression", efface le livre et son contenu ; une entrée du catalogue supprimée se réactive par un
+  nouveau téléchargement.
 - Dépôt : envoi d'un EPUB, conversion, activation immédiate ; titre et auteur corrigés ensuite dans
   la Bibliothèque si besoin.
 - Réglages : palier, avec un aperçu du rendu indiquant la taille réelle sur son écran.
@@ -287,8 +304,8 @@ compression.
 
 | Publique | Réponse |
 |---|---|
-| `GET /api/books` | livres actifs : `id`, `title`, `author`, `activatedAt` |
-| `GET /api/books/{id}` | livre au format interne ; `404` si inactif ou inconnu |
+| `GET /api/books` | livres actifs : `id`, `title`, `author`, `activatedAt`, `finishedAt` (marque "lu" du backoffice, `null` sinon) |
+| `GET /api/books/{id}` | livre au format interne, plus `finishedAt` ; `404` si inactif ou inconnu |
 | `GET /api/settings` | `{ "fontTier": 100 }` |
 
 | Administration (`X-Admin-Key`) | Effet |
@@ -297,7 +314,8 @@ compression.
 | `POST /api/admin/books/from-catalogue` | `{ "entryId" }` ; téléchargement, conversion, activation, `201` ; entrée déjà importée : réactivée et renvoyée, `200` |
 | `POST /api/admin/books/upload` | multipart EPUB ; conversion, activation, `201` |
 | `GET /api/admin/books` | tous les livres |
-| `PATCH /api/admin/books/{id}` | `title`, `author`, `active` |
+| `PATCH /api/admin/books/{id}` | `title`, `author`, `active`, `finished` (`true` marque lu à l'instant, `false` retire la marque) |
+| `DELETE /api/admin/books/{id}` | suppression définitive, `204` ; `404` si inconnu |
 | `PUT /api/admin/settings` | `fontTier` |
 
 ## 11. Architecture
@@ -319,7 +337,7 @@ Client OPDS `WebClient` avec délais courts et un réessai. Compression HTTP act
 
 | Table | Colonnes |
 |---|---|
-| `book` | `id`, `title`, `author`, `source` (`catalogue` ou `upload`), `source_id` (identifiant OPDS, unique, nul pour un dépôt), `source_url`, `content` (JSONB), `block_count`, `active`, `activated_at`, `created_at` |
+| `book` | `id`, `title`, `author`, `source` (`catalogue` ou `upload`), `source_id` (identifiant OPDS, unique, nul pour un dépôt), `source_url`, `content` (JSONB), `block_count`, `active`, `activated_at`, `created_at`, `finished_at` (marque "lu" du backoffice, nulle sinon) |
 | `reader_settings` | une ligne : `font_tier`, `updated_at` |
 
 **Déploiement** : `https://book-reader.thomashtn.dev`. Deux images Docker (nginx pour le bundle, jar
@@ -350,28 +368,35 @@ La version 1 est livrable quand :
 
 | Décision | Écarté | Raison |
 |---|---|---|
+| Backoffice en rail marine, accent bleu tampon ; Bibliothèque en liste filtrable, toutes les actions visibles sur chaque ligne dans un seul style | cartes empilées ; menu "Plus" pour les actions rares | 23 septembre 2026 : demande de l'utilisateur ; à une cinquantaine de livres les cartes devenaient illisibles, et un menu ajoute un clic à chaque action ; le rose garde son seul sens, "vous êtes ici" |
 | Ebooks libres et gratuits par OPDS, plus dépôt | Gutenberg, Gallica, Éole, PNB | seul catalogue français propre avec flux ; Éole sans API et chiffré ; PNB sous DRM |
 | Recherche relayée en direct | copie locale du catalogue | quelques recherches par mois ne justifient ni table ni tâche |
 | Écran catalogue vide invitant à chercher | suggestions chargées à l'ouverture de l'onglet | une sélection par défaut appellerait le site à chaque visite, ce que la ligne précédente écarte |
 | Classes de la liseuse préfixées `book-*` | noms nus `grid`, `card`, `cover` | 22 septembre 2026 : `grid` écrasait l'utilitaire Tailwind du backoffice et cassait la page Réglages |
+| Marque "lu" du backoffice horodatée sur le serveur, appliquée par la liseuse si elle est postérieure à la dernière lecture locale | écrire la progression depuis le backoffice, drapeau "lu" permanent | 23 septembre 2026 : demande de l'utilisateur ; la progression ne vit que sur le PC de la lectrice, l'aidant agit depuis un autre appareil ; l'horodatage laisse une relecture ultérieure reprendre la main sans synchronisation |
+| Suppression définitive, confirmée, à côté de "Retirer" | retrait seul | 23 septembre 2026 : demande de l'utilisateur, pour purger la bibliothèque ; la confirmation évite une perte par erreur de doigt sur mobile |
 | Paliers globaux | loupe, Ctrl plus et moins | motricité fine, texte mobile, conflit avec le zoom Chrome |
 | Référence 1280 px | référence 1920 px | couvre la mise à l'échelle Windows à 100 % et 125 % |
-| Multi-colonnes CSS par chapitre, total compté en fond | livre entier en un conteneur, mesure mot par mot, pages du chapitre seul, pourcentage | essai du 17 septembre 2026 (5.2) : plafond de Blink dépassé et plus d'une seconde pour le livre entier ; le chapitre tient en 0,22 s et garde "Page 12 sur 840" |
+| Multi-colonnes CSS par chapitre, total estimé (voir plus bas) | livre entier en un conteneur, mesure mot par mot, pages du chapitre seul, pourcentage | essai du 17 septembre 2026 (5.2) : plafond de Blink dépassé et plus d'une seconde pour le livre entier ; le chapitre tient en 0,22 s et garde "Page 12 sur 840" |
 | Position par `Range` seul | `caretPositionFromPoint` | le coin de colonne tombe dans une marge ; une seule API |
 | Texte brut par bloc | `<i>`, `<b>` conservés | gras invisible, italique nuisible, position triviale |
 | Pied de page, boutons en moitiés d'écran | barres verticales pleine hauteur | 17 septembre 2026 : zone de lecture élargie de 600 px sur grand écran ; cibles encore très grandes (demi-écran de large, plus hautes que l'en-tête) |
 | Pied unique, aucun en-tête | en-tête avec "Mes livres" et l'indicateur | 22 septembre 2026 : le texte gagne toute la hauteur de l'en-tête et les trois commandes sont au même endroit, à portée du pouce |
 | Indicateur en petit dans le coin supérieur droit | bande d'état au-dessus des commandes, indicateur supprimé, indicateur dans le bouton "Suivant" | 22 septembre 2026 : une bande pleine largeur donnait trop de poids à une information secondaire ; le coin la garde visible sans voler de surface au texte ni à une cible |
 | Accent rose `#ffa6c1`, réservé aux commandes | tangerine `#ffa03c`, rose sur le seul thème clair | 22 septembre 2026 : demande de l'utilisateur ; le rose ne colore que ce qui s'active, donc une surface rose veut toujours dire "appuyez ici" |
-| Bordure des commandes à 2 px | 6 px | les aplats pleins portent les formes, un filet de 6 px alourdissait sans rien ajouter au contraste |
+| Bordure des commandes à 2 px (remplacée le 23 septembre 2026, voir plus bas) | 6 px | les aplats pleins portent les formes, un filet de 6 px alourdissait sans rien ajouter au contraste |
 | Grille de trois blocs par ligne, paginée par rangées | une ligne par livre en multi-colonnes | 22 septembre 2026 : demande de l'utilisateur ; une grille ne se fragmente pas en colonnes CSS, d'où le découpage par rangées entières (`core/reader/grid-math.ts`) |
 | Grille sur 1 500 px avec des marges de 20 px, des blocs deux fois plus hauts qu'une commande et un titre plafonné à `8cqi` | grille sur 1 100 px, marges de lecture, titre à `11cqi` | 22 septembre 2026 : demande de l'utilisateur ; sur cet écran les blocs sont le contenu, donc ils prennent la largeur que les marges abandonnent, et le plafond du titre garde neuf titres par page au palier 100 sur 1080 px, barres de pagination comprises |
 | Bloc plein portant le titre, l'auteur et l'état | plateau 3:4 avec l'initiale du titre, couverture extraite de l'EPUB | 22 septembre 2026 : demande de l'utilisateur ; sans couverture à afficher, le plateau ne faisait que voler la place du titre. L'auteur, d'abord écarté avec le plateau, est rétabli le même jour : il tient sur une ligne sous le titre, à `--card-author-size`, sans reprendre de place au titre |
 | Barre retirée quand elle ne mène nulle part | barre laissée en place et désactivée | 22 septembre 2026 : demande de l'utilisateur ; contrepartie assumée, la cible restante change de largeur au premier et au dernier tour de page |
 | Commandes sur la surface beige du thème | commandes en aplat rose | 22 septembre 2026 : demande de l'utilisateur ; le rose ne désigne plus que le livre en cours, qui devient la seule surface colorée de l'écran |
-| Filet permanent de 2 px sur les blocs, aplat un ton plus soutenu au survol | filet de 4 px, filet épaissi au survol | 22 septembre 2026 : demande de l'utilisateur ; 4 px alourdissaient la grille alors que la gouttière de 24 px sépare déjà les blocs, donc le survol passe par le fond, comme sur les commandes, sans rien déplacer ni révéler ; il reste un supplément pour la souris, le clavier et le tactile gardent le filet et l'anneau de focus |
+| Filet permanent de 2 px sur les blocs, aplat un ton plus soutenu au survol (remplacé le 23 septembre 2026, voir plus bas) | filet de 4 px, filet épaissi au survol | 22 septembre 2026 : demande de l'utilisateur ; 4 px alourdissaient la grille alors que la gouttière de 24 px sépare déjà les blocs, donc le survol passe par le fond, comme sur les commandes, sans rien déplacer ni révéler ; il reste un supplément pour la souris, le clavier et le tactile gardent le filet et l'anneau de focus |
 | Titre de l'écran en haut à gauche de "Mes livres" | titre lu par le seul lecteur d'écran | 22 septembre 2026 : demande de l'utilisateur ; la ligne existait déjà pour l'indicateur, donc elle ne coûte pas de place |
-| Indicateur de lecture en pourcentage de blocs lus | indicateur "Page 12 sur 840", pourcentage de pages comptées en fond | 22 septembre 2026 : demande de l'utilisateur ; le nombre de pages varie avec le palier de police (5.2) et son comptage en fond pouvait laisser l'indicateur vide plusieurs minutes sur un gros livre (90 chapitres, essai en local), alors que l'index de bloc est connu dès l'ouverture |
+| Indicateur de lecture en pourcentage de blocs lus (remplacé le 23 septembre 2026, voir plus bas) | indicateur "Page 12 sur 840", pourcentage de pages comptées en fond | 22 septembre 2026 : demande de l'utilisateur ; le nombre de pages varie avec le palier de police (5.2) et son comptage en fond pouvait laisser l'indicateur vide plusieurs minutes sur un gros livre (90 chapitres, essai en local), alors que l'index de bloc est connu dès l'ouverture |
+| "Page 12 sur 840" : chapitres affichés comptés, les autres estimés par calcul pur, comptes mémorisés dans `localStorage` | pourcentage ; comptage en fond dans un double caché ; comptage côté serveur ; étalonnage de l'estimation sur le chapitre affiché | 23 septembre 2026 : demande de l'utilisateur. Seule la mise en page coûte ; le calcul pur l'évite entièrement, suit le palier et la fenêtre, et reste à moins de 2 % du réel (5.2). Le serveur ne connaît ni la police rendue ni la taille de la fenêtre ; l'étalonnage sur un premier chapitre souvent réduit à une page de titre donnait des totaux absurdes |
+| Commandes et blocs sans bordure : commandes en aplat encre à libellé crème, blocs en aplat de couleur, arrondi de 12 px, espace de 8 px entre les barres | filets de 2 px sur fond beige, angles vifs | 23 septembre 2026 : demande de l'utilisateur, pour un rendu plus moderne ; sans filet, seul un fond sombre détache une cible du papier (au moins 7,9:1), donc les commandes passent à l'encre et les blocs à des toiles sombres ; l'arrondi ne coûte rien en lisibilité et l'anneau de focus en ombre intérieure le suit |
+| Une couleur de toile par livre parmi dix, tirée de son identifiant et décalée à la suivante libre si le voisin de gauche ou du dessus la porte déjà ; livre en cours rose, livre terminé beige pâle | même aplat pour tous les livres ; cinq toiles tirées de l'identifiant seul ; couleur selon la seule position dans la liste | 23 septembre 2026 : la DMLA ôte la vision centrale mais laisse les grandes taches de couleur en périphérie, donc un livre se retrouve à sa couleur avant d'être lu ; les couleurs ne portent aucun sens. Avec cinq toiles tirées au hasard, des voisins se répétaient (demande de l'utilisateur) ; le décalage les supprime et ne change la couleur d'un livre que lorsque l'ordre crée un conflit |
+| Gras réservé au texte lu et aux titres de livres ; commandes, auteurs, étiquettes et ligne de tête en Luciole 400 | tout en 700 | 23 septembre 2026 : demande de l'utilisateur ; tout en gras aplatissait la hiérarchie, le titre ressort mieux quand il est seul en gras, et Luciole 400 reste assez épaisse aux tailles des commandes |
 | Une application Angular avec `/admin` | deux applications | un front, un back |
 | `localStorage` seul, en ligne | IndexedDB, hors ligne | simplicité, perte acceptée |
 | API publique | clé par poste | une seule utilisatrice |

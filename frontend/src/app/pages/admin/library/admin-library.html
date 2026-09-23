@@ -1,10 +1,38 @@
 <section class="a-view" aria-labelledby="library-title">
-  <h2 id="library-title">
-    Bibliothèque
+  <header class="a-view-head">
+    <h2 id="library-title">Bibliothèque</h2>
     @if (books.hasValue()) {
-      <small>{{ activeCount() }} livres actifs sur {{ books.value().length }}</small>
+      <p class="a-view-sub">{{ counts().active }} livres actifs sur {{ counts().all }}</p>
     }
-  </h2>
+  </header>
+
+  @if (books.hasValue()) {
+    <div class="a-toolbar">
+      <div class="a-filter" role="search">
+        <svg aria-hidden="true" lucideSearch></svg>
+        <label for="library-filter" class="sr-only">Filtrer par titre ou auteur</label>
+        <input
+          id="library-filter"
+          class="a-input"
+          type="search"
+          placeholder="Filtrer par titre ou auteur"
+          [value]="filterText()"
+          (input)="filterText.set($any($event.target).value)"
+        />
+      </div>
+      <div class="a-seg a-seg--tabs" role="group" aria-label="État des livres">
+        @for (option of stateFilters; track option.value) {
+          <button
+            type="button"
+            [attr.aria-pressed]="stateFilter() === option.value"
+            (click)="stateFilter.set(option.value)"
+          >
+            {{ option.label }} <span class="a-count">{{ counts()[option.value] }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
 
   <div aria-live="polite">
     @if (message(); as current) {
@@ -13,92 +41,166 @@
       </p>
     }
     @if (books.error() && !books.hasValue()) {
-      <p class="a-message a-message--failure">Échec : bibliothèque indisponible</p>
-      <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="books.reload()">
-        Réessayer
-      </button>
+      <div class="a-empty">
+        <p class="a-message a-message--failure">Échec : bibliothèque indisponible</p>
+        <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="books.reload()">
+          <svg aria-hidden="true" lucideRotateCw></svg>
+          Réessayer
+        </button>
+      </div>
     }
   </div>
 
   @if (books.hasValue()) {
-    <ul class="a-list">
-      @for (book of books.value(); track book.id) {
-        <li class="a-item">
-          @if (editingId() === book.id) {
-            <form class="grid gap-3" (submit)="save($event, book)">
-              <div class="a-field">
-                <label [for]="'title-' + book.id">Titre</label>
-                <input
-                  [id]="'title-' + book.id"
-                  name="title"
-                  class="a-input"
-                  [value]="title()"
-                  (input)="title.set($any($event.target).value)"
-                />
+    @if (visibleBooks().length) {
+      <ul class="a-list">
+        @for (book of visibleBooks(); track book.id) {
+          <li class="a-item" [class.a-item--muted]="!book.active">
+            @if (editingId() === book.id) {
+              <form class="a-edit" (submit)="save($event, book)">
+                <div class="a-field">
+                  <label [for]="'title-' + book.id">Titre</label>
+                  <input
+                    [id]="'title-' + book.id"
+                    name="title"
+                    class="a-input"
+                    [value]="title()"
+                    (input)="title.set($any($event.target).value)"
+                  />
+                </div>
+                <div class="a-field">
+                  <label [for]="'author-' + book.id">Auteur</label>
+                  <input
+                    [id]="'author-' + book.id"
+                    name="author"
+                    class="a-input"
+                    [value]="author()"
+                    (input)="author.set($any($event.target).value)"
+                  />
+                </div>
+                <div class="actions">
+                  <button
+                    type="submit"
+                    class="a-btn a-btn--primary a-btn--sm"
+                    [disabled]="busyId() === book.id"
+                    [attr.aria-busy]="busyId() === book.id || null"
+                  >
+                    <svg aria-hidden="true" lucideSave></svg>
+                    Enregistrer
+                  </button>
+                  <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="cancel()">
+                    <svg aria-hidden="true" lucideX></svg>
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <div class="a-item__main">
+                <p class="t">{{ book.title }}</p>
+                <p class="m">{{ meta(book) }}</p>
               </div>
-              <div class="a-field">
-                <label [for]="'author-' + book.id">Auteur</label>
-                <input
-                  [id]="'author-' + book.id"
-                  name="author"
-                  class="a-input"
-                  [value]="author()"
-                  (input)="author.set($any($event.target).value)"
-                />
-              </div>
-              <div class="actions">
-                <button
-                  type="submit"
-                  class="a-btn a-btn--primary a-btn--sm"
-                  [disabled]="busyId() === book.id"
-                  [attr.aria-busy]="busyId() === book.id || null"
-                >
-                  Enregistrer
-                </button>
-                <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="cancel()">
-                  Annuler
-                </button>
-              </div>
-            </form>
-          } @else {
-            <div>
-              <p class="t">{{ book.title }}</p>
-              <p class="m">{{ meta(book) }}</p>
-            </div>
-            <div class="actions">
-              @if (book.active) {
-                <span class="a-chip a-chip--ok">Active</span>
+              @if (confirmingId() === book.id) {
+                <div class="actions a-confirm">
+                  <p class="m">Supprimer définitivement ce livre ?</p>
+                  <button
+                    type="button"
+                    class="a-btn a-btn--danger a-btn--sm"
+                    [disabled]="busyId() === book.id"
+                    [attr.aria-busy]="busyId() === book.id || null"
+                    (click)="remove(book)"
+                  >
+                    <svg aria-hidden="true" lucideTrash></svg>
+                    Confirmer la suppression
+                  </button>
+                  <button
+                    type="button"
+                    class="a-btn a-btn--secondary a-btn--sm"
+                    (click)="confirmingId.set(null)"
+                  >
+                    <svg aria-hidden="true" lucideX></svg>
+                    Annuler
+                  </button>
+                </div>
               } @else {
-                <span class="a-chip">Retiré</span>
+                <div class="a-item__state">
+                  @if (book.active) {
+                    <span class="a-chip a-chip--ok">Active</span>
+                  } @else {
+                    <span class="a-chip a-chip--off">Retiré</span>
+                  }
+                  @if (book.finishedAt) {
+                    <span class="a-chip">Lu</span>
+                  }
+                </div>
+                <div class="actions">
+                  @if (book.active) {
+                    <button
+                      type="button"
+                      class="a-btn a-btn--secondary a-btn--sm"
+                      [disabled]="busyId() === book.id"
+                      [attr.aria-busy]="busyId() === book.id || null"
+                      (click)="setActive(book, false)"
+                    >
+                      <svg aria-hidden="true" lucideEyeOff></svg>
+                      Retirer
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="a-btn a-btn--secondary a-btn--sm"
+                      [disabled]="busyId() === book.id"
+                      [attr.aria-busy]="busyId() === book.id || null"
+                      (click)="setActive(book, true)"
+                    >
+                      <svg aria-hidden="true" lucideEye></svg>
+                      Réactiver
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="a-btn a-btn--secondary a-btn--sm"
+                    (click)="edit(book)"
+                  >
+                    <svg aria-hidden="true" lucidePencil></svg>
+                    Modifier
+                  </button>
+                  <button
+                    type="button"
+                    class="a-btn a-btn--secondary a-btn--sm"
+                    [disabled]="busyId() === book.id"
+                    [attr.aria-busy]="busyId() === book.id || null"
+                    (click)="setFinished(book, !book.finishedAt)"
+                  >
+                    @if (book.finishedAt) {
+                      <svg aria-hidden="true" lucideBookX></svg>
+                      Marquer comme non lu
+                    } @else {
+                      <svg aria-hidden="true" lucideBookCheck></svg>
+                      Marquer comme lu
+                    }
+                  </button>
+                  <button
+                    type="button"
+                    class="a-btn a-btn--danger a-btn--sm"
+                    (click)="confirmingId.set(book.id)"
+                  >
+                    <svg aria-hidden="true" lucideTrash></svg>
+                    Supprimer
+                  </button>
+                </div>
               }
-              <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="edit(book)">
-                Modifier
-              </button>
-              @if (book.active) {
-                <button
-                  type="button"
-                  class="a-btn a-btn--danger a-btn--sm"
-                  [disabled]="busyId() === book.id"
-                  [attr.aria-busy]="busyId() === book.id || null"
-                  (click)="setActive(book, false)"
-                >
-                  Retirer
-                </button>
-              } @else {
-                <button
-                  type="button"
-                  class="a-btn a-btn--secondary a-btn--sm"
-                  [disabled]="busyId() === book.id"
-                  [attr.aria-busy]="busyId() === book.id || null"
-                  (click)="setActive(book, true)"
-                >
-                  Réactiver
-                </button>
-              }
-            </div>
-          }
-        </li>
-      }
-    </ul>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="a-empty">
+        @if (counts().all) {
+          Aucun livre ne correspond à ce filtre.
+        } @else {
+          Aucun livre pour l'instant : activez-en un depuis le Catalogue ou le Dépôt.
+        }
+      </p>
+    }
   }
 </section>

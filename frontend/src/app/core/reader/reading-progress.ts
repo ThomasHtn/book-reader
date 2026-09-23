@@ -42,6 +42,27 @@ export function parseProgress(raw: string | null): ReadingProgress | undefined {
 }
 
 /**
+ * Applies the caregiver's read mark: a book marked after its last reading counts as just finished.
+ *
+ * @param progress - Stored progress.
+ * @param finishedAt - When the book was marked as read, or `null`.
+ * @returns Progress to act upon.
+ */
+export function withReadMark(
+  progress: ReadingProgress | undefined,
+  finishedAt: string | null,
+): ReadingProgress | undefined {
+  if (
+    finishedAt === null ||
+    (progress && Date.parse(progress.updatedAt) >= Date.parse(finishedAt))
+  ) {
+    return progress;
+  }
+  // Normalised like ProgressStore dates, so string ordering in sortLibrary holds.
+  return { ...BOOK_START, finished: true, updatedAt: new Date(finishedAt).toISOString() };
+}
+
+/**
  * Returns where a book opens: its stored position, or its start when finished, unknown or out of range.
  *
  * @param progress - Stored progress.
@@ -59,18 +80,7 @@ export function startPosition(
 }
 
 /**
- * Returns the reading progress in the book, as a rounded percentage.
- *
- * @param position - Current position.
- * @param blockCount - Number of blocks of the book.
- * @returns Percentage from 1 to 100.
- */
-export function readingProgressPercent(position: TextPosition, blockCount: number): number {
-  return Math.round(((position.blockIndex + 1) / blockCount) * 100);
-}
-
-/**
- * Orders "Mes livres": read books by last reading, then never opened ones by activation.
+ * Orders "Mes livres": read books (or marked as read) by last reading, then never opened ones by activation.
  *
  * @param books - Active books.
  * @param progressOf - Stored progress of a book.
@@ -80,7 +90,10 @@ export function sortLibrary(
   books: readonly BookSummary[],
   progressOf: (bookId: string) => ReadingProgress | undefined,
 ): LibraryEntry[] {
-  const withProgress = books.map((book) => ({ book, progress: progressOf(book.id) }));
+  const withProgress = books.map((book) => ({
+    book,
+    progress: withReadMark(progressOf(book.id), book.finishedAt),
+  }));
   const read = withProgress
     .filter((entry) => entry.progress !== undefined)
     .sort((a, b) => compareDesc(a.progress!.updatedAt, b.progress!.updatedAt));
@@ -107,10 +120,11 @@ export function resumableBookId(
   books: readonly BookSummary[],
   progressOf: (bookId: string) => ReadingProgress | undefined,
 ): string | null {
-  if (lastBookId === null || !books.some((book) => book.id === lastBookId)) {
+  const book = books.find((candidate) => candidate.id === lastBookId);
+  if (!book) {
     return null;
   }
-  return progressOf(lastBookId)?.finished ? null : lastBookId;
+  return withReadMark(progressOf(book.id), book.finishedAt)?.finished ? null : book.id;
 }
 
 function compareDesc(a: string, b: string): number {
