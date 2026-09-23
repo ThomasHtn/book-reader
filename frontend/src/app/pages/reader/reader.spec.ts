@@ -27,16 +27,18 @@ const BOOK: BookContent = {
   finishedAt: null,
 };
 
-/** One page per block, so pages and positions are easy to predict. */
+/** One page per block, so pages and positions are easy to predict; the title page may take one too. */
 class FakeLayout implements ChapterLayout {
   public content: ChapterContent | undefined;
   public shownPage = -1;
   public renders = 0;
 
+  constructor(private readonly titlePagePages = 0) {}
+
   public render(content: ChapterContent): number {
     this.content = content;
     this.renders++;
-    return content.blocks.length;
+    return content.blocks.length + this.lead();
   }
 
   public show(page: number): void {
@@ -44,16 +46,23 @@ class FakeLayout implements ChapterLayout {
   }
 
   public pageOf(position: TextPosition): number {
-    return position.blockIndex - this.content!.firstBlock;
+    return position.blockIndex - this.content!.firstBlock + this.lead();
   }
 
   public positionOfPage(page: number): TextPosition {
-    return { blockIndex: this.content!.firstBlock + page, charOffset: 0 };
+    return {
+      blockIndex: this.content!.firstBlock + Math.max(0, page - this.lead()),
+      charOffset: 0,
+    };
   }
 
   /** One line per block, one line per page, so estimates match one page per block. */
   public geometry(): PageGeometry {
     return { width: 1000, height: 14, fontSize: 10, charWidth: () => 1 };
+  }
+
+  private lead(): number {
+    return this.content?.titlePage ? this.titlePagePages : 0;
   }
 }
 
@@ -66,6 +75,7 @@ describe('Reader', () => {
   let store: FakeProgressStore;
   let layouts: FakeLayout[];
   let navigate: ReturnType<typeof vi.fn>;
+  let titlePagePages: number;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -73,6 +83,7 @@ describe('Reader', () => {
     data = new FakeReaderData();
     store = new FakeProgressStore();
     layouts = [];
+    titlePagePages = 0;
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -83,7 +94,7 @@ describe('Reader', () => {
         {
           provide: CHAPTER_LAYOUT_FACTORY,
           useValue: () => {
-            const layout = new FakeLayout();
+            const layout = new FakeLayout(titlePagePages);
             layouts.push(layout);
             return layout;
           },
@@ -139,6 +150,21 @@ describe('Reader', () => {
     expect(next()).not.toBeNull();
     // Chapter II is estimated with the end mark the fake layout leaves out: 3 + 3.
     expect(indicator()).toBe('Page 1 sur 6');
+  });
+
+  it('opens on the title page when it fills a page of its own, until the text is reached', async () => {
+    titlePagePages = 1;
+    const { prev, indicator, fixture } = await open();
+
+    expect(visible().shownPage).toBe(0);
+    expect(prev()).toBeNull();
+    expect(indicator()).toMatch(/^Page 1 sur \d+$/);
+
+    store.progress.set('b1', { blockIndex: 1, charOffset: 0, finished: false, updatedAt: 't' });
+    fixture.destroy();
+    layouts = [];
+    await open();
+    expect(visible().shownPage).toBe(2);
   });
 
   it('resumes at the stored position and marks the book finished on its last page', async () => {

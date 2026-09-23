@@ -58,7 +58,11 @@
         [disabled]="checking()"
         [attr.aria-busy]="checking() || null"
       >
-        <svg aria-hidden="true" lucideLogIn></svg>
+        @if (checking()) {
+          <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+        } @else {
+          <svg aria-hidden="true" lucideLogIn></svg>
+        }
         Entrer
       </button>
       @if (error(); as message) {

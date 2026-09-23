@@ -17,14 +17,19 @@ Instance : [book-reader.thomashtn.dev](https://book-reader.thomashtn.dev) (non i
 
 | Commande | Souris | Clavier |
 |---|---|---|
-| Page suivante | barre orange de droite, pleine hauteur | flèche droite ou espace |
-| Page précédente | barre orange de gauche, pleine hauteur | flèche gauche |
-| Mes livres | bouton en haut à gauche | Tab puis Entrée |
+| Page suivante | barre "Suivant", en bas à droite | flèche droite ou espace |
+| Page précédente | barre "Précédent", en bas au centre | flèche gauche |
+| Mes livres | barre "Mes livres", en bas à gauche | Tab puis Entrée |
 
 Pas de menu, pas de message, pas de confirmation. La DMLA dégrade la vision centrale et conserve la
-périphérie : les commandes sont de grandes zones colorées aux bords de l'écran, le texte au centre.
-Une commande reçue moins de 400 ms après la précédente est ignorée, la répétition d'une touche
-maintenue aussi. La position est mémorisée à chaque page ; au démarrage, le dernier livre reprend.
+périphérie : le texte occupe tout l'écran, les trois commandes sont de larges barres sombres rangées
+dans le pied, et une barre qui ne mène nulle part (première ou dernière page) disparaît. Une commande
+reçue moins de 400 ms après la précédente est ignorée, la répétition d'une touche maintenue aussi. La
+position est mémorisée à chaque page ; au démarrage, le dernier livre reprend.
+
+"Mes livres" montre trois livres par rangée, chacun sur un aplat de couleur qui lui est propre pour
+qu'elle le retrouve avant de lire son titre ; le livre en cours est rose. Un engrenage discret en haut
+à droite mène au backoffice, destiné à l'aidant.
 
 ## Captures
 
@@ -32,12 +37,16 @@ maintenue aussi. La position est mémorisée à chaque page ; au démarrage, le 
 |---|---|
 | ![](docs/screenshots/lecture-1920.png) | ![](docs/screenshots/lecture-400.png) |
 
-| Mes livres (1920 px) | Backoffice, réglages (400 px) |
+| Mes livres (1920 px) | Mes livres (400 px) |
 |---|---|
-| ![](docs/screenshots/livres-1920.png) | ![](docs/screenshots/admin-reglages-400.png) |
+| ![](docs/screenshots/livres-1920.png) | ![](docs/screenshots/livres-400.png) |
 
-Captures générées par `SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts` sur *Le Horla* de
-Maupassant (domaine public).
+| Backoffice, réglages (400 px) |
+|---|
+| ![](docs/screenshots/admin-reglages-400.png) |
+
+Captures générées par `SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts` sur *Le Horla* et
+*Amour* de Maupassant (domaine public), au palier 100.
 
 ## Architecture
 

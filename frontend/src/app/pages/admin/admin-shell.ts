@@ -11,6 +11,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
   LucideArrowLeft,
   LucideLibrary,
+  LucideLoaderCircle,
   LucideLogIn,
   LucideLogOut,
   LucideSearch,
@@ -39,6 +40,7 @@ const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
     RouterLinkActive,
     LucideArrowLeft,
     LucideLibrary,
+    LucideLoaderCircle,
     LucideLogIn,
     LucideLogOut,
     LucideSearch,

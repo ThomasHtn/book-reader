@@ -33,6 +33,41 @@ describe('Settings', () => {
     return { element, settle, option };
   }
 
+  it('shows a loader, not a default tier someone could save, until the settings arrive', async () => {
+    const fixture = TestBed.createComponent(Settings);
+    TestBed.tick();
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('.a-loading[role="status"]')?.textContent?.trim()).toBe(
+      'Chargement des réglages',
+    );
+    expect(element.querySelector('[role="group"]')).toBeNull();
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
+  });
+
+  it('explains settings that cannot be read and reloads them on demand', async () => {
+    const fixture = TestBed.createComponent(Settings);
+    const settle = async () => {
+      TestBed.tick();
+      await new Promise((resolve) => setTimeout(resolve));
+      fixture.detectChanges();
+    };
+    await settle();
+    http.expectOne(API_ENDPOINTS.settings).flush(null, { status: 503, statusText: 'Unavailable' });
+    await settle();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.textContent).toContain('Échec : réglages indisponibles');
+    expect(element.querySelector('[role="group"]')).toBeNull();
+    element.querySelector<HTMLButtonElement>('.a-empty button')!.click();
+    await settle();
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 72 });
+    await settle();
+    expect(element.querySelector('[aria-pressed="true"]')?.textContent?.trim()).toBe('72');
+  });
+
   it('shows the current tier as the pressed option', async () => {
     const { element, option } = await render();
 

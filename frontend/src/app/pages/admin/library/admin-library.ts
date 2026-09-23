@@ -5,6 +5,7 @@ import {
   LucideBookX,
   LucideEye,
   LucideEyeOff,
+  LucideLoaderCircle,
   LucidePencil,
   LucideRotateCw,
   LucideSave,
@@ -41,6 +42,9 @@ const MATCHES: Record<StateFilter, (book: AdminBook) => boolean> = {
   finished: (book) => Boolean(book.finishedAt),
 };
 
+/** Row action in flight, so only the pressed button spins while the whole row waits. */
+type RowAction = 'active' | 'finished' | 'save' | 'delete';
+
 /** Lower case without diacritics, so "baudélaire" finds "Baudelaire". */
 function fold(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
@@ -55,6 +59,7 @@ function fold(text: string): string {
     LucideBookX,
     LucideEye,
     LucideEyeOff,
+    LucideLoaderCircle,
     LucidePencil,
     LucideRotateCw,
     LucideSave,
@@ -93,6 +98,8 @@ export class AdminLibrary {
 
   protected readonly busyId = signal<string | null>(null);
 
+  private readonly busyAction = signal<RowAction | null>(null);
+
   protected readonly editingId = signal<string | null>(null);
 
   protected readonly confirmingId = signal<string | null>(null);
@@ -118,9 +125,14 @@ export class AdminLibrary {
     this.editingId.set(null);
   }
 
+  protected spinning(book: AdminBook, action: RowAction): boolean {
+    return this.busyId() === book.id && this.busyAction() === action;
+  }
+
   protected setActive(book: AdminBook, active: boolean): Promise<void> {
     return this.change(
       book,
+      'active',
       { active },
       `${active ? 'Livre réactivé' : 'Livre retiré'} : ${book.title}`,
     );
@@ -129,6 +141,7 @@ export class AdminLibrary {
   protected setFinished(book: AdminBook, finished: boolean): Promise<void> {
     return this.change(
       book,
+      'finished',
       { finished },
       `${finished ? 'Livre marqué comme lu' : 'Livre marqué comme non lu'} : ${book.title}`,
     );
@@ -136,6 +149,7 @@ export class AdminLibrary {
 
   protected async remove(book: AdminBook): Promise<void> {
     this.busyId.set(book.id);
+    this.busyAction.set('delete');
     try {
       await this.api.deleteBook(book.id);
       this.message.set(successMessage(`Livre supprimé : ${book.title}`));
@@ -154,11 +168,17 @@ export class AdminLibrary {
     if (!title || !author) {
       return;
     }
-    await this.change(book, { title, author }, 'Titre et auteur enregistrés');
+    await this.change(book, 'save', { title, author }, 'Titre et auteur enregistrés');
   }
 
-  private async change(book: AdminBook, patch: BookPatch, success: string): Promise<void> {
+  private async change(
+    book: AdminBook,
+    action: RowAction,
+    patch: BookPatch,
+    success: string,
+  ): Promise<void> {
     this.busyId.set(book.id);
+    this.busyAction.set(action);
     try {
       await this.api.updateBook(book.id, patch);
       this.message.set(successMessage(success));

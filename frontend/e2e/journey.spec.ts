@@ -36,6 +36,7 @@ test('reader journey', async ({ page }) => {
     await expect(page).toHaveURL(/\/livres$/);
     await expect(page.getByRole('heading', { name: 'Mes livres' })).toBeVisible();
     await expect(page.locator('button.book-card')).toHaveCount(0);
+    await expect(page.getByText("Aucun livre pour l'instant.")).toBeVisible();
     await expectAccessible(page);
   });
 
@@ -60,6 +61,8 @@ test('reader journey', async ({ page }) => {
     });
 
     await page.goto('/admin');
+    // The backoffice is lazy: audit it once rendered, not the empty shell.
+    await expect(page.getByLabel("Clé d'administration")).toBeVisible();
     await expectAccessible(page);
     await page.getByLabel("Clé d'administration").fill('wrong-key-for-the-journey');
     await page.getByRole('button', { name: 'Entrer' }).click();
@@ -78,7 +81,7 @@ test('reader journey', async ({ page }) => {
 
   await test.step('uploads a second book and visits every backoffice section', async () => {
     await page.getByRole('link', { name: 'Dépôt' }).click();
-    await page.getByLabel('Choisir un fichier EPUB').setInputFiles({
+    await page.getByLabel('Choisir des fichiers EPUB').setInputFiles({
       name: 'amour.epub',
       mimeType: 'application/epub+zip',
       buffer: buildEpub(AMOUR),

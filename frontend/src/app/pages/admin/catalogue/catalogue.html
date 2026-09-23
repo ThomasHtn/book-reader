@@ -21,7 +21,10 @@
 
   <div aria-live="polite">
     @if (results.isLoading()) {
-      <p class="a-help a-pending">Recherche en cours</p>
+      <p class="a-loading" role="status">
+        <span class="a-brand__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        Recherche de « {{ submitted() }} » dans le catalogue
+      </p>
     } @else if (searchFailure(); as failure) {
       <div class="a-empty">
         <p class="a-message a-message--failure">{{ failure }}</p>
@@ -68,7 +71,11 @@
                 [attr.aria-busy]="busy()[entry.entryId] || null"
                 (click)="activate(entry)"
               >
-                <svg aria-hidden="true" lucideDownload></svg>
+                @if (busy()[entry.entryId]) {
+                  <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+                } @else {
+                  <svg aria-hidden="true" lucideDownload></svg>
+                }
                 {{ busy()[entry.entryId] ? 'Activation en cours' : 'Activer' }}
               </button>
             }

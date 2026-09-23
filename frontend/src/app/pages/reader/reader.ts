@@ -46,9 +46,9 @@ import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './chapter
         [style.visibility]="location() ? null : 'hidden'"
         (contextmenu)="$event.preventDefault()"
       >
-        <div class="page-head">
+        <header class="page-head">
           <p class="page-indicator" aria-live="polite">{{ indicator() }}</p>
-        </div>
+        </header>
         <main>
           <h1 class="visually-hidden">{{ title() }}</h1>
           <section class="paged reading" lang="fr" aria-label="Texte du livre" tabindex="-1" #text>
@@ -258,7 +258,10 @@ export class Reader {
     const chapter = chapterOfBlock(this.chapters, position.blockIndex);
     this.renderChapter(chapter);
     this.pageCounts.set(estimatePageCounts(book, this.chapters, this.measured, layout.geometry()));
-    const page = Math.min(layout.pageOf(position), this.chapterPages() - 1);
+    // A chapter's start is its first page, or a fresh book would skip a title page filling a page alone.
+    const page = isStartOf(this.chapters[chapter], position)
+      ? 0
+      : Math.min(layout.pageOf(position), this.chapterPages() - 1);
     layout.show(page);
     this.location.set({ chapter, page });
     this.position = position;
@@ -318,6 +321,10 @@ export class Reader {
     const settings = this.data.settings();
     return `${viewport?.clientWidth}x${viewport?.clientHeight}:${settings?.fontTier}`;
   }
+}
+
+function isStartOf(chapter: Chapter, position: TextPosition): boolean {
+  return position.blockIndex === chapter.firstBlock && position.charOffset === 0;
 }
 
 function statusOf(error: unknown): number | undefined {

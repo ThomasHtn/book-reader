@@ -84,6 +84,18 @@ describe('Catalogue', () => {
     );
   });
 
+  it('shows a loader while the site answers', async () => {
+    const { element, settle } = await render();
+    await search(element, settle, 'maupassant');
+
+    expect(element.querySelector('.a-loading[role="status"]')?.textContent?.trim()).toBe(
+      'Recherche de « maupassant » dans le catalogue',
+    );
+    http.expectOne((r) => r.url === API_ENDPOINTS.admin.catalogue).flush([]);
+    await settle();
+    expect(element.querySelector('.a-loading')).toBeNull();
+  });
+
   it('says when nothing matches', async () => {
     const { element, settle } = await render();
     await search(element, settle, 'zzz');
@@ -105,6 +117,7 @@ describe('Catalogue', () => {
     expect(busy.disabled).toBe(true);
     expect(busy.getAttribute('aria-busy')).toBe('true');
     expect(busy.textContent?.trim()).toBe('Activation en cours');
+    expect(busy.querySelector('svg.a-spin')).not.toBeNull();
 
     const activation = http.expectOne(API_ENDPOINTS.admin.fromCatalogue);
     expect(activation.request.method).toBe('POST');

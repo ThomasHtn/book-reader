@@ -706,6 +706,52 @@
   color: var(--admin-fg-muted);
 }
 
+/* Waiting for a list: the brand's three spines are pulled from the shelf one after another. */
+.a-loading {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 3);
+  margin: 0;
+  padding: calc(var(--spacing) * 6) 0;
+  color: var(--admin-fg-muted);
+  font-size: var(--admin-text-sm);
+}
+
+.a-loading .a-brand__mark i {
+  animation: a-spine-pull var(--admin-loading-duration) ease-in-out infinite;
+}
+
+.a-loading .a-brand__mark i:nth-child(2) {
+  animation-delay: calc(var(--admin-loading-duration) / 8);
+}
+
+.a-loading .a-brand__mark i:nth-child(3) {
+  animation-delay: calc(var(--admin-loading-duration) / 4);
+}
+
+@keyframes a-spine-pull {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(calc(var(--spacing) * -1.25));
+  }
+}
+
+/* Busy button: its icon turns into a spinning circle, the label says what is running. */
+.a-spin {
+  animation: a-spin var(--admin-spin-duration) linear infinite;
+}
+
+@keyframes a-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .a-message {
   margin: 0;
   padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3.5);
@@ -900,5 +946,11 @@
 @media (prefers-reduced-motion: reduce) {
   .admin * {
     transition: none !important;
+  }
+
+  /* The label still says what is running; the motion only repeats it. */
+  .a-loading .a-brand__mark i,
+  .a-spin {
+    animation: none;
   }
 }

@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, linkedSignal, signal } from '@angular/core';
-import { LucideSave } from '@lucide/angular';
+import { LucideLoaderCircle, LucideRotateCw, LucideSave } from '@lucide/angular';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminMessage, failureMessage, successMessage } from '@core/admin/admin-message';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
@@ -10,7 +10,7 @@ import { FontTier, ReaderSettings } from '@core/http/api.model';
 @Component({
   selector: 'app-admin-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideSave],
+  imports: [LucideLoaderCircle, LucideRotateCw, LucideSave],
   templateUrl: './settings.html',
 })
 export class Settings {
@@ -18,8 +18,9 @@ export class Settings {
 
   protected readonly tiers: readonly FontTier[] = [48, 72, 100, 140];
 
-  private readonly current = httpResource<ReaderSettings>(() => API_ENDPOINTS.settings);
+  protected readonly current = httpResource<ReaderSettings>(() => API_ENDPOINTS.settings);
 
+  /** Only shown once the server answered, so the fallback can never be saved over the real tier. */
   protected readonly tier = linkedSignal<FontTier>(() =>
     this.current.hasValue() ? this.current.value().fontTier : 100,
   );

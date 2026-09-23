@@ -90,6 +90,8 @@ app-book-card {
 /* ---- Screen frame: content owns every pixel above the footer, there is no header ---- */
 .screen {
   display: grid;
+  /* Bounded column: a footer wider than a phone must not widen the whole screen past the window */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
 }
@@ -113,6 +115,7 @@ app-book-card {
    holds one or two of them. */
 .nav-row .nav-bar {
   flex: 1;
+  min-width: 0;
 }
 
 /* "Mes livres" takes its label's width, unless the book fits one page and it is the only command */
@@ -191,6 +194,14 @@ app-book-card {
   max-width: var(--grid-max-width);
   /* Head and grid share one side padding, or the title stops sitting over the first block */
   padding-inline: var(--grid-padding);
+  /* Room for the corner gear once the head reaches the screen edge, below the grid's maximum width */
+  padding-inline-end: max(
+    var(--grid-padding),
+    calc(
+      var(--grid-padding) + var(--space-4) + var(--space-1) -
+        max(0px, (100vw - var(--grid-max-width)) / 2)
+    )
+  );
 }
 
 .page-title {
@@ -503,11 +514,34 @@ app-book-card {
   justify-self: center;
 }
 
-/* Three per row stays, but the chevron labels drop below the phone breakpoint */
+/* Empty shelf: the same centred sentence as the status screen, without a button she could not use */
+.book-empty {
+  place-self: center;
+  max-width: 24ch;
+  margin: 0;
+  padding: var(--reading-padding);
+  font-size: var(--text-body);
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* Below the phone breakpoint: three per row stays, footer bars keep labels and drop chevrons */
 @media (max-width: 480px) {
   :root {
     --grid-gap: var(--space-2);
     /* A third of a phone leaves no room for a 24px inset: titles broke mid-word */
     --book-block-padding: var(--space-1) var(--space-1) var(--space-2);
+  }
+
+  /* Three labelled commands on one row: the chevrons and inner margins give way to the labels */
+  .nav-bar svg {
+    display: none;
+  }
+
+  .nav-bar,
+  .nav-bar--exit {
+    padding-inline: var(--space-1);
   }
 }

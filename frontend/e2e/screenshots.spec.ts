@@ -38,11 +38,16 @@ test('README screenshots', async ({ page }) => {
     await page.screenshot({ path: `${OUTPUT}/lecture-${width}.png` });
   }
 
-  await page.setViewportSize({ width: 1920, height: 1080 });
-  await page.goto('/livres');
-  await expect(page.locator('button.book-card')).toHaveCount(2);
-  await page.mouse.move(960, 900);
-  await page.screenshot({ path: `${OUTPUT}/livres-1920.png` });
+  for (const width of [1920, 400]) {
+    await page.setViewportSize(
+      width === 1920 ? { width: 1920, height: 1080 } : { width: 400, height: 860 },
+    );
+    await page.goto('/livres');
+    await expect(page.locator('button.book-card')).toHaveCount(2);
+    // Rest the pointer below the grid, where nothing reacts to hovering.
+    await page.mouse.move(width / 2, width === 1920 ? 900 : 840);
+    await page.screenshot({ path: `${OUTPUT}/livres-${width}.png` });
+  }
 
   await page.setViewportSize({ width: 400, height: 860 });
   await page.evaluate((key) => localStorage.setItem('admin.key', key), E2E_ADMIN_KEY);

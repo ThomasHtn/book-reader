@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { LucideFileUp, LucideUpload } from '@lucide/angular';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { LucideFileUp, LucideLoaderCircle, LucideUpload } from '@lucide/angular';
 import { AdminApi } from '@core/admin/admin-api';
 import { failureReason } from '@core/admin/admin-errors';
 import { AdminMessage, successMessage } from '@core/admin/admin-message';
@@ -8,7 +8,7 @@ import { AdminMessage, successMessage } from '@core/admin/admin-message';
 @Component({
   selector: 'app-admin-upload',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [LucideFileUp, LucideUpload],
+  imports: [LucideFileUp, LucideLoaderCircle, LucideUpload],
   templateUrl: './upload.html',
 })
 export class Upload {
@@ -19,6 +19,17 @@ export class Upload {
   protected readonly dragging = signal(false);
 
   protected readonly sending = signal(false);
+
+  /** One-based index of the file being converted, 0 when idle. */
+  private readonly current = signal(0);
+
+  protected readonly sendLabel = computed(() => {
+    if (!this.sending()) {
+      return 'Envoyer';
+    }
+    const total = this.files().length;
+    return total > 1 ? `Envoi ${this.current()} sur ${total}` : 'Envoi en cours';
+  });
 
   protected readonly message = signal<AdminMessage | null>(null);
 
@@ -46,7 +57,8 @@ export class Upload {
     this.sending.set(true);
     const titles: string[] = [];
     const failures: { name: string; reason: string }[] = [];
-    for (const file of files) {
+    for (const [index, file] of files.entries()) {
+      this.current.set(index + 1);
       try {
         const book = await this.api.upload(file);
         titles.push(book.title);
@@ -59,6 +71,7 @@ export class Upload {
       this.files.set([]);
     }
     this.sending.set(false);
+    this.current.set(0);
   }
 }
 

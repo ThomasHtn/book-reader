@@ -54,6 +54,8 @@ describe('Upload', () => {
     await settle();
     expect(send().disabled).toBe(true);
     expect(send().getAttribute('aria-busy')).toBe('true');
+    expect(send().textContent?.trim()).toBe('Envoi en cours');
+    expect(send().querySelector('svg.a-spin')).not.toBeNull();
 
     const request = http.expectOne(API_ENDPOINTS.admin.upload);
     expect(request.request.method).toBe('POST');
@@ -80,6 +82,7 @@ describe('Upload', () => {
     await settle();
 
     const secondRequest = http.expectOne(API_ENDPOINTS.admin.upload);
+    expect(send().textContent?.trim()).toBe('Envoi 2 sur 2');
     expect((secondRequest.request.body as FormData).get('file')).toBe(second);
     secondRequest.flush(
       { id: 'b2', title: 'Boule de suif' },

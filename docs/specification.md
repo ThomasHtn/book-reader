@@ -137,6 +137,9 @@ Règles :
   bibliothèque de cette taille, et tout le bloc est la cible.
 - Paginée par les mêmes barres que le texte, mais par rangées entières et non en multi-colonnes :
   une rangée n'est jamais coupée, et un titre long prend la place qu'il faut, jamais tronqué.
+- Bibliothèque vide : une phrase centrée, "Aucun livre pour l'instant. Ils apparaîtront ici dès leur
+  ajout.", sans bouton (elle n'a rien à faire, les livres arrivent au prochain rafraîchissement) ;
+  pendant le premier chargement, page vide comme pour un livre (5.6).
 - Ordre : livres ayant une progression, terminés compris, du plus récemment lu au plus ancien ; puis
   livres jamais ouverts, du plus récemment ajouté au plus ancien.
 - Repères : le premier bloc, s'il est en cours et non terminé, est rose et porte l'étiquette
@@ -295,7 +298,11 @@ temporaire par adresse après plusieurs échecs. Écran : un champ mot de passe,
 Toute action longue désactive son bouton ("en cours") puis affiche succès ou échec avec la raison
 (chiffré, sans texte, trop volumineux, catalogue injoignable, catalogue qui refuse les
 téléchargements : le site renvoie alors une page HTML au lieu de l'EPUB quand il bannit une adresse).
-Rien d'autre.
+Pendant l'action, l'icône du bouton devient un cercle qui tourne ; un dépôt de plusieurs fichiers
+indique "Envoi 2 sur 3". Chargement d'une liste (Bibliothèque, Réglages, recherche du catalogue) : un
+indicateur animé et une phrase qui nomme ce qui charge. Réglages ne montre aucun palier avant la
+réponse du serveur, pour qu'on ne puisse pas enregistrer la valeur par défaut, et propose
+"Réessayer" en cas d'échec. Rien d'autre.
 
 ## 10. API
 
@@ -397,6 +404,7 @@ La version 1 est livrable quand :
 | Commandes et blocs sans bordure : commandes en aplat encre à libellé crème, blocs en aplat de couleur, arrondi de 12 px, espace de 8 px entre les barres | filets de 2 px sur fond beige, angles vifs | 23 septembre 2026 : demande de l'utilisateur, pour un rendu plus moderne ; sans filet, seul un fond sombre détache une cible du papier (au moins 7,9:1), donc les commandes passent à l'encre et les blocs à des toiles sombres ; l'arrondi ne coûte rien en lisibilité et l'anneau de focus en ombre intérieure le suit |
 | Une couleur de toile par livre parmi dix, tirée de son identifiant et décalée à la suivante libre si le voisin de gauche ou du dessus la porte déjà ; livre en cours rose, livre terminé beige pâle | même aplat pour tous les livres ; cinq toiles tirées de l'identifiant seul ; couleur selon la seule position dans la liste | 23 septembre 2026 : la DMLA ôte la vision centrale mais laisse les grandes taches de couleur en périphérie, donc un livre se retrouve à sa couleur avant d'être lu ; les couleurs ne portent aucun sens. Avec cinq toiles tirées au hasard, des voisins se répétaient (demande de l'utilisateur) ; le décalage les supprime et ne change la couleur d'un livre que lorsque l'ordre crée un conflit |
 | Gras réservé au texte lu et aux titres de livres ; commandes, auteurs, étiquettes et ligne de tête en Luciole 400 | tout en 700 | 23 septembre 2026 : demande de l'utilisateur ; tout en gras aplatissait la hiérarchie, le titre ressort mieux quand il est seul en gras, et Luciole 400 reste assez épaisse aux tailles des commandes |
+| Message de bibliothèque vide côté liseuse, sans bouton ; indicateurs animés dans le backoffice seulement | page vide ; indicateur de chargement dans la liseuse | 23 septembre 2026 : demande de l'utilisateur, pour une application qui paraisse finie ; une page vide ressemble à une panne, une phrase dit que rien n'est cassé. La liseuse garde l'interdit d'animation (6) et le fond seul au chargement (5.6) |
 | Une application Angular avec `/admin` | deux applications | un front, un back |
 | `localStorage` seul, en ligne | IndexedDB, hors ligne | simplicité, perte acceptée |
 | API publique | clé par poste | une seule utilisatrice |

@@ -38,6 +38,24 @@ describe('Library', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
+  it('says the shelf is empty once the list arrives without any book', async () => {
+    data.books.set([]);
+
+    const element = await render();
+
+    expect(element.querySelector('.book-empty')?.textContent?.trim()).toBe(
+      "Aucun livre pour l'instant. Ils apparaîtront ici dès leur ajout.",
+    );
+    expect(element.querySelector('.page-indicator')?.textContent?.trim()).toBe('');
+  });
+
+  it('keeps the page blank while the list is loading, as for a book', async () => {
+    const element = await render();
+
+    expect(element.querySelector('.book-empty')).toBeNull();
+    expect(element.querySelector('.book-card')).toBeNull();
+  });
+
   it('lists books with the one in progress first, marked, and finished ones labelled', async () => {
     data.books.set([book('new', '2026-09-10T00:00:00Z'), book('reading'), book('done')]);
     store.progress.set('reading', {

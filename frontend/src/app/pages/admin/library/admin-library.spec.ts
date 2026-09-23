@@ -65,6 +65,25 @@ describe('AdminLibrary', () => {
     return { element, settle, item, button };
   }
 
+  it('shows a loader until the list arrives', async () => {
+    const fixture = TestBed.createComponent(AdminLibrary);
+    const settle = async () => {
+      TestBed.tick();
+      await new Promise((resolve) => setTimeout(resolve));
+      fixture.detectChanges();
+    };
+    await settle();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('.a-loading[role="status"]')?.textContent?.trim()).toBe(
+      'Chargement de la bibliothèque',
+    );
+
+    http.expectOne(API_ENDPOINTS.admin.books).flush(BOOKS);
+    await settle();
+    expect(element.querySelector('.a-loading')).toBeNull();
+  });
+
   it('lists every imported book with author, source, date and state', async () => {
     const { item } = await render();
 

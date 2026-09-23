@@ -40,6 +40,12 @@
         {{ current.text }}
       </p>
     }
+    @if (books.isLoading() && !books.hasValue()) {
+      <p class="a-loading" role="status">
+        <span class="a-brand__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        Chargement de la bibliothèque
+      </p>
+    }
     @if (books.error() && !books.hasValue()) {
       <div class="a-empty">
         <p class="a-message a-message--failure">Échec : bibliothèque indisponible</p>
@@ -83,9 +89,13 @@
                     type="submit"
                     class="a-btn a-btn--primary a-btn--sm"
                     [disabled]="busyId() === book.id"
-                    [attr.aria-busy]="busyId() === book.id || null"
+                    [attr.aria-busy]="spinning(book, 'save') || null"
                   >
-                    <svg aria-hidden="true" lucideSave></svg>
+                    @if (spinning(book, 'save')) {
+                      <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+                    } @else {
+                      <svg aria-hidden="true" lucideSave></svg>
+                    }
                     Enregistrer
                   </button>
                   <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="cancel()">
@@ -106,10 +116,14 @@
                     type="button"
                     class="a-btn a-btn--danger a-btn--sm"
                     [disabled]="busyId() === book.id"
-                    [attr.aria-busy]="busyId() === book.id || null"
+                    [attr.aria-busy]="spinning(book, 'delete') || null"
                     (click)="remove(book)"
                   >
-                    <svg aria-hidden="true" lucideTrash></svg>
+                    @if (spinning(book, 'delete')) {
+                      <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+                    } @else {
+                      <svg aria-hidden="true" lucideTrash></svg>
+                    }
                     Confirmer la suppression
                   </button>
                   <button
@@ -138,10 +152,14 @@
                       type="button"
                       class="a-btn a-btn--secondary a-btn--sm"
                       [disabled]="busyId() === book.id"
-                      [attr.aria-busy]="busyId() === book.id || null"
+                      [attr.aria-busy]="spinning(book, 'active') || null"
                       (click)="setActive(book, false)"
                     >
-                      <svg aria-hidden="true" lucideEyeOff></svg>
+                      @if (spinning(book, 'active')) {
+                        <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+                      } @else {
+                        <svg aria-hidden="true" lucideEyeOff></svg>
+                      }
                       Retirer
                     </button>
                   } @else {
@@ -149,10 +167,14 @@
                       type="button"
                       class="a-btn a-btn--secondary a-btn--sm"
                       [disabled]="busyId() === book.id"
-                      [attr.aria-busy]="busyId() === book.id || null"
+                      [attr.aria-busy]="spinning(book, 'active') || null"
                       (click)="setActive(book, true)"
                     >
-                      <svg aria-hidden="true" lucideEye></svg>
+                      @if (spinning(book, 'active')) {
+                        <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+                      } @else {
+                        <svg aria-hidden="true" lucideEye></svg>
+                      }
                       Réactiver
                     </button>
                   }
@@ -168,16 +190,17 @@
                     type="button"
                     class="a-btn a-btn--secondary a-btn--sm"
                     [disabled]="busyId() === book.id"
-                    [attr.aria-busy]="busyId() === book.id || null"
+                    [attr.aria-busy]="spinning(book, 'finished') || null"
                     (click)="setFinished(book, !book.finishedAt)"
                   >
-                    @if (book.finishedAt) {
+                    @if (spinning(book, 'finished')) {
+                      <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+                    } @else if (book.finishedAt) {
                       <svg aria-hidden="true" lucideBookX></svg>
-                      Marquer comme non lu
                     } @else {
                       <svg aria-hidden="true" lucideBookCheck></svg>
-                      Marquer comme lu
                     }
+                    {{ book.finishedAt ? 'Marquer comme non lu' : 'Marquer comme lu' }}
                   </button>
                   <button
                     type="button"

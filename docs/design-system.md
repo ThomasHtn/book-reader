@@ -140,7 +140,7 @@ anti-rebond : cahier des charges 5.1. Aucun geste tactile requis.
 
 | Composant | Spécification |
 |---|---|
-| Pied `nav-footer` | pied de `screen`, commandes seules : une rangée `nav-row` en flex. Les barres se partagent la place (`flex: 1`), "Mes livres" prend celle de son libellé, ou toute la largeur s'il reste seul. Une barre qui ne mène nulle part n'est pas rendue, et sur "Mes livres" le pied disparaît entièrement quand tout tient sur une page |
+| Pied `nav-footer` | pied de `screen`, commandes seules : une rangée `nav-row` en flex. Les barres se partagent la place (`flex: 1`), "Mes livres" prend celle de son libellé, ou toute la largeur s'il reste seul. Une barre qui ne mène nulle part n'est pas rendue, et sur "Mes livres" le pied disparaît entièrement quand tout tient sur une page. Sous 480 px, les barres perdent leur chevron et leur marge interne pour garder les trois libellés sur une rangée ; l'écran ne dépasse jamais la fenêtre |
 | Ligne de tête `page-head` | première rangée de `screen` ; rangée alignée à droite, centrée sur `--reading-max-width` ou, avec `page-head--grid`, sur `--grid-max-width`. Le titre s'y pousse à gauche tout seul, donc l'indicateur reste à droite quand il n'y a pas de titre |
 | Titre `page-title` | `--page-title-size` (entre 20 et 35 px, calé sur le palier 100 sans en dépendre : c'est du décor, pas du texte de lecture). Sur "Mes livres" seulement |
 | Indicateur `page-indicator` | `--indicator-size` (un quart du corps, entre 16 et 32 px), texte atténué, chiffres tabulaires, `aria-live="polite"`, aucun filet. Porte "Page 12 sur 840" en lecture, "Titres 1 à 6 sur 7" sur la liste. Volontairement discret : c'est un état, jamais une commande |
@@ -153,6 +153,7 @@ anti-rebond : cahier des charges 5.1. Aucun geste tactile requis.
 | Étiquette `tag` | `--card-meta-size`, pastille encre à texte crème, arrondi 6 px, jamais en capitales ; n'apparaît que sur les blocs clairs (en cours, terminé). "En cours" et "Terminé" : la couleur seule ne suffit jamais à porter l'état |
 | Aperçu `a-preview` (backoffice) | rendu réel du palier, réduit à la boîte : la boîte est un conteneur et le texte est dimensionné en `cqi`, sinon il se mesure sur la fenêtre entière et déborde |
 | Écran d'état `status` | une phrase centrée en `--text-body`, 24 caractères par ligne maximum, un bouton |
+| Étagère vide `book-empty` | à la place de la grille sur "Mes livres" quand la liste reçue est vide : même phrase centrée que `status`, sans bouton ; la ligne de tête et l'engrenage restent |
 
 ## 8. Composants du backoffice
 
@@ -181,7 +182,8 @@ ou plus, tout contour d'interaction à 3:1.
 | Vide `a-empty` | cadre pointillé, phrase qui dit quoi faire |
 | Message `a-message` | bandeau pâle succès ou danger, texte gras |
 | Connexion | fond marine, carte centrée : marque, titre, champ mot de passe, bouton "Entrer" ; lien "Retour aux livres" en haut à gauche ; erreur sous le bouton |
-| Attente | bouton en "en cours" (`aria-busy`, désactivé) puis succès ou échec en clair |
+| Chargement `a-loading` | `role="status"`, les trois dos de la marque (`a-brand__mark`) qui se lèvent l'un après l'autre (`--admin-loading-duration`) et une phrase atténuée qui nomme ce qui charge ; immobiles sous `prefers-reduced-motion`, la phrase suffit |
+| Attente | bouton en "en cours" (`aria-busy`, désactivé), son icône remplacée par un cercle Lucide qui tourne (`a-spin`, `--admin-spin-duration`), puis succès ou échec en clair |
 
 ## 9. Interdits
 

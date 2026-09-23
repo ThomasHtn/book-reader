@@ -323,6 +323,8 @@
   --admin-nav-height: 64px;
   --admin-rail-width: 248px;
   --admin-duration: 120ms;
+  --admin-spin-duration: 800ms;
+  --admin-loading-duration: 1200ms;
   --admin-focus-ring: 0 0 0 2px var(--admin-surface), 0 0 0 4px var(--admin-focus);
 }
 

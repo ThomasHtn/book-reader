@@ -45,8 +45,12 @@
       [attr.aria-busy]="sending() || null"
       (click)="send()"
     >
-      <svg aria-hidden="true" lucideUpload></svg>
-      {{ sending() ? 'Envoi en cours' : 'Envoyer' }}
+      @if (sending()) {
+        <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+      } @else {
+        <svg aria-hidden="true" lucideUpload></svg>
+      }
+      {{ sendLabel() }}
     </button>
     <p class="a-help">
       Chaque livre est converti puis activé ; corrigez le titre et l'auteur dans la Bibliothèque si

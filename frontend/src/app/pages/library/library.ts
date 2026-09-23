@@ -36,34 +36,45 @@ const GRID_COLUMNS = 3;
     @if (data.unreachable()) {
       <app-status-screen (retry)="data.retry()" />
     } @else {
-      <button type="button" class="button--settings" aria-label="Réglages" (click)="openAdmin()">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.61l-1.92-3.32a.5.5 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94L14.4 2.81a.49.49 0 0 0-.48-.41h-3.84a.49.49 0 0 0-.48.41L9.25 5.35c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.59.22L2.74 8.87a.5.5 0 0 0 .12.61l2.03 1.58c-.05.3-.09.62-.09.94s.02.64.07.94l-2.03 1.58a.5.5 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.5.5 0 0 0-.12-.61l-2.03-1.58ZM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2Z"
-          />
-        </svg>
-      </button>
       <div class="screen">
-        <div class="page-head page-head--grid">
+        <header class="page-head page-head--grid">
           <h1 class="page-title">Mes livres</h1>
           <p class="page-indicator" aria-live="polite">{{ indicator() }}</p>
-        </div>
+          <button
+            type="button"
+            class="button--settings"
+            aria-label="Réglages"
+            (click)="openAdmin()"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.61l-1.92-3.32a.5.5 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94L14.4 2.81a.49.49 0 0 0-.48-.41h-3.84a.49.49 0 0 0-.48.41L9.25 5.35c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.59.22L2.74 8.87a.5.5 0 0 0 .12.61l2.03 1.58c-.05.3-.09.62-.09.94s.02.64.07.94l-2.03 1.58a.5.5 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.5.5 0 0 0-.12-.61l-2.03-1.58ZM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2Z"
+              />
+            </svg>
+          </button>
+        </header>
         <main>
-          <div class="book-grid-viewport" #viewport>
-            <div class="book-grid" #grid [style.transform]="transform()">
-              @for (entry of entries(); track entry.book.id; let index = $index) {
-                <app-book-card
-                  [title]="entry.book.title"
-                  [author]="entry.book.author"
-                  [current]="entry.current"
-                  [finished]="entry.finished"
-                  [tone]="tones()[index]"
-                  [attr.inert]="cardPages()[index] === page() ? null : ''"
-                  (activate)="open(entry.book.id)"
-                />
-              }
+          @if (data.books()?.length === 0) {
+            <p class="book-empty">
+              Aucun livre pour l'instant. Ils apparaîtront ici dès leur ajout.
+            </p>
+          } @else {
+            <div class="book-grid-viewport" #viewport>
+              <div class="book-grid" #grid [style.transform]="transform()">
+                @for (entry of entries(); track entry.book.id; let index = $index) {
+                  <app-book-card
+                    [title]="entry.book.title"
+                    [author]="entry.book.author"
+                    [current]="entry.current"
+                    [finished]="entry.finished"
+                    [tone]="tones()[index]"
+                    [attr.inert]="cardPages()[index] === page() ? null : ''"
+                    (activate)="open(entry.book.id)"
+                  />
+                }
+              </div>
             </div>
-          </div>
+          }
         </main>
         @if (pages() > 1) {
           <footer class="nav-footer">
