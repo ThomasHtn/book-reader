@@ -11,7 +11,7 @@ export interface PendingLocation {
 }
 
 /** Tolerance for sub-pixel layout rounding at column edges. */
-const EDGE_TOLERANCE_PX = 0.5;
+export const EDGE_TOLERANCE_PX = 0.5;
 
 /**
  * Returns the page holding a horizontal offset measured from the start of the chapter.
@@ -65,19 +65,4 @@ export function previousLocation(location: Location): PendingLocation | null {
     return { chapter: location.chapter, page: location.page - 1 };
   }
   return location.chapter > 0 ? { chapter: location.chapter - 1, page: 'last' } : null;
-}
-
-/**
- * Returns the rows laid out on a page of "Mes livres".
- *
- * @param rowPages - Page of each row, in list order.
- * @param page - Displayed page.
- * @returns One-based first and last row, or `null` when the page holds none.
- */
-export function visibleRange(
-  rowPages: readonly number[],
-  page: number,
-): { first: number; last: number } | null {
-  const first = rowPages.indexOf(page);
-  return first < 0 ? null : { first: first + 1, last: rowPages.lastIndexOf(page) + 1 };
 }

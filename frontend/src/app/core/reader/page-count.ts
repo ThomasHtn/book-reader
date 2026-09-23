@@ -29,7 +29,9 @@ const HEADING_SCALE = 1.15;
 const LEADING_TIGHT = 1.15;
 const GAP_EM = 0.6;
 const META_SCALE = 0.5;
-const END_MARK = 'Fin du livre';
+
+/** Line shown after the last block of a book, also laid out by the reader. */
+export const END_MARK = 'Fin du livre';
 
 // Column breaks as observed in Blink on real books (2026-09-23): two lines at least on each side,
 // except a three-line paragraph, split two and one rather than leaving two empty lines.

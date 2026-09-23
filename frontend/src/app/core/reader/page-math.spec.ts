@@ -1,4 +1,4 @@
-import { nextLocation, pageAt, pageCount, previousLocation, visibleRange } from './page-math';
+import { nextLocation, pageAt, pageCount, previousLocation } from './page-math';
 
 describe('pageAt', () => {
   it('returns the column holding a horizontal offset from the start of the chapter', () => {
@@ -50,19 +50,5 @@ describe('previousLocation', () => {
 
   it('stays put on the first page of the book', () => {
     expect(previousLocation({ chapter: 0, page: 0 })).toBeNull();
-  });
-});
-
-describe('visibleRange', () => {
-  it('returns the one-based range of rows laid out on a page', () => {
-    const rowPages = [0, 0, 0, 1, 1, 2];
-    expect(visibleRange(rowPages, 0)).toEqual({ first: 1, last: 3 });
-    expect(visibleRange(rowPages, 1)).toEqual({ first: 4, last: 5 });
-    expect(visibleRange(rowPages, 2)).toEqual({ first: 6, last: 6 });
-  });
-
-  it('returns nothing for a page without rows', () => {
-    expect(visibleRange([], 0)).toBeNull();
-    expect(visibleRange([0, 0], 3)).toBeNull();
   });
 });

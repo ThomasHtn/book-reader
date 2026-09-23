@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GridItem, paginateGrid } from './grid-math';
+import { GridItem, paginateGrid, visibleRange } from './grid-math';
 
 /** Builds `count` rows of `perRow` cards, each `height` tall, laid out from the top of the grid. */
 function rows(count: number, perRow: number, height: number, gap = 0): GridItem[] {
@@ -82,5 +82,19 @@ describe('paginateGrid', () => {
       offsets: [0],
       pages: [0, 0, 0, 0, 0, 0],
     });
+  });
+});
+
+describe('visibleRange', () => {
+  it('returns the one-based range of cards laid out on a page', () => {
+    const cardPages = [0, 0, 0, 1, 1, 2];
+    expect(visibleRange(cardPages, 0)).toEqual({ first: 1, last: 3 });
+    expect(visibleRange(cardPages, 1)).toEqual({ first: 4, last: 5 });
+    expect(visibleRange(cardPages, 2)).toEqual({ first: 6, last: 6 });
+  });
+
+  it('returns nothing for a page without cards', () => {
+    expect(visibleRange([], 0)).toBeNull();
+    expect(visibleRange([0, 0], 3)).toBeNull();
   });
 });

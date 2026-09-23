@@ -16,8 +16,15 @@ import io.github.thomashtn.bookreader.shared.config.AdminApiKeyFilter;
 import io.github.thomashtn.bookreader.support.PostgreSqlIntegrationTest;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import mockwebserver3.Dispatcher;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
@@ -45,6 +52,11 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
     private static final AtomicBoolean SITE_DOWN = new AtomicBoolean();
 
     private static final AtomicInteger DOWNLOADS = new AtomicInteger();
+
+    /**
+     * When set, every download waits until this many downloads are in flight.
+     */
+    private static final AtomicReference<CountDownLatch> DOWNLOAD_BARRIER = new AtomicReference<>();
 
     static {
         CATALOGUE.setDispatcher(new FakeCatalogue());
@@ -77,6 +89,7 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
         repository.deleteAll();
         SITE_DOWN.set(false);
         DOWNLOADS.set(0);
+        DOWNLOAD_BARRIER.set(null);
     }
 
     @Test
@@ -130,6 +143,25 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
     }
 
     @Test
+    @DisplayName("Activates an entry once when two activations of it run at the same time")
+    void activatesConcurrentlyOnce() throws Exception {
+        DOWNLOAD_BARRIER.set(new CountDownLatch(2));
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            List<Future<Integer>> statuses = List.of(
+                executor.submit(() -> importEntry(FANTINE).andReturn().getResponse().getStatus()),
+                executor.submit(() -> importEntry(FANTINE).andReturn().getResponse().getStatus())
+            );
+
+            assertThat(List.of(statuses.get(0).get(), statuses.get(1).get())).containsExactlyInAnyOrder(201, 200);
+        } finally {
+            executor.shutdownNow();
+        }
+        assertThat(repository.count()).isEqualTo(1);
+        assertDownloads(2);
+    }
+
+    @Test
     @DisplayName("Answers 503 when the catalogue site is unreachable")
     void reportsUnavailableSite() throws Exception {
         SITE_DOWN.set(true);
@@ -149,6 +181,7 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
         importEntry("https://evil.example/steal?book=1")
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"));
+        importEntry("https://evil.example/details.php?book=726").andExpect(status().isBadRequest());
         importEntry("").andExpect(status().isBadRequest());
         assertDownloads(0);
     }
@@ -205,9 +238,23 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
             }
             if ("/newsendbook.php".equals(path)) {
                 DOWNLOADS.incrementAndGet();
+                awaitBarrier();
                 return new MockResponse.Builder().body(new Buffer().write(EpubFixtures.epub("atlantis"))).build();
             }
             return new MockResponse.Builder().code(404).build();
+        }
+
+        private static void awaitBarrier() {
+            CountDownLatch barrier = DOWNLOAD_BARRIER.get();
+            if (barrier == null) {
+                return;
+            }
+            barrier.countDown();
+            try {
+                barrier.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }

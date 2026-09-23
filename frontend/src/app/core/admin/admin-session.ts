@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Service, signal } from '@angular/core';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
-import { BROWSER_STORAGE } from '@core/reader/progress-store';
+import { BROWSER_STORAGE } from '@core/storage/browser-storage';
 import { firstValueFrom } from 'rxjs';
 
 /** Header carrying the administrator key. */

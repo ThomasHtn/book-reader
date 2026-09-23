@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { ProgressStore, BROWSER_STORAGE } from './progress-store';
+import { BROWSER_STORAGE } from '@core/storage/browser-storage';
+import { ProgressStore } from './progress-store';
 
 class MemoryStorage implements Storage {
   private readonly items = new Map<string, string>();

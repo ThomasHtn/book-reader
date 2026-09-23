@@ -57,7 +57,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
      *
      * <p>Deliberately not a {@code getRequestURI().startsWith(...)} test. The request URI is the
      * raw, still percent-encoded target, while both Spring MVC and Spring Security match on the
-     * decoded path — so {@code /api/%61dmin/players} reaches the administrative controller yet
+     * decoded path — so {@code /api/%61dmin/books} reaches the administrative controller yet
      * fails a raw prefix comparison, which would skip this filter entirely.</p>
      */
     private static final RequestMatcher ADMIN_ROUTES =

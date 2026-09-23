@@ -12,8 +12,7 @@ import {
 import { Router } from '@angular/router';
 import { COMMAND_INTERVAL_MS, CommandGate } from '@core/reader/command-gate';
 import { assignCoverTones } from '@core/reader/cover-tone';
-import { paginateGrid } from '@core/reader/grid-math';
-import { visibleRange } from '@core/reader/page-math';
+import { paginateGrid, visibleRange } from '@core/reader/grid-math';
 import { ProgressStore } from '@core/reader/progress-store';
 import { ReaderData } from '@core/reader/reader-data';
 import { sortLibrary } from '@core/reader/reading-progress';

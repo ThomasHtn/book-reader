@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { LucideFileUp, LucideUpload } from '@lucide/angular';
 import { AdminApi } from '@core/admin/admin-api';
 import { failureReason } from '@core/admin/admin-errors';
-import { AdminMessage } from '@core/admin/admin-message';
+import { AdminMessage, successMessage } from '@core/admin/admin-message';
 
 /** Upload of one or more EPUB files: conversion and immediate activation, one request per file. */
 @Component({
@@ -76,10 +76,11 @@ function uploadResultMessage(
   batch: boolean,
 ): AdminMessage {
   if (failures.length === 0) {
-    const text = batch
-      ? `${titles.length} livres ajoutés et activés : ${titles.join(', ')}`
-      : `Livre ajouté et activé : ${titles[0]}`;
-    return { kind: 'success', text };
+    return successMessage(
+      batch
+        ? `${titles.length} livres ajoutés et activés : ${titles.join(', ')}`
+        : `Livre ajouté et activé : ${titles[0]}`,
+    );
   }
   const failureText = batch
     ? failures.map((failure) => `${failure.name} (${failure.reason})`).join(' ; ')

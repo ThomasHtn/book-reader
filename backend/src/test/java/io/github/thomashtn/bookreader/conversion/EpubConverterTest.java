@@ -36,6 +36,21 @@ class EpubConverterTest {
         }
 
         @Test
+        @DisplayName("Cuts title and author to the length the book table stores")
+        void truncatesLongMetadata() {
+            Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
+            String opf = new String(entries.get("Ops/content.opf"), StandardCharsets.UTF_8)
+                .replace("Les Misérables - Tome I - Fantine", "T".repeat(600))
+                .replace(">Victor Hugo<", ">" + "A".repeat(600) + "<");
+            entries.put("Ops/content.opf", opf.getBytes(StandardCharsets.UTF_8));
+
+            ConvertedBook longBook = converter.convert(EpubFixtures.zip(entries));
+
+            assertThat(longBook.title()).isEqualTo("T".repeat(ConvertedBook.MAX_METADATA_LENGTH));
+            assertThat(longBook.author()).isEqualTo("A".repeat(ConvertedBook.MAX_METADATA_LENGTH));
+        }
+
+        @Test
         @DisplayName("Promotes table of contents targets to headings, drops notes, notes document, cover, empty blocks")
         void extractsBlocks() {
             assertThat(book.blocks()).containsExactly(

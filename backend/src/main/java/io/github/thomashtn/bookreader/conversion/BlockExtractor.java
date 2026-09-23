@@ -19,7 +19,7 @@ final class BlockExtractor {
     /**
      * Longest paragraph a table of contents entry may promote to a heading.
      */
-    static final int MAX_PROMOTED_HEADING_LENGTH = 150;
+    private static final int MAX_PROMOTED_HEADING_LENGTH = 150;
 
     private static final Set<String> HEADINGS = Set.of("h1", "h2", "h3", "h4", "h5", "h6");
 

@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
-import { BROWSER_STORAGE } from '@core/reader/progress-store';
+import { BROWSER_STORAGE } from '@core/storage/browser-storage';
 import { AdminSession } from './admin-session';
 
 describe('AdminSession', () => {

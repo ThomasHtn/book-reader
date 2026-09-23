@@ -30,7 +30,7 @@ public class OpdsCatalogueClient {
     /**
      * Identifies the application to the catalogue site.
      */
-    static final String USER_AGENT = "book-reader/1.0 (+https://book-reader.thomashtn.dev)";
+    private static final String USER_AGENT = "book-reader/1.0 (+https://book-reader.thomashtn.dev)";
 
     private static final Duration RETRY_DELAY = Duration.ofMillis(300);
 

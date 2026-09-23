@@ -14,10 +14,10 @@ import io.github.thomashtn.bookreader.shared.exception.InvalidRequestException;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,9 +28,10 @@ import org.springframework.stereotype.Service;
 public class DefaultCatalogueService implements CatalogueService {
 
     /**
-     * Book page of the catalogue; only its number is used, the download URL is built from configuration.
+     * Book page on the catalogue site, as the feed identifies entries; the download URL is built from configuration.
      */
-    private static final Pattern ENTRY_ID = Pattern.compile("https?://[^/?#]+/details\\.php\\?book=(\\d{1,9})");
+    private static final Pattern ENTRY_ID =
+        Pattern.compile("https?://www\\.ebooksgratuits\\.com/details\\.php\\?book=(\\d{1,9})");
 
     private final OpdsCatalogueClient client;
 
@@ -80,16 +81,24 @@ public class DefaultCatalogueService implements CatalogueService {
         if (!matcher.matches()) {
             throw new InvalidRequestException("The entry identifier is not a catalogue book page.");
         }
-        Optional<Book> existing = repository.findBySourceId(entryId);
-        if (existing.isPresent()) {
-            Book book = existing.get();
-            book.activate(clock.instant());
-            return new CatalogueImportResult(AdminBookResponse.from(repository.save(book)), false);
+        Book existing = repository.findBySourceId(entryId).orElse(null);
+        if (existing != null) {
+            return reactivate(existing);
         }
         byte[] epub = client.downloadEpub(Integer.parseInt(matcher.group(1)));
         ConvertedBook converted = converter.convert(epub);
-        Book book = repository.save(Book.fromCatalogue(converted, entryId, clock.instant()));
-        return new CatalogueImportResult(AdminBookResponse.from(book), true);
+        try {
+            Book book = repository.save(Book.fromCatalogue(converted, entryId, clock.instant()));
+            return new CatalogueImportResult(AdminBookResponse.from(book), true);
+        } catch (DataIntegrityViolationException exception) {
+            // A concurrent activation of the same entry inserted it first (unique source_id).
+            return reactivate(repository.findBySourceId(entryId).orElseThrow(() -> exception));
+        }
+    }
+
+    private CatalogueImportResult reactivate(Book book) {
+        book.activate(clock.instant());
+        return new CatalogueImportResult(AdminBookResponse.from(repository.save(book)), false);
     }
 
     private static CatalogueEntryState stateOf(Boolean active) {

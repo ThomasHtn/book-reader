@@ -1,11 +1,8 @@
 import { TextPosition } from '@core/reader/reading-progress';
 import { lowerBound } from '@core/reader/lower-bound';
-import { PageGeometry } from '@core/reader/page-count';
-import { pageAt, pageCount } from '@core/reader/page-math';
+import { END_MARK, PageGeometry } from '@core/reader/page-count';
+import { EDGE_TOLERANCE_PX, pageAt, pageCount } from '@core/reader/page-math';
 import { ChapterContent, ChapterLayout } from './chapter-layout';
-
-/** Tolerance for sub-pixel rounding when comparing positions to a column edge. */
-const EDGE_TOLERANCE_PX = 0.5;
 
 /**
  * Lays a chapter out in CSS columns exactly as wide as the viewport and locates text with `Range`,
@@ -36,7 +33,7 @@ export class DomChapterLayout implements ChapterLayout {
     );
     nodes.push(...this.blockElements);
     if (content.endOfBook) {
-      nodes.push(element(document, 'p', 'Fin du livre', 'end'));
+      nodes.push(element(document, 'p', END_MARK, 'end'));
     }
     this.firstBlock = content.firstBlock;
     this.columnWidth = Math.max(1, this.viewport.clientWidth);

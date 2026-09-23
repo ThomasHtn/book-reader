@@ -68,3 +68,18 @@ export function paginateGrid(
   }
   return { offsets, pages };
 }
+
+/**
+ * Returns the cards laid out on a page of "Mes livres".
+ *
+ * @param cardPages - Page of each card, in list order.
+ * @param page - Displayed page.
+ * @returns One-based first and last card, or `null` when the page holds none.
+ */
+export function visibleRange(
+  cardPages: readonly number[],
+  page: number,
+): { first: number; last: number } | null {
+  const first = cardPages.indexOf(page);
+  return first < 0 ? null : { first: first + 1, last: cardPages.lastIndexOf(page) + 1 };
+}

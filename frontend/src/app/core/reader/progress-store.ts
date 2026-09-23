@@ -1,18 +1,7 @@
-import { DOCUMENT, inject, InjectionToken, Service } from '@angular/core';
+import { inject, Service } from '@angular/core';
+import { BROWSER_STORAGE } from '@core/storage/browser-storage';
 import { MeasuredCounts, parsePageCounts, serializePageCounts } from './page-count';
 import { parseProgress, ReadingProgress, TextPosition } from './reading-progress';
-
-/** Browser `localStorage`, `null` where it is unavailable. */
-export const BROWSER_STORAGE = new InjectionToken<Storage | null>('BROWSER_STORAGE', {
-  providedIn: 'root',
-  factory: () => {
-    try {
-      return inject(DOCUMENT).defaultView?.localStorage ?? null;
-    } catch {
-      return null;
-    }
-  },
-});
 
 const LAST_BOOK_KEY = 'reader.lastBookId';
 const PROGRESS_KEY_PREFIX = 'reader.progress.';
