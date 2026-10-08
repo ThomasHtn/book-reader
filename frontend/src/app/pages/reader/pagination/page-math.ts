@@ -1,0 +1,88 @@
+/**
+ * A page of the book: a column of one chapter.
+ */
+export interface PageLocation {
+  /**
+   * Zero-based chapter index.
+   */
+  readonly chapter: number;
+
+  /**
+   * Zero-based page within the chapter.
+   */
+  readonly page: number;
+}
+
+/**
+ * Target of a command, before the destination chapter is laid out: `last` is resolved once it is.
+ */
+export interface PendingLocation {
+  /**
+   * Zero-based chapter index.
+   */
+  readonly chapter: number;
+
+  /**
+   * Zero-based page, or `last` while the chapter's page count is unknown.
+   */
+  readonly page: number | 'last';
+}
+
+/**
+ * Tolerance for sub-pixel layout rounding at column edges.
+ */
+export const EDGE_TOLERANCE_PX = 0.5;
+
+/**
+ * Returns the page holding a horizontal offset measured from the start of the chapter.
+ *
+ * @param left - Offset in CSS pixels.
+ * @param columnWidth - Width of one page.
+ * @returns Zero-based page index.
+ */
+export function pageAt(left: number, columnWidth: number): number {
+  return Math.max(0, Math.floor((left + EDGE_TOLERANCE_PX) / columnWidth));
+}
+
+/**
+ * Returns the number of pages of a laid-out chapter.
+ *
+ * @param scrollWidth - Width of the multi-column content.
+ * @param columnWidth - Width of one page.
+ * @returns Page count, at least one.
+ */
+export function pageCount(scrollWidth: number, columnWidth: number): number {
+  return Math.max(1, Math.round(scrollWidth / columnWidth));
+}
+
+/**
+ * Returns where "Suivant" leads.
+ *
+ * @param location - Current page.
+ * @param chapterPages - Page count of the current chapter.
+ * @param chapterCount - Number of chapters.
+ * @returns Next page, or `null` on the last page of the book.
+ */
+export function nextLocation(
+  location: PageLocation,
+  chapterPages: number,
+  chapterCount: number,
+): PageLocation | null {
+  if (location.page < chapterPages - 1) {
+    return { chapter: location.chapter, page: location.page + 1 };
+  }
+  return location.chapter < chapterCount - 1 ? { chapter: location.chapter + 1, page: 0 } : null;
+}
+
+/**
+ * Returns where "Précédent" leads.
+ *
+ * @param location - Current page.
+ * @returns Previous page, or `null` on the first page of the book.
+ */
+export function previousLocation(location: PageLocation): PendingLocation | null {
+  if (location.page > 0) {
+    return { chapter: location.chapter, page: location.page - 1 };
+  }
+  return location.chapter > 0 ? { chapter: location.chapter - 1, page: 'last' } : null;
+}

@@ -1,0 +1,19 @@
+/* === Catalogue: search results ========================================= */
+
+/* Result cards stacked one per row. */
+.a-results {
+  display: grid;
+  gap: calc(var(--admin-spacing) * 3);
+}
+
+/* Card body: text, actions, then the activation outcome. */
+.a-result {
+  gap: calc(var(--admin-spacing) * 3);
+}
+
+/* Title, author and summary; min-width lets long titles wrap inside the grid. */
+.a-result__text {
+  display: grid;
+  gap: calc(var(--admin-spacing) * 0.5);
+  min-width: 0;
+}

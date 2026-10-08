@@ -1,0 +1,56 @@
+/* === Upload =============================================================== */
+
+/* Drop zone, also holding the file picker button. */
+.a-drop {
+  display: grid;
+  place-items: center;
+  gap: calc(var(--admin-spacing) * 3);
+  padding: calc(var(--admin-spacing) * 12) calc(var(--admin-spacing) * 4);
+  border: 2px dashed var(--admin-border-strong);
+  border-radius: var(--admin-radius-lg);
+  background: var(--admin-surface);
+  text-align: center;
+  transition:
+    background var(--admin-duration),
+    border-color var(--admin-duration);
+}
+
+/* Large file icon and call to action. */
+.a-drop > svg {
+  width: 40px;
+  height: 40px;
+  color: var(--admin-accent);
+  stroke-width: 1.5;
+}
+
+.a-drop b {
+  font-size: var(--admin-text-lg);
+}
+
+/* Highlight while files hover the zone. */
+.a-drop--over {
+  border-color: var(--admin-accent);
+  background: var(--admin-accent-soft);
+}
+
+/* Children would fire dragleave on the zone while the file crosses them. */
+.a-drop--over > * {
+  pointer-events: none;
+}
+
+/* Selected files: one name, or a count then the list. */
+.a-files {
+  display: grid;
+  gap: var(--admin-spacing);
+  padding: calc(var(--admin-spacing) * 3) calc(var(--admin-spacing) * 4);
+  border-radius: var(--admin-radius-lg);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+}
+
+.a-files ul {
+  margin: 0;
+  padding-left: calc(var(--admin-spacing) * 5);
+  color: var(--admin-fg-muted);
+  font-size: var(--admin-text-sm);
+}

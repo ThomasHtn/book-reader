@@ -1,20 +1,37 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { assignCoverTones } from '@core/reader/cover-tone';
+
 import { ProgressStore } from '@core/reader/progress-store';
 import { ReaderData } from '@core/reader/reader-data';
+
 import {
   book,
   FakeProgressStore,
   FakeReaderData,
   stubResizeObserver,
 } from '../../testing/reader-fakes';
+import { assignCoverTones } from './cover-tone';
 import { Library } from './library';
 
 describe('Library', () => {
+  /**
+   * List and settings the page polls, set by each test.
+   */
   let data: FakeReaderData;
+
+  /**
+   * In-memory progress, which orders the list.
+   */
   let store: FakeProgressStore;
+
+  /**
+   * Router spy, so no navigation really happens.
+   */
   let navigate: ReturnType<typeof vi.fn>;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   beforeEach(() => {
     stubResizeObserver();
@@ -30,6 +47,9 @@ describe('Library', () => {
     navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
   });
 
+  /**
+   * Renders the page and returns its element.
+   */
   async function render() {
     const fixture = TestBed.createComponent(Library);
     fixture.detectChanges();
@@ -125,6 +145,38 @@ describe('Library', () => {
     expect(element.querySelector('[aria-live]')?.textContent?.trim()).toBe('Titres 1 à 3 sur 3');
     expect(element.querySelector('footer')).toBeNull();
     expect(element.querySelectorAll('button.nav-bar')).toHaveLength(0);
+  });
+
+  it('turns pages of titles with the arrows, leaving Space and browser chords alone', async () => {
+    // Seven cards, three per 100 px row, in a 200 px viewport: two rows on the first page.
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const cards = [...(this.closest('.book-grid')?.querySelectorAll('.book-card') ?? [])];
+      const index = cards.indexOf(this);
+      return { top: index < 0 ? 0 : Math.floor(index / 3) * 100, height: 90 } as DOMRect;
+    });
+    data.books.set(['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((id) => book(id)));
+    const fixture = TestBed.createComponent(Library);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    const indicator = () => element.querySelector('.page-indicator')?.textContent?.trim();
+    const press = async (key: string, init: KeyboardEventInit = {}) => {
+      const event = new KeyboardEvent('keydown', { key, cancelable: true, ...init });
+      document.dispatchEvent(event);
+      await fixture.whenStable();
+      return event.defaultPrevented;
+    };
+
+    expect(indicator()).toBe('Titres 1 à 6 sur 7');
+
+    expect(await press('ArrowLeft', { altKey: true })).toBe(false);
+    expect(await press(' ')).toBe(false);
+    expect(indicator()).toBe('Titres 1 à 6 sur 7');
+
+    expect(await press('ArrowRight')).toBe(true);
+    expect(indicator()).toBe('Titres 7 à 7 sur 7');
   });
 
   it('shows the unavailable screen only while the list has never loaded', async () => {

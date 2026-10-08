@@ -1,10 +1,15 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
 import { BookSummary } from '@core/http/api.model';
+import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
 import { POLL_INTERVAL_MS, ReaderData } from './reader-data';
 
+/**
+ * Book list the fake backend serves.
+ */
 const BOOKS: BookSummary[] = [
   {
     id: 'a',
@@ -16,10 +21,19 @@ const BOOKS: BookSummary[] = [
 ];
 
 describe('ReaderData', () => {
+  /**
+   * Backend double answering the polls.
+   */
   let http: HttpTestingController;
+
+  /**
+   * Service under test, created before each test so its first requests are pending.
+   */
   let data: ReaderData;
 
-  // whenStable() never settles with a pending interval under fake timers: flush explicitly.
+  /**
+   * Lets responses reach the signals; `whenStable()` never settles with the poll interval pending.
+   */
   const settle = async () => {
     TestBed.tick();
     await vi.advanceTimersByTimeAsync(0);

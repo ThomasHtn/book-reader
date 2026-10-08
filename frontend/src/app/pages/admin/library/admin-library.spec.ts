@@ -1,10 +1,15 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+
 import { AdminBook } from '@core/admin/admin.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
 import { AdminLibrary } from './admin-library';
 
+/**
+ * An active catalogue book and a withdrawn, read upload with a title in capitals.
+ */
 const BOOKS: AdminBook[] = [
   {
     id: 'b1',
@@ -33,6 +38,9 @@ const BOOKS: AdminBook[] = [
 ];
 
 describe('AdminLibrary', () => {
+  /**
+   * Answers the list and row action requests.
+   */
   let http: HttpTestingController;
 
   beforeEach(() => {
@@ -42,9 +50,14 @@ describe('AdminLibrary', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
+  /**
+   * Creates the page, answers the first list request and returns row lookup helpers.
+   */
   async function render() {
     const fixture = TestBed.createComponent(AdminLibrary);
-    // whenStable() would wait for the very requests the test has to answer.
+    /**
+     * Runs effects and HTTP callbacks, then renders; `whenStable()` would wait for unanswered requests.
+     */
     const settle = async () => {
       TestBed.tick();
       await new Promise((resolve) => setTimeout(resolve));
@@ -54,10 +67,16 @@ describe('AdminLibrary', () => {
     http.expectOne(API_ENDPOINTS.admin.books).flush(BOOKS);
     await settle();
     const element = fixture.nativeElement as HTMLElement;
+    /**
+     * Row whose text contains the title.
+     */
     const item = (title: string) =>
       [...element.querySelectorAll<HTMLElement>('.a-item')].find((candidate) =>
         candidate.textContent?.includes(title),
       )!;
+    /**
+     * Button of the container whose label is exactly this text.
+     */
     const button = (container: HTMLElement, label: string) =>
       [...container.querySelectorAll<HTMLButtonElement>('button')].find(
         (candidate) => candidate.textContent?.trim() === label,

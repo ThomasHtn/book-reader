@@ -8,8 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.github.thomashtn.bookreader.shared.config.AdminApiKeyFilter;
+import io.github.thomashtn.bookreader.shared.security.AdminApiKeyFilter;
 import io.github.thomashtn.bookreader.support.PostgreSqlIntegrationTest;
+import java.net.URI;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
 
+    /**
+     * Client driving the whole filter chain.
+     */
     @Autowired
     private MockMvc mockMvc;
 
@@ -61,6 +65,14 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
         mockMvc.perform(get("/api/settings"))
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache"));
         putSettings("{\"fontTier\": 100}")
+            .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
+    }
+
+    @Test
+    @DisplayName("Never lets the browser store an admin response reached through a percent-encoded path")
+    void setsNoStoreOnEncodedAdminPath() throws Exception {
+        mockMvc.perform(get(URI.create("/api/%61dmin/session")).header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
+            .andExpect(status().isNoContent())
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
     }
 
@@ -112,6 +124,13 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
             .andExpect(status().isForbidden());
     }
 
+    /**
+     * Replaces the settings with the administrator key.
+     *
+     * @param body JSON body
+     * @return response
+     * @throws Exception when the request cannot be performed
+     */
     private ResultActions putSettings(String body) throws Exception {
         return mockMvc.perform(put("/api/admin/settings")
             .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)

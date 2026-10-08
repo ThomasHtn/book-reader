@@ -1,0 +1,200 @@
+/* === Shell: fonts, header, tab bar or rail, scrolling content ======== */
+
+/* Backoffice face, self-hosted; the reader keeps Luciole. */
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('/fonts/atkinson-hyperlegible-next/atkinson-hyperlegible-next-latin-400-normal.woff2')
+    format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('/fonts/atkinson-hyperlegible-next/atkinson-hyperlegible-next-latin-700-normal.woff2')
+    format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* Mobile: top bar, content, tab bar pinned to the bottom. From 900px: navy rail on the left. */
+.admin {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--admin-nav-height) minmax(0, 1fr);
+  height: 100%;
+  background: var(--admin-bg);
+  color: var(--admin-fg);
+  font: var(--admin-weight) var(--admin-text-base) / var(--admin-leading) var(--font-admin);
+  letter-spacing: 0;
+  overflow: hidden;
+}
+
+/* One focus ring for every control, drawn from the --admin-focus-ring token. */
+.admin *:focus-visible {
+  outline: none;
+  box-shadow: var(--admin-focus-ring);
+}
+
+/* Pointer cursor on everything clickable, the file picker label included. */
+.admin a,
+.admin button,
+.admin label.a-btn {
+  cursor: pointer;
+}
+
+/* Lucide icons are drawn as strokes in the text colour. */
+.admin svg {
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Header on the navy rail colours. */
+.a-header {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--admin-spacing) * 3);
+  padding: 0 var(--admin-gutter);
+  background: var(--admin-rail-bg);
+  color: var(--admin-rail-fg);
+}
+
+/* Brand: mark beside a two-line title in the reader's face. */
+.a-brand {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--admin-spacing) * 3);
+  min-width: 0;
+}
+
+.a-brand h1 {
+  margin: 0;
+  font: var(--weight-heading) var(--admin-text-lg) / 1.1 var(--font-reading);
+  color: var(--admin-rail-current-fg);
+  white-space: nowrap;
+}
+
+.a-brand small {
+  display: block;
+  font: var(--admin-weight) var(--admin-text-xs) / 1.3 var(--font-admin);
+  color: var(--admin-rail-fg-muted);
+}
+
+/* Three spines on a shelf, the middle one rose: the reader's "book in progress". */
+.a-brand__mark {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: calc(var(--admin-spacing) * 8);
+  padding: 0 calc(var(--admin-spacing) * 1.5) calc(var(--admin-spacing) * 1.5);
+  border-radius: var(--admin-radius);
+  background: var(--admin-rail-current-bg);
+}
+
+/* Spines of uneven heights: paper, rose, paper. */
+.a-brand__mark i {
+  width: 6px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--color-paper-100);
+}
+
+.a-brand__mark i:nth-child(2) {
+  height: 22px;
+  background: var(--admin-marker);
+}
+
+.a-brand__mark i:nth-child(3) {
+  height: 15px;
+  background: var(--color-paper-200);
+}
+
+/* Sign-out pushed to the far end of the header. */
+.a-signout {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--admin-spacing) * 2);
+  min-height: var(--admin-control-height);
+  margin-left: auto;
+  padding: 0 calc(var(--admin-spacing) * 3);
+  border: 0;
+  border-radius: var(--admin-radius);
+  background: transparent;
+  color: var(--admin-rail-fg);
+  font: inherit;
+  font-size: var(--admin-text-sm);
+  transition: background var(--admin-duration);
+}
+
+.a-signout:hover {
+  background: var(--admin-rail-current-bg);
+}
+
+.a-signout svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile tab bar pinned to the bottom, clear of the phone's home indicator. */
+.a-nav {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--admin-rail-bg);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Tab: icon over label, at least the nav height so it is easy to hit. */
+.a-nav a {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: calc(var(--admin-spacing) * 0.5);
+  min-height: var(--admin-nav-height);
+  padding: calc(var(--admin-spacing) * 1.5) var(--admin-spacing);
+  color: var(--admin-rail-fg-muted);
+  font-size: var(--admin-text-xs);
+  text-decoration: none;
+}
+
+.a-nav svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Current section. */
+.a-nav a[aria-current='page'] {
+  color: var(--admin-rail-current-fg);
+  font-weight: var(--admin-weight-strong);
+}
+
+/* Rose marks "you are here", as it marks the book in progress in the reader. */
+.a-nav a[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  inset: 0 30% auto;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--admin-marker);
+}
+
+/* Scrolling content; the bottom padding keeps the last line clear of the tab bar. */
+.a-main {
+  overflow: auto;
+  padding: calc(var(--admin-spacing) * 6) var(--admin-gutter)
+    calc(var(--admin-nav-height) + env(safe-area-inset-bottom) + var(--admin-spacing) * 6);
+}
+
+/* Each routed view is centred and capped to a readable width. */
+.a-main > * {
+  display: block;
+  max-width: var(--admin-content-max);
+  margin-inline: auto;
+}

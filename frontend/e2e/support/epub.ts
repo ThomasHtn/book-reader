@@ -1,10 +1,33 @@
 import { crc32 } from 'node:zlib';
 
-/** A book to turn into an EPUB: chapters of plain paragraphs. */
+/**
+ * A book to turn into an EPUB: chapters of plain paragraphs.
+ */
 export interface TestBook {
+  /**
+   * Written to `dc:title`, which the backend keeps as the book title.
+   */
   readonly title: string;
+
+  /**
+   * Written to `dc:creator`.
+   */
   readonly author: string;
-  readonly chapters: readonly { readonly title: string; readonly paragraphs: readonly string[] }[];
+
+  /**
+   * One XHTML file per chapter, its title as `<h1>` so the converter emits a heading block.
+   */
+  readonly chapters: readonly {
+    /**
+     * Chapter heading.
+     */
+    readonly title: string;
+
+    /**
+     * Paragraph texts, escaped when written.
+     */
+    readonly paragraphs: readonly string[];
+  }[];
 }
 
 /**
@@ -16,6 +39,7 @@ export interface TestBook {
 export function buildEpub(book: TestBook): Buffer {
   const escape = (text: string) =>
     text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // EPUB requires `mimetype` as the first entry, uncompressed.
   const files: [string, string][] = [
     ['mimetype', 'application/epub+zip'],
     [
@@ -53,7 +77,9 @@ export function buildEpub(book: TestBook): Buffer {
   return zipStored(files.map(([name, content]) => [name, Buffer.from(content, 'utf8')]));
 }
 
-/** Writes a ZIP archive without compression, which EPUB readers accept and requires no dependency. */
+/**
+ * Writes a ZIP archive without compression, which EPUB readers accept and requires no dependency.
+ */
 function zipStored(entries: [string, Buffer][]): Buffer {
   const locals: Buffer[] = [];
   const centrals: Buffer[] = [];
@@ -61,6 +87,7 @@ function zipStored(entries: [string, Buffer][]): Buffer {
   for (const [name, data] of entries) {
     const fileName = Buffer.from(name, 'utf8');
     const checksum = crc32(data);
+    // Local file header (signature PK\3\4); method 0 (stored) is the zeroed field.
     const local = Buffer.alloc(30);
     local.writeUInt32LE(0x04034b50, 0);
     local.writeUInt16LE(20, 4);
@@ -68,6 +95,7 @@ function zipStored(entries: [string, Buffer][]): Buffer {
     local.writeUInt32LE(data.length, 18);
     local.writeUInt32LE(data.length, 22);
     local.writeUInt16LE(fileName.length, 26);
+    // Central directory record pointing back at the local header through `offset`.
     const central = Buffer.alloc(46);
     central.writeUInt32LE(0x02014b50, 0);
     central.writeUInt16LE(20, 4);
@@ -82,6 +110,7 @@ function zipStored(entries: [string, Buffer][]): Buffer {
     offset += local.length + fileName.length + data.length;
   }
   const centralSize = centrals.reduce((size, part) => size + part.length, 0);
+  // End of central directory record.
   const end = Buffer.alloc(22);
   end.writeUInt32LE(0x06054b50, 0);
   end.writeUInt16LE(entries.length, 8);

@@ -8,13 +8,19 @@ import {
   viewChild,
 } from '@angular/core';
 
-/** Where the CSS shows the 64px cursors (styles.css); the system cursor stays everywhere else. */
+/**
+ * Where the CSS shows the 64px cursors (styles/base.css); the system cursor stays everywhere else.
+ */
 const LARGE_CURSOR_MEDIA = '(pointer: fine) and (min-width: 1100px)';
 
-/** Side of both cursor images, in CSS pixels. */
+/**
+ * Side of both cursor images, in CSS pixels.
+ */
 const CURSOR_SIZE = 64;
 
-/** Hotspots of `--cursor-large` and `--cursor-large-pointer` in tokens.css. */
+/**
+ * Hotspots of `--cursor-large` and `--cursor-large-pointer` in tokens.css.
+ */
 const HOTSPOTS = { arrow: { x: 6, y: 4 }, hand: { x: 22, y: 4 } } as const;
 
 /**
@@ -28,8 +34,14 @@ const HOTSPOTS = { arrow: { x: 6, y: 4 }, hand: { x: 22, y: 4 } } as const;
   template: '<div class="large-cursor" aria-hidden="true" #overlay></div>',
 })
 export class LargeCursor {
+  /**
+   * Element drawing the cursor image where Chrome would show the small system cursor.
+   */
   private readonly overlay = viewChild.required<ElementRef<HTMLElement>>('overlay');
 
+  /**
+   * Follows the pointer at document level and draws the cursor only where its image crosses the window edge.
+   */
   constructor() {
     const document = inject(DOCUMENT);
     const root = document.documentElement;
@@ -44,6 +56,7 @@ export class LargeCursor {
         top < 0 ||
         left + CURSOR_SIZE > view.innerWidth ||
         top + CURSOR_SIZE > view.innerHeight;
+      // Same scope as the CSS cursors: none in the backoffice or without a fine pointer on a wide screen.
       const enabled =
         root.getAttribute('data-density') !== 'admin' &&
         view.matchMedia(LARGE_CURSOR_MEDIA).matches;
@@ -54,6 +67,7 @@ export class LargeCursor {
         root.removeAttribute('data-cursor');
       }
     };
+    // `relatedTarget` is null when the pointer leaves the window.
     const onOut = (event: MouseEvent) => {
       if (event.relatedTarget === null) {
         root.removeAttribute('data-cursor');

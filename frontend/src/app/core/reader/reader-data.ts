@@ -6,13 +6,16 @@ import {
   effect,
   inject,
   Service,
-  signal,
   Signal,
+  signal,
 } from '@angular/core';
-import { API_ENDPOINTS } from '@core/http/api-endpoints';
-import { BookSummary, ReaderSettings } from '@core/http/api.model';
 
-/** Refresh cadence of books and settings, also the retry cadence when the server is unreachable. */
+import { BookSummary, ReaderSettings } from '@core/http/api.model';
+import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
+/**
+ * Refresh cadence of books and settings, also the retry cadence when the server is unreachable.
+ */
 export const POLL_INTERVAL_MS = 10_000;
 
 /**
@@ -21,21 +24,36 @@ export const POLL_INTERVAL_MS = 10_000;
  */
 @Service()
 export class ReaderData {
+  /**
+   * Raw book list request, reloaded by the poll; its value is lost on error, hence `books`.
+   */
   private readonly booksResource = httpResource<BookSummary[]>(() => API_ENDPOINTS.books);
 
+  /**
+   * Raw settings request, reloaded by the poll alongside the books.
+   */
   private readonly settingsResource = httpResource<ReaderSettings>(() => API_ENDPOINTS.settings);
 
-  /** Last valid book list, kept through failed polls so "Mes livres" stays available offline. */
+  /**
+   * Last valid book list, kept through failed polls so "Mes livres" stays available offline.
+   */
   public readonly books = lastValidValue(this.booksResource);
 
-  /** Last valid settings. */
+  /**
+   * Last valid settings, so a failed poll never resets the font tier.
+   */
   public readonly settings = lastValidValue(this.settingsResource);
 
-  /** Whether the book list never loaded because the server does not answer. */
+  /**
+   * Whether the book list never loaded because the server does not answer.
+   */
   public readonly unreachable = computed(
     () => this.books() === undefined && this.booksResource.error() !== undefined,
   );
 
+  /**
+   * Mirrors the font tier on `<html>` for `tokens.css` and starts the poll for the app's lifetime.
+   */
   constructor() {
     const root = inject(DOCUMENT).documentElement;
     effect(() => {
@@ -48,7 +66,9 @@ export class ReaderData {
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
   }
 
-  /** Reloads books and settings now. */
+  /**
+   * Reloads books and settings now.
+   */
   public retry(): void {
     this.booksResource.reload();
     this.settingsResource.reload();

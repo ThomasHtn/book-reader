@@ -17,8 +17,16 @@ public enum BlockKind {
      */
     PARAGRAPH("paragraph");
 
+    /**
+     * Value used in JSON.
+     */
     private final String value;
 
+    /**
+     * Binds a kind to its JSON value.
+     *
+     * @param value value used in JSON
+     */
     BlockKind(String value) {
         this.value = value;
     }

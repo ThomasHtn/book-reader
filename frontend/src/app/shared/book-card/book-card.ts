@@ -8,6 +8,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   selector: 'app-book-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <!-- The whole block is one button; data-tone picks its cloth colour in book-grid.css. -->
     <button
       type="button"
       class="book-card"
@@ -18,6 +19,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
     >
       <span class="title">{{ title() }}</span>
       <span class="author">{{ author() }}</span>
+      <!-- States are spelled out, never shown by colour alone (spec 5.4). -->
       @if (current()) {
         <span class="tag">En cours</span>
       }
@@ -28,18 +30,33 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   `,
 })
 export class BookCard {
+  /**
+   * Title in very large type, wrapped but never truncated (spec 5.4).
+   */
   public readonly title = input.required<string>();
 
-  /** Always present: conversion falls back to "Auteur inconnu" when the OPF has no creator. */
+  /**
+   * Always present: conversion falls back to "Auteur inconnu" when the OPF has no creator.
+   */
   public readonly author = input.required<string>();
 
-  /** The book being read, marked by a rose block so it also reads as "resume here". */
+  /**
+   * The book being read, marked by a rose block so it also reads as "resume here".
+   */
   public readonly current = input(false);
 
+  /**
+   * Finished book: muted block tagged "Terminé" (spec 5.4).
+   */
   public readonly finished = input(false);
 
-  /** Cover colour from 1 to 10, see `assignCoverTones`; `null` for a current or finished book. */
+  /**
+   * Cover colour from 1 to 10, see `assignCoverTones`; `null` for a current or finished book.
+   */
   public readonly tone = input<number | null>(null);
 
+  /**
+   * Emitted on click, Space or Enter: the whole block is the target.
+   */
   public readonly activate = output<void>();
 }

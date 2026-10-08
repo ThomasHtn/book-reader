@@ -1,13 +1,21 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
-import { API_ENDPOINTS } from '@core/http/api-endpoints';
-import { ReaderSettings } from '@core/http/api.model';
+
 import { firstValueFrom } from 'rxjs';
+
+import { ReaderSettings } from '@core/http/api.model';
+import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
 import { AdminBook, BookPatch } from './admin.model';
 
-/** Backoffice mutations; lists are read through `httpResource` in the views. */
+/**
+ * Backoffice mutations; lists are read through `httpResource` in the views.
+ */
 @Service()
 export class AdminApi {
+  /**
+   * Client whose calls go through `adminKeyInterceptor`, which adds the key.
+   */
   private readonly http = inject(HttpClient);
 
   /**

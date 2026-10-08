@@ -1,10 +1,23 @@
 import { inject, Service } from '@angular/core';
-import { BROWSER_STORAGE } from '@core/storage/browser-storage';
-import { MeasuredCounts, parsePageCounts, serializePageCounts } from './page-count';
-import { parseProgress, ReadingProgress, TextPosition } from './reading-progress';
 
+import { BROWSER_STORAGE, readItem, writeItem } from '@core/storage/browser-storage';
+
+import { parseProgress, ReadingProgress, TextPosition } from './reading-progress';
+import { MeasuredCounts, parsePageCounts, serializePageCounts } from './stored-page-counts';
+
+/**
+ * Book `/` resumes (spec section 8).
+ */
 const LAST_BOOK_KEY = 'reader.lastBookId';
+
+/**
+ * Prefix of one `ReadingProgress` entry per book, completed by the book identifier.
+ */
 const PROGRESS_KEY_PREFIX = 'reader.progress.';
+
+/**
+ * Prefix of one entry of measured chapter page counts per book (spec section 5.2).
+ */
 const PAGES_KEY_PREFIX = 'reader.pages.';
 
 /**
@@ -13,6 +26,9 @@ const PAGES_KEY_PREFIX = 'reader.pages.';
  */
 @Service()
 export class ProgressStore {
+  /**
+   * Browser storage, `null` when unavailable, in which case nothing is remembered.
+   */
   private readonly storage = inject(BROWSER_STORAGE);
 
   /**
@@ -21,7 +37,7 @@ export class ProgressStore {
    * @returns Book identifier, or `null`.
    */
   public lastBookId(): string | null {
-    return this.read(LAST_BOOK_KEY);
+    return readItem(this.storage, LAST_BOOK_KEY);
   }
 
   /**
@@ -31,7 +47,7 @@ export class ProgressStore {
    * @returns Progress, or `undefined` when absent or corrupt.
    */
   public progressOf(bookId: string): ReadingProgress | undefined {
-    return parseProgress(this.read(PROGRESS_KEY_PREFIX + bookId));
+    return parseProgress(readItem(this.storage, PROGRESS_KEY_PREFIX + bookId));
   }
 
   /**
@@ -40,7 +56,7 @@ export class ProgressStore {
    * @param bookId - Book identifier.
    */
   public markOpened(bookId: string): void {
-    this.write(LAST_BOOK_KEY, bookId);
+    writeItem(this.storage, LAST_BOOK_KEY, bookId);
   }
 
   /**
@@ -56,7 +72,7 @@ export class ProgressStore {
       finished,
       updatedAt: new Date().toISOString(),
     };
-    this.write(PROGRESS_KEY_PREFIX + bookId, JSON.stringify(progress));
+    writeItem(this.storage, PROGRESS_KEY_PREFIX + bookId, JSON.stringify(progress));
   }
 
   /**
@@ -72,7 +88,7 @@ export class ProgressStore {
     layout: string,
     chapterCount: number,
   ): (number | undefined)[] {
-    return parsePageCounts(this.read(PAGES_KEY_PREFIX + bookId), layout, chapterCount);
+    return parsePageCounts(readItem(this.storage, PAGES_KEY_PREFIX + bookId), layout, chapterCount);
   }
 
   /**
@@ -83,22 +99,6 @@ export class ProgressStore {
    * @param counts - Measured counts.
    */
   public savePageCounts(bookId: string, layout: string, counts: MeasuredCounts): void {
-    this.write(PAGES_KEY_PREFIX + bookId, serializePageCounts(layout, counts));
-  }
-
-  private read(key: string): string | null {
-    try {
-      return this.storage?.getItem(key) ?? null;
-    } catch {
-      return null;
-    }
-  }
-
-  private write(key: string, value: string): void {
-    try {
-      this.storage?.setItem(key, value);
-    } catch {
-      // Quota or privacy settings: progress is best effort by design.
-    }
+    writeItem(this.storage, PAGES_KEY_PREFIX + bookId, serializePageCounts(layout, counts));
   }
 }

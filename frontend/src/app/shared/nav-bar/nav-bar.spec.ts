@@ -1,17 +1,31 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+
 import { NavBar } from './nav-bar';
 
+/**
+ * Host binding the bar's direction and counting its activations.
+ */
 @Component({
   imports: [NavBar],
   template: `<app-nav-bar [direction]="direction()" (activate)="activations = activations + 1" />`,
 })
 class Host {
+  /**
+   * Direction bound to the bar.
+   */
   public readonly direction = signal<'previous' | 'next'>('next');
+
+  /**
+   * Number of `activate` events received.
+   */
   public activations = 0;
 }
 
 describe('NavBar', () => {
+  /**
+   * Renders the host and returns its button.
+   */
   function render() {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();

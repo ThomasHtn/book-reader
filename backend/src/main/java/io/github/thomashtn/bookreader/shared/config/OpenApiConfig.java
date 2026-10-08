@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader.shared.config;
 
+import io.github.thomashtn.bookreader.shared.security.AdminApiKeyFilter;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;

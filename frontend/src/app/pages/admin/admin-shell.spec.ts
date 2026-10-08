@@ -1,14 +1,33 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+
 import { AdminSession, SignInOutcome } from '@core/admin/admin-session';
+
 import { AdminShell } from './admin-shell';
 
+/**
+ * In-memory `AdminSession` whose next sign-in outcome each test picks.
+ */
 class FakeSession {
+  /**
+   * Accepted key, `null` while signed out.
+   */
   public readonly key = signal<string | null>(null);
+
+  /**
+   * Outcome returned by the next sign-in.
+   */
   public outcome: SignInOutcome = 'ok';
+
+  /**
+   * Every key submitted, in order.
+   */
   public attempts: string[] = [];
 
+  /**
+   * Records the key and stores it when the chosen outcome accepts it.
+   */
   public async signIn(key: string): Promise<SignInOutcome> {
     this.attempts.push(key);
     if (this.outcome === 'ok') {
@@ -17,12 +36,18 @@ class FakeSession {
     return this.outcome;
   }
 
+  /**
+   * Forgets the key, as the real session does.
+   */
   public signOut(): void {
     this.key.set(null);
   }
 }
 
 describe('AdminShell', () => {
+  /**
+   * Fresh fake session injected in place of `AdminSession`.
+   */
   let session: FakeSession;
 
   beforeEach(() => {
@@ -34,6 +59,9 @@ describe('AdminShell', () => {
 
   afterEach(() => document.documentElement.removeAttribute('data-density'));
 
+  /**
+   * Creates the shell and lets its first render settle.
+   */
   async function render() {
     const fixture = TestBed.createComponent(AdminShell);
     await fixture.whenStable();
@@ -41,9 +69,22 @@ describe('AdminShell', () => {
     return { fixture, element: fixture.nativeElement as HTMLElement };
   }
 
+  /**
+   * Types the key in the password field and submits the form.
+   */
   async function signIn(
     element: HTMLElement,
-    fixture: { whenStable(): Promise<unknown>; detectChanges(): void },
+    fixture: {
+      /**
+       * Resolves once the sign-in request has settled.
+       */
+      whenStable(): Promise<unknown>;
+
+      /**
+       * Renders the outcome.
+       */
+      detectChanges(): void;
+    },
     key: string,
   ) {
     const input = element.querySelector<HTMLInputElement>('input[type="password"]')!;

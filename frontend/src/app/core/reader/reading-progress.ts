@@ -1,26 +1,68 @@
 import { BookSummary } from '@core/http/api.model';
 
-/** Stored under `reader.progress.<bookId>` (specification section 8). */
+/**
+ * Stored under `reader.progress.<bookId>` (specification section 8).
+ */
 export interface ReadingProgress {
+  /**
+   * Index in `BookContent.blocks` of the block holding the page's first character.
+   */
   readonly blockIndex: number;
+
+  /**
+   * Offset in characters of that first character inside its block.
+   */
   readonly charOffset: number;
+
+  /**
+   * Whether the last page was reached; a finished book reopens at its start.
+   */
   readonly finished: boolean;
+
+  /**
+   * ISO-8601 instant of the last page turn, which orders "Mes livres".
+   */
   readonly updatedAt: string;
 }
 
-/** First character of a page, independent of tier and theme. */
+/**
+ * First character of a page, independent of tier and theme (spec section 5.3).
+ */
 export interface TextPosition {
+  /**
+   * Index in `BookContent.blocks`.
+   */
   readonly blockIndex: number;
+
+  /**
+   * Offset in characters inside that block.
+   */
   readonly charOffset: number;
 }
 
-/** A row of "Mes livres". */
+/**
+ * A row of "Mes livres" (spec section 5.4).
+ */
 export interface LibraryEntry {
+  /**
+   * Book the row opens.
+   */
   readonly book: BookSummary;
+
+  /**
+   * Whether this is the book being read, shown first and tagged.
+   */
   readonly current: boolean;
+
+  /**
+   * Whether the book was read to the end or marked as read.
+   */
   readonly finished: boolean;
 }
 
+/**
+ * Position of a book never opened, or reopened after being finished.
+ */
 const BOOK_START: TextPosition = { blockIndex: 0, charOffset: 0 };
 
 /**
@@ -127,10 +169,16 @@ export function resumableBookId(
   return withReadMark(progressOf(book.id), book.finishedAt)?.finished ? null : book.id;
 }
 
+/**
+ * Sorts ISO-8601 strings newest first; normalised dates compare correctly as plain strings.
+ */
 function compareDesc(a: string, b: string): number {
   return a < b ? 1 : a > b ? -1 : 0;
 }
 
+/**
+ * Guards against stored JSON written by an older version or edited by hand.
+ */
 function isProgress(value: unknown): value is ReadingProgress {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -144,6 +192,9 @@ function isProgress(value: unknown): value is ReadingProgress {
   );
 }
 
+/**
+ * Accepts only values usable as a block index or a character offset.
+ */
 function isNonNegativeInteger(value: unknown): boolean {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0;
 }

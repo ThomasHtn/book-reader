@@ -14,8 +14,14 @@ import java.util.zip.ZipInputStream;
  */
 final class EpubArchive {
 
+    /**
+     * Read buffer size; the limits are checked once per buffer.
+     */
     private static final int BUFFER_SIZE = 64 * 1024;
 
+    /**
+     * Prevents instantiation of this static helper.
+     */
     private EpubArchive() {
     }
 
@@ -55,6 +61,12 @@ final class EpubArchive {
 
     /**
      * Reads one entry, failing as soon as it grows past the per-file limit.
+     *
+     * @param zip      archive positioned on the entry
+     * @param maxBytes per-file limit
+     * @param name     entry name, for the log detail
+     * @return decompressed content
+     * @throws IOException when the archive is corrupted
      */
     private static byte[] readEntry(ZipInputStream zip, long maxBytes, String name) throws IOException {
         ByteArrayOutputStream content = new ByteArrayOutputStream();

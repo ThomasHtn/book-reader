@@ -1,0 +1,39 @@
+/* Full-screen sentences: the server status screen and the empty shelf. */
+
+/* Status screen: one centred sentence and its retry button (spec 5.6). */
+.status {
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: var(--space-6);
+  padding: var(--reading-padding);
+  height: 100%;
+}
+
+/* Message at reading size but regular weight: only book text is bold. */
+.status h1 {
+  font-size: var(--text-body);
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  margin: 0;
+  max-width: 24ch;
+  text-wrap: balance;
+}
+
+/* Retry button centred under the message. */
+.status .button {
+  justify-self: center;
+}
+
+/* Empty shelf: the same centred sentence as the status screen, without a button she could not use */
+.book-empty {
+  place-self: center;
+  max-width: 24ch;
+  margin: 0;
+  padding: var(--reading-padding);
+  font-size: var(--text-body);
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  text-align: center;
+  text-wrap: balance;
+}

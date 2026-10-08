@@ -4,8 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.thomashtn.bookreader.catalogue.client.CatalogueRefusedException;
 import io.github.thomashtn.bookreader.catalogue.client.CatalogueUnavailableException;
+import io.github.thomashtn.bookreader.catalogue.config.CatalogueProperties;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException.Reason;
+import java.net.URI;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
@@ -13,6 +19,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -25,8 +32,25 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
  */
 class GlobalExceptionHandlerTest {
 
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+    /**
+     * Instant every response is stamped with.
+     */
+    private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
 
+    /**
+     * Handler under test, with the production EPUB size limit.
+     */
+    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(
+        Clock.fixed(NOW, ZoneOffset.UTC),
+        new CatalogueProperties(
+            URI.create("https://catalogue.test/"), Duration.ofSeconds(1), Duration.ofSeconds(1),
+            DataSize.ofMegabytes(20)
+        )
+    );
+
+    /**
+     * Request every failure is reported for.
+     */
     private final MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/books/42");
 
     @Test
@@ -38,6 +62,8 @@ class GlobalExceptionHandlerTest {
         assertError(response, HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND");
         assertThat(response.getBody().detail()).isEqualTo("Book not found.");
         assertThat(response.getBody().instance()).hasToString("/api/books/42");
+        assertThat(response.getBody().title()).isEqualTo("Not Found");
+        assertThat(response.getBody().timestamp()).isEqualTo(NOW);
     }
 
     @Test
@@ -109,6 +135,7 @@ class GlobalExceptionHandlerTest {
             handler.handleUploadTooLarge(new MaxUploadSizeExceededException(20L * 1024 * 1024), request);
 
         assertError(response, HttpStatus.CONTENT_TOO_LARGE, "EPUB_TOO_LARGE");
+        assertThat(response.getBody().detail()).isEqualTo("The file exceeds 20 MB.");
     }
 
     @Test
@@ -148,6 +175,13 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody().detail()).contains("query");
     }
 
+    /**
+     * Checks the status, repeated in the body, and the application code of a problem response.
+     *
+     * @param response problem response
+     * @param status   expected HTTP status
+     * @param code     expected application code
+     */
     private static void assertError(ResponseEntity<ApiErrorResponse> response, HttpStatus status, String code) {
         assertThat(response.getStatusCode()).isEqualTo(status);
         assertThat(response.getBody()).isNotNull();

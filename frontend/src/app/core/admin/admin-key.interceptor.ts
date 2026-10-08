@@ -1,8 +1,15 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { tap } from 'rxjs';
-import { ADMIN_KEY_HEADER, AdminSession } from './admin-session';
 
+import { tap } from 'rxjs';
+
+import { httpStatusOf } from '@core/http/http-status';
+
+import { ADMIN_KEY_HEADER, AdminSession, isRefusedKey } from './admin-session';
+
+/**
+ * URL prefix of the routes guarded by `X-Admin-Key`; public `GET /api/**` calls stay keyless.
+ */
 const ADMIN_PREFIX = '/api/admin';
 
 /**
@@ -21,9 +28,7 @@ export const adminKeyInterceptor: HttpInterceptorFn = (request, next) => {
   return next(authorized).pipe(
     tap({
       error: (error: unknown) => {
-        const refused =
-          error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403);
-        if (refused && !explicit) {
+        if (isRefusedKey(httpStatusOf(error)) && !explicit) {
           session.signOut();
         }
       },

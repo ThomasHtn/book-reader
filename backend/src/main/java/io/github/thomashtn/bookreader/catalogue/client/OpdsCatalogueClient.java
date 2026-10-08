@@ -8,6 +8,9 @@ import io.netty.channel.ChannelOption;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -32,8 +35,23 @@ public class OpdsCatalogueClient {
      */
     private static final String USER_AGENT = "book-reader/1.0 (+https://book-reader.thomashtn.dev)";
 
+    /**
+     * Book page on the catalogue site, which is how the feed identifies an entry.
+     *
+     * <p>Pinned to the real host rather than to the configured base URL: an entry identifier comes
+     * from the caller, and only the number it carries is ever sent to the site.</p>
+     */
+    private static final Pattern BOOK_PAGE =
+        Pattern.compile("https?://www\\.ebooksgratuits\\.com/details\\.php\\?book=(\\d{1,9})");
+
+    /**
+     * Pause before the single retry, short enough to keep the backoffice responsive.
+     */
     private static final Duration RETRY_DELAY = Duration.ofMillis(300);
 
+    /**
+     * Client bound to the catalogue base URL, with its timeouts and size limit.
+     */
     private final WebClient webClient;
 
     /**
@@ -55,6 +73,17 @@ public class OpdsCatalogueClient {
             .codecs(codecs -> codecs.defaultCodecs()
                 .maxInMemorySize(Math.toIntExact(properties.maxEpubSize().toBytes())))
             .build();
+    }
+
+    /**
+     * Extracts the book number from an entry identifier returned by {@link #search(String)}.
+     *
+     * @param entryId entry identifier, the URL of the book page on the site
+     * @return book number to download, empty when the identifier is not a catalogue book page
+     */
+    public static OptionalInt bookNumberOf(String entryId) {
+        Matcher matcher = BOOK_PAGE.matcher(entryId);
+        return matcher.matches() ? OptionalInt.of(Integer.parseInt(matcher.group(1))) : OptionalInt.empty();
     }
 
     /**
@@ -80,7 +109,7 @@ public class OpdsCatalogueClient {
     /**
      * Downloads the EPUB of a catalogue book.
      *
-     * @param bookNumber number of the book page, {@code details.php?book=<n>}
+     * @param bookNumber number of the book page, from {@link #bookNumberOf(String)}
      * @return EPUB bytes
      * @throws CatalogueUnavailableException when the site does not answer
      * @throws ResourceNotFoundException     when the site has no EPUB for this book
@@ -105,6 +134,9 @@ public class OpdsCatalogueClient {
 
     /**
      * Reads the EPUB body, refusing the HTML warning page the site serves with a 200 once it bans an address.
+     *
+     * @param response download response, after redirections
+     * @return EPUB bytes, or an error the caller maps to an exception of this API
      */
     private static Mono<byte[]> readEpub(ClientResponse response) {
         if (response.statusCode().isError()) {
@@ -117,17 +149,36 @@ public class OpdsCatalogueClient {
         return response.bodyToMono(byte[].class);
     }
 
+    /**
+     * Retries a call once after a transient failure, then rethrows the original error rather than Reactor's.
+     *
+     * @param call HTTP call
+     * @param <T>  body type
+     * @return call with its retry policy
+     */
     private static <T> Mono<T> withRetry(Mono<T> call) {
         return call.retryWhen(Retry.fixedDelay(1, RETRY_DELAY)
             .filter(OpdsCatalogueClient::isTransient)
             .onRetryExhaustedThrow((spec, signal) -> signal.failure()));
     }
 
+    /**
+     * Tells whether a failure may disappear on retry: no connection, or a server error.
+     *
+     * @param error failure of a call
+     * @return {@code true} when worth one retry
+     */
     private static boolean isTransient(Throwable error) {
         return error instanceof WebClientRequestException
             || error instanceof WebClientResponseException response && response.getStatusCode().is5xxServerError();
     }
 
+    /**
+     * Tells whether a download hit the in-memory size limit, whose exception arrives wrapped.
+     *
+     * @param error failure of a download
+     * @return {@code true} when the EPUB exceeds the limit
+     */
     private static boolean isTooLarge(Throwable error) {
         for (Throwable cause = error; cause != null; cause = cause.getCause()) {
             if (cause instanceof DataBufferLimitException) {
@@ -137,14 +188,32 @@ public class OpdsCatalogueClient {
         return false;
     }
 
+    /**
+     * Tells whether the site answered with a 4xx, meaning it has no such book.
+     *
+     * @param error failure of a call
+     * @return {@code true} on a client error status
+     */
     private static boolean isClientError(Throwable error) {
         return error instanceof WebClientResponseException response && response.getStatusCode().is4xxClientError();
     }
 
+    /**
+     * Tells whether a failure comes from the HTTP exchange itself rather than from this application.
+     *
+     * @param error failure of a call
+     * @return {@code true} for a connection failure or an error status
+     */
     private static boolean isTransportFailure(Throwable error) {
         return error instanceof WebClientRequestException || error instanceof WebClientResponseException;
     }
 
+    /**
+     * Wraps an exchange failure into the exception answered with a 503.
+     *
+     * @param error failure of a call
+     * @return unavailability carrying the cause for the logs
+     */
     private static Throwable unavailable(Throwable error) {
         return new CatalogueUnavailableException("Catalogue unavailable: " + error.getMessage(), error);
     }

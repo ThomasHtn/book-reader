@@ -12,8 +12,14 @@ import java.util.Map;
  */
 public class EpubConverter {
 
+    /**
+     * Archive entry whose presence means DRM-protected resources.
+     */
     private static final String ENCRYPTION = "META-INF/encryption.xml";
 
+    /**
+     * Decompression guards.
+     */
     private final EpubLimits limits;
 
     /**
@@ -43,7 +49,7 @@ public class EpubConverter {
         for (String path : epubPackage.readingOrder()) {
             byte[] content = entries.get(path);
             if (content != null) {
-                blocks.addAll(BlockExtractor.extract(EpubPackage.parseXml(content), epubPackage.tocTargetsOf(path)));
+                blocks.addAll(BlockExtractor.extract(EpubXml.parse(content), epubPackage.tocTargetsOf(path)));
             }
         }
         if (blocks.isEmpty()) {

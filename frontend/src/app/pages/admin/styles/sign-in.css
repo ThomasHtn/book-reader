@@ -1,0 +1,47 @@
+/* === Sign-in ============================================================== */
+
+/* Sign-in screen: card centred on the navy rail colour. */
+.a-login {
+  grid-template-rows: auto minmax(0, 1fr);
+  place-items: center;
+  padding: var(--admin-gutter);
+  background: var(--admin-rail-bg);
+  overflow: auto;
+}
+
+/* Way back to the book list, top left. */
+.a-login-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--admin-spacing) * 2);
+  min-height: var(--admin-control-height);
+  padding: 0 calc(var(--admin-spacing) * 2);
+  border-radius: var(--admin-radius);
+  color: var(--admin-rail-fg);
+  text-decoration: none;
+}
+
+.a-login-back svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Sign-in card: roomier, with a stronger shadow. */
+.a-login__card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc(var(--admin-spacing) * 100);
+  gap: calc(var(--admin-spacing) * 5);
+  padding: calc(var(--admin-spacing) * 8);
+  box-shadow: var(--admin-shadow-pop);
+}
+
+.a-login__card .a-brand__mark {
+  justify-self: start;
+}
+
+.a-login h1 {
+  margin: 0;
+  font: var(--weight-heading) var(--admin-text-2xl) / 1.15 var(--font-reading);
+}

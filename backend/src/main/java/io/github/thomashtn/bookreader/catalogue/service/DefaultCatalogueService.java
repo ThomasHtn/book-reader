@@ -14,8 +14,6 @@ import io.github.thomashtn.bookreader.shared.exception.InvalidRequestException;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -28,17 +26,23 @@ import org.springframework.stereotype.Service;
 public class DefaultCatalogueService implements CatalogueService {
 
     /**
-     * Book page on the catalogue site, as the feed identifies entries; the download URL is built from configuration.
+     * Client of the catalogue site.
      */
-    private static final Pattern ENTRY_ID =
-        Pattern.compile("https?://www\\.ebooksgratuits\\.com/details\\.php\\?book=(\\d{1,9})");
-
     private final OpdsCatalogueClient client;
 
+    /**
+     * Converter turning a downloaded EPUB into blocks.
+     */
     private final EpubConverter converter;
 
+    /**
+     * Repository holding books, catalogue ones included.
+     */
     private final BookRepository repository;
 
+    /**
+     * Clock stamping imports and reactivations.
+     */
     private final Clock clock;
 
     /**
@@ -58,6 +62,13 @@ public class DefaultCatalogueService implements CatalogueService {
         this.clock = clock;
     }
 
+    /**
+     * Relays the search, then reads the import state of every result in a single query.
+     *
+     * @param query non-blank query
+     * @return entries offering an EPUB, in feed order
+     * @throws InvalidRequestException when the query is blank
+     */
     @Override
     public List<CatalogueEntryResponse> search(String query) {
         if (query == null || query.isBlank()) {
@@ -75,17 +86,24 @@ public class DefaultCatalogueService implements CatalogueService {
             .toList();
     }
 
+    /**
+     * Reactivates an imported entry without contacting the site; otherwise downloads and converts it
+     * outside any transaction. A concurrent import of the same entry ends as a reactivation.
+     *
+     * @param entryId entry identifier from the search
+     * @return activated book and whether it was created
+     * @throws InvalidRequestException when the identifier is not a catalogue book page
+     */
     @Override
     public CatalogueImportResult importEntry(String entryId) {
-        Matcher matcher = ENTRY_ID.matcher(entryId);
-        if (!matcher.matches()) {
-            throw new InvalidRequestException("The entry identifier is not a catalogue book page.");
-        }
+        int bookNumber = OpdsCatalogueClient.bookNumberOf(entryId).orElseThrow(
+            () -> new InvalidRequestException("The entry identifier is not a catalogue book page.")
+        );
         Book existing = repository.findBySourceId(entryId).orElse(null);
         if (existing != null) {
             return reactivate(existing);
         }
-        byte[] epub = client.downloadEpub(Integer.parseInt(matcher.group(1)));
+        byte[] epub = client.downloadEpub(bookNumber);
         ConvertedBook converted = converter.convert(epub);
         try {
             Book book = repository.save(Book.fromCatalogue(converted, entryId, clock.instant()));
@@ -96,11 +114,23 @@ public class DefaultCatalogueService implements CatalogueService {
         }
     }
 
+    /**
+     * Shows an imported book again; it counts as newly added in the reader's list.
+     *
+     * @param book imported book
+     * @return reactivated book, not created
+     */
     private CatalogueImportResult reactivate(Book book) {
         book.activate(clock.instant());
         return new CatalogueImportResult(AdminBookResponse.from(repository.save(book)), false);
     }
 
+    /**
+     * Maps the active flag of an imported book to the state shown in the backoffice.
+     *
+     * @param active active flag, {@code null} when the entry was never imported
+     * @return import state
+     */
     private static CatalogueEntryState stateOf(Boolean active) {
         if (active == null) {
             return CatalogueEntryState.NOT_IMPORTED;

@@ -1,0 +1,109 @@
+/* === Views ================================================================ */
+
+/* A view stacks its header, controls, messages and lists. */
+.a-view {
+  display: grid;
+  gap: calc(var(--admin-spacing) * 5);
+}
+
+/* An empty live region stays in the page for screen readers but takes no row, hence no gap. */
+.a-view > [aria-live]:empty {
+  position: absolute;
+}
+
+/* View title in the reader's face, subtitle muted. */
+.a-view-head {
+  display: grid;
+  gap: var(--admin-spacing);
+}
+
+.a-view-head h2 {
+  margin: 0;
+  font: var(--weight-heading) var(--admin-text-2xl) / 1.1 var(--font-reading);
+}
+
+.a-view-sub {
+  margin: 0;
+  color: var(--admin-fg-muted);
+}
+
+/* Form field: label above its control. */
+.a-field {
+  display: grid;
+  gap: calc(var(--admin-spacing) * 1.5);
+}
+
+.a-field label,
+.a-label {
+  margin: 0;
+  font-size: var(--admin-text-sm);
+  font-weight: var(--admin-weight-strong);
+}
+
+/* Text input on --admin-* tokens; focus also tints the border. */
+.a-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--admin-control-height);
+  padding: 0 calc(var(--admin-spacing) * 3);
+  border: 1px solid var(--admin-border-strong);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface);
+  color: var(--admin-fg);
+  font: inherit;
+}
+
+.a-input::placeholder {
+  color: var(--admin-fg-muted);
+  opacity: 1;
+}
+
+.a-input:focus-visible {
+  border-color: var(--admin-focus);
+}
+
+/* Search field with its magnifier inside. */
+.a-filter {
+  position: relative;
+  min-width: 0;
+}
+
+.a-filter svg {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--admin-spacing) * 3.5);
+  width: 18px;
+  height: 18px;
+  translate: 0 -50%;
+  color: var(--admin-fg-muted);
+  pointer-events: none;
+}
+
+.a-filter .a-input {
+  display: block;
+  padding-left: calc(var(--admin-spacing) * 10);
+}
+
+/* Catalogue search: a large field and its button on one row. */
+.a-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: calc(var(--admin-spacing) * 2);
+}
+
+.a-search .a-input {
+  height: 52px;
+  font-size: var(--admin-text-lg);
+  box-shadow: var(--admin-shadow);
+}
+
+.a-search .a-btn {
+  min-height: 52px;
+}
+
+/* Library toolbar: text filter and state filter, side by side from 640px. */
+.a-toolbar {
+  display: grid;
+  align-items: center;
+  gap: calc(var(--admin-spacing) * 3);
+}

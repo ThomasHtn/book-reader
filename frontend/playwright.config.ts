@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
-import { E2E_ADMIN_KEY } from './e2e/support/books';
 
+import { E2E_ADMIN_KEY } from './e2e/support/env';
+
+/**
+ * On CI the dev server is never reused and an HTML report is kept.
+ */
 const ci = !!process.env['CI'];
 
 /**

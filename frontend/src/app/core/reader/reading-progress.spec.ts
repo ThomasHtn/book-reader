@@ -1,13 +1,17 @@
 import { BookSummary } from '@core/http/api.model';
+
 import {
-  ReadingProgress,
   parseProgress,
+  ReadingProgress,
   resumableBookId,
   sortLibrary,
   startPosition,
   withReadMark,
 } from './reading-progress';
 
+/**
+ * Builds an active book; only its dates matter to the ordering rules.
+ */
 const book = (id: string, activatedAt: string, finishedAt: string | null = null): BookSummary => ({
   id,
   title: `Titre ${id}`,
@@ -16,6 +20,9 @@ const book = (id: string, activatedAt: string, finishedAt: string | null = null)
   finishedAt,
 });
 
+/**
+ * Builds a stored progress at an arbitrary position.
+ */
 const progress = (updatedAt: string, finished = false): ReadingProgress => ({
   blockIndex: 3,
   charOffset: 12,
@@ -88,6 +95,9 @@ describe('startPosition', () => {
 });
 
 describe('sortLibrary', () => {
+  /**
+   * One book per ordering case, activation dates chosen to differ from reading order.
+   */
   const books = [
     book('never-old', '2026-01-01T00:00:00Z'),
     book('read-old', '2026-02-01T00:00:00Z'),
@@ -95,6 +105,9 @@ describe('sortLibrary', () => {
     book('read-new', '2026-01-15T00:00:00Z'),
     book('finished', '2026-01-20T00:00:00Z'),
   ];
+  /**
+   * Progress of the books opened at least once.
+   */
   const stored: Record<string, ReadingProgress> = {
     'read-old': progress('2026-09-01T00:00:00Z'),
     'read-new': progress('2026-09-10T00:00:00Z'),
@@ -142,6 +155,9 @@ describe('sortLibrary', () => {
 });
 
 describe('resumableBookId', () => {
+  /**
+   * Single active book.
+   */
   const books = [book('a', '2026-01-01T00:00:00Z')];
 
   it('resumes the last opened book when it is active and not finished', () => {

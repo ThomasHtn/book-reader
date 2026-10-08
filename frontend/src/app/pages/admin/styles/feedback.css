@@ -1,0 +1,97 @@
+/* === Feedback ============================================================= */
+
+/* Muted help text; links in it and in the credits stay underlined. */
+.a-help {
+  margin: 0;
+  color: var(--admin-fg-muted);
+  font-size: var(--admin-text-sm);
+}
+
+.a-help a,
+.a-credits a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Empty or failed state, dashed like an empty slot. */
+.a-empty {
+  display: grid;
+  justify-items: start;
+  gap: calc(var(--admin-spacing) * 3);
+  margin: 0;
+  padding: calc(var(--admin-spacing) * 6) calc(var(--admin-spacing) * 5);
+  border: 1px dashed var(--admin-border-strong);
+  border-radius: var(--admin-radius-lg);
+  color: var(--admin-fg-muted);
+}
+
+/* Waiting for a list: the brand's three spines are pulled from the shelf one after another. */
+.a-loading {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--admin-spacing) * 3);
+  margin: 0;
+  padding: calc(var(--admin-spacing) * 6) 0;
+  color: var(--admin-fg-muted);
+  font-size: var(--admin-text-sm);
+}
+
+/* Each spine rises in turn, staggered by an eighth of the cycle. */
+.a-loading .a-brand__mark i {
+  animation: a-spine-pull var(--admin-loading-duration) ease-in-out infinite;
+}
+
+.a-loading .a-brand__mark i:nth-child(2) {
+  animation-delay: calc(var(--admin-loading-duration) / 8);
+}
+
+.a-loading .a-brand__mark i:nth-child(3) {
+  animation-delay: calc(var(--admin-loading-duration) / 4);
+}
+
+@keyframes a-spine-pull {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(calc(var(--admin-spacing) * -1.25));
+  }
+}
+
+/* Busy button: its icon turns into a spinning circle, the label says what is running. */
+.a-spin {
+  animation: a-spin var(--admin-spin-duration) linear infinite;
+}
+
+@keyframes a-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Action outcome: green by default, red with --failure. */
+.a-message {
+  margin: 0;
+  padding: calc(var(--admin-spacing) * 2.5) calc(var(--admin-spacing) * 3.5);
+  border-radius: var(--admin-radius);
+  background: var(--admin-success-soft);
+  color: var(--admin-success);
+  font-size: var(--admin-text-sm);
+  font-weight: var(--admin-weight-strong);
+}
+
+.a-message--failure {
+  background: var(--admin-danger-soft);
+  color: var(--admin-danger);
+}
+
+/* Font and catalogue credits at the foot of the settings view. */
+.a-credits {
+  padding-top: calc(var(--admin-spacing) * 4);
+  border-top: 1px solid var(--admin-border);
+  color: var(--admin-fg-muted);
+  font-size: var(--admin-text-xs);
+}

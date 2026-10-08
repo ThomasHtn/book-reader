@@ -8,10 +8,15 @@ import {
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
+
 import { adminKeyInterceptor } from '@core/admin/admin-key.interceptor';
 import { AppUpdater } from '@core/update/app-updater';
+
 import { routes } from './app.routes';
 
+/**
+ * Application providers; `AppUpdater` is injected at start so its idle reload timer runs from the first screen.
+ */
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),

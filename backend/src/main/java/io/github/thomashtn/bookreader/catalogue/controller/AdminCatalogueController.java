@@ -2,6 +2,7 @@ package io.github.thomashtn.bookreader.catalogue.controller;
 
 import static io.github.thomashtn.bookreader.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
 
+import io.github.thomashtn.bookreader.book.controller.BookController;
 import io.github.thomashtn.bookreader.book.dto.AdminBookResponse;
 import io.github.thomashtn.bookreader.catalogue.dto.CatalogueEntryResponse;
 import io.github.thomashtn.bookreader.catalogue.dto.ImportCatalogueEntryRequest;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.net.URI;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = ADMIN_KEY_SECURITY_SCHEME)
 public class AdminCatalogueController {
 
+    /**
+     * Service searching and importing catalogue entries.
+     */
     private final CatalogueService service;
 
     /**
@@ -71,6 +74,6 @@ public class AdminCatalogueController {
         if (!result.created()) {
             return ResponseEntity.ok(result.book());
         }
-        return ResponseEntity.created(URI.create("/api/books/" + result.book().id())).body(result.book());
+        return ResponseEntity.created(BookController.locationOf(result.book().id())).body(result.book());
     }
 }

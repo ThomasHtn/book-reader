@@ -25,6 +25,12 @@ public record ConvertedBook(String title, String author, List<Block> blocks) {
         blocks = List.copyOf(blocks);
     }
 
+    /**
+     * Cuts a text to {@link #MAX_METADATA_LENGTH} characters.
+     *
+     * @param text metadata text
+     * @return the text, or its longest prefix that fits
+     */
     private static String truncate(String text) {
         if (text.length() <= MAX_METADATA_LENGTH) {
             return text;

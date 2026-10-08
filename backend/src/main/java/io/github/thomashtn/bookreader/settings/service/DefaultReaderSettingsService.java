@@ -14,8 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DefaultReaderSettingsService implements ReaderSettingsService {
 
+    /**
+     * Repository holding the single settings row.
+     */
     private final ReaderSettingsRepository repository;
 
+    /**
+     * Clock stamping each change.
+     */
     private final Clock clock;
 
     /**
@@ -29,12 +35,23 @@ public class DefaultReaderSettingsService implements ReaderSettingsService {
         this.clock = clock;
     }
 
+    /**
+     * Reads the single row in a read-only transaction.
+     *
+     * @return current settings
+     */
     @Override
     @Transactional(readOnly = true)
     public ReaderSettingsResponse getSettings() {
         return ReaderSettingsResponse.from(loadSettings());
     }
 
+    /**
+     * Updates the single row in place; dirty checking writes it when the transaction commits.
+     *
+     * @param request validated new settings
+     * @return settings after the change
+     */
     @Override
     @Transactional
     public ReaderSettingsResponse updateSettings(UpdateReaderSettingsRequest request) {
@@ -44,7 +61,10 @@ public class DefaultReaderSettingsService implements ReaderSettingsService {
     }
 
     /**
-     * Loads the single settings row, which V1 migration guarantees.
+     * Loads the single settings row, which the V1 migration inserts.
+     *
+     * @return settings entity
+     * @throws IllegalStateException when the row is missing, which means a broken database
      */
     private ReaderSettings loadSettings() {
         return repository.findById(ReaderSettings.SINGLETON_ID)

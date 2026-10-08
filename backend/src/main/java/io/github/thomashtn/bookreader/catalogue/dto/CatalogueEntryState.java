@@ -22,8 +22,16 @@ public enum CatalogueEntryState {
      */
     WITHDRAWN("withdrawn");
 
+    /**
+     * Value used in JSON.
+     */
     private final String value;
 
+    /**
+     * Binds a state to its JSON value.
+     *
+     * @param value value used in JSON
+     */
     CatalogueEntryState(String value) {
         this.value = value;
     }

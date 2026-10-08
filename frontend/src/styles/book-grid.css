@@ -1,0 +1,154 @@
+/* ---- Book grid: three blocks per row, paged by whole rows.
+   Every class is prefixed, as backoffice ones carry `a-`: the global sheet is shared. ---- */
+
+/* One page of rows, aligned with the head line; rows are translated, never scrolled. */
+.book-grid-viewport {
+  height: 100%;
+  overflow: hidden;
+  padding: 0 var(--grid-padding);
+  max-width: var(--grid-max-width);
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Three equal columns; grid-math.ts repeats the top padding on every page. */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+
+  /* `1fr` on a grid of undefined height gives every row the height of the tallest one, so all the
+     blocks end up the same size whatever the length of their title. */
+  grid-auto-rows: 1fr;
+  gap: var(--grid-gap);
+  align-content: start;
+  padding-top: var(--reading-padding);
+}
+
+/* Blocks of the other pages keep their box, so the measurement stays valid, but stay out of sight:
+   without this the top of the next row shows under the current page. */
+.book-grid > [inert] {
+  visibility: hidden;
+}
+
+/* One book, one cloth-coloured block: title, then author and state, nothing else. */
+.book-card {
+  --book-cover: var(--book-cover-1);
+
+  container-type: inline-size;
+  width: 100%;
+  display: grid;
+  align-content: start;
+  gap: var(--card-gap);
+  min-height: var(--book-block-min-height);
+  padding: var(--book-block-padding);
+  background: var(--book-cover);
+  color: var(--book-block-fg);
+  border: none;
+  text-align: left;
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-tight);
+  border-radius: var(--radius-reader);
+}
+
+/* Cloth colour picked by `data-tone` (cover-tone.ts); tone 1 is the default above. */
+.book-card[data-tone='2'] {
+  --book-cover: var(--book-cover-2);
+}
+
+.book-card[data-tone='3'] {
+  --book-cover: var(--book-cover-3);
+}
+
+.book-card[data-tone='4'] {
+  --book-cover: var(--book-cover-4);
+}
+
+.book-card[data-tone='5'] {
+  --book-cover: var(--book-cover-5);
+}
+
+.book-card[data-tone='6'] {
+  --book-cover: var(--book-cover-6);
+}
+
+.book-card[data-tone='7'] {
+  --book-cover: var(--book-cover-7);
+}
+
+.book-card[data-tone='8'] {
+  --book-cover: var(--book-cover-8);
+}
+
+.book-card[data-tone='9'] {
+  --book-cover: var(--book-cover-9);
+}
+
+.book-card[data-tone='10'] {
+  --book-cover: var(--book-cover-10);
+}
+
+/* Only the title is bold: it is what she reads, the rest only confirms it */
+.book-card .title {
+  font-size: var(--card-title-size);
+  font-weight: var(--weight-heading);
+  overflow-wrap: anywhere;
+}
+
+/* Same ink as the title, one size and one weight down */
+.book-card .author {
+  font-size: var(--card-author-size);
+  overflow-wrap: anywhere;
+}
+
+/* Pointing at a block darkens its cloth: no movement, nothing revealed. */
+.book-card:hover {
+  background: color-mix(
+    in srgb,
+    var(--book-cover),
+    var(--color-ink-900) var(--book-block-hover-darken)
+  );
+}
+
+/* Book in progress: rose block, tagged "En cours" (spec 5.4). */
+.book-card--current {
+  background: var(--book-block-current-bg);
+  color: var(--book-block-current-fg);
+}
+
+.book-card--current:hover {
+  background: var(--book-block-current-bg-hover);
+}
+
+/* Finished book: muted block, tagged "Terminé" (spec 5.4). */
+.book-card--finished {
+  background: var(--book-block-finished-bg);
+  color: var(--book-block-finished-fg);
+}
+
+.book-card--finished:hover {
+  background: var(--book-block-finished-bg-hover);
+}
+
+/* Pressed: the same strong colour change as the command bars. */
+.book-card:active {
+  background: var(--color-control-bg-active);
+  color: var(--color-control-fg-active);
+}
+
+/* Keyboard focus ring, the only shadow the reader allows. */
+.book-card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-shadow);
+}
+
+/* State tag, with the only other radius allowed in the reader. */
+.book-card .tag {
+  justify-self: start;
+  margin-top: var(--space-1);
+  font-size: var(--card-meta-size);
+  background: var(--tag-bg);
+  color: var(--tag-fg);
+  padding: var(--tag-padding);
+  border-radius: var(--radius-tag);
+  white-space: nowrap;
+}

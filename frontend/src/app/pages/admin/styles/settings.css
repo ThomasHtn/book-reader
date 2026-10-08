@@ -1,0 +1,71 @@
+/* === Settings: the preview is her screen ================================= */
+
+/* Controls and preview, stacked on phones, side by side from 900px. */
+.a-settings {
+  display: grid;
+  gap: calc(var(--admin-spacing) * 8);
+}
+
+.a-settings__controls {
+  display: grid;
+  align-content: start;
+  gap: calc(var(--admin-spacing) * 4);
+}
+
+/* Larger tier buttons: the tier is the one choice of this view. */
+.a-settings .a-seg button {
+  min-height: 52px;
+  font-size: var(--admin-text-lg);
+}
+
+/* Real reader rendering of the chosen tier, scaled down to the screen. The reader sizes its text
+   against the viewport (tier px at 1280px wide); here the paper is the viewport, hence `cqi`. */
+.a-preview {
+  --preview-tier: 100;
+
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--admin-spacing) * 3);
+  margin: 0;
+}
+
+/* Bezel around the paper, so the preview reads as her screen. */
+.a-preview__screen {
+  box-sizing: border-box;
+  width: 100%;
+  padding: calc(var(--admin-spacing) * 2.5) calc(var(--admin-spacing) * 2.5)
+    calc(var(--admin-spacing) * 6);
+  border-radius: var(--admin-radius-lg);
+  background: var(--admin-screen-bezel);
+  box-shadow: var(--admin-shadow-pop);
+}
+
+/* Paper in the reader's colours, and the container its text sizes against. */
+.a-preview__paper {
+  container-type: inline-size;
+
+  /* Without overflow clipping, a long line at tier 140 grows the paper instead of being cut. */
+  aspect-ratio: 16 / 9;
+  padding: 6cqi 7cqi;
+  box-sizing: border-box;
+  border-radius: 4px;
+  background: var(--color-paper-50);
+  color: var(--color-ink-900);
+}
+
+/* `cqi` on the container itself would resolve against its ancestor, so the text sits in a child. */
+.a-preview__text {
+  margin: 0;
+  font-family: var(--font-reading);
+  font-weight: var(--weight-body);
+  font-size: clamp(8px, calc(var(--preview-tier) / 12.8 * 1cqi), calc(var(--preview-tier) * 1px));
+  line-height: var(--leading-body);
+  overflow-wrap: anywhere;
+}
+
+/* Caption giving the real size on her screen. */
+.a-preview figcaption {
+  color: var(--admin-fg-muted);
+  font-size: var(--admin-text-sm);
+  text-align: center;
+}

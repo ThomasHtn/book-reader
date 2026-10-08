@@ -12,7 +12,7 @@ import com.jayway.jsonpath.JsonPath;
 import io.github.thomashtn.bookreader.book.repository.BookRepository;
 import io.github.thomashtn.bookreader.catalogue.client.OpdsFixtures;
 import io.github.thomashtn.bookreader.conversion.EpubFixtures;
-import io.github.thomashtn.bookreader.shared.config.AdminApiKeyFilter;
+import io.github.thomashtn.bookreader.shared.security.AdminApiKeyFilter;
 import io.github.thomashtn.bookreader.support.PostgreSqlIntegrationTest;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -45,12 +45,24 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 class CatalogueApiTest extends PostgreSqlIntegrationTest {
 
+    /**
+     * Entry identifier of a book present in the recorded search.
+     */
     private static final String FANTINE = "https://www.ebooksgratuits.com/details.php?book=726";
 
+    /**
+     * Fake catalogue site, shared by the whole class like the Spring context pointing at it.
+     */
     private static final MockWebServer CATALOGUE = new MockWebServer();
 
+    /**
+     * When set, the fake site answers every request with a 503.
+     */
     private static final AtomicBoolean SITE_DOWN = new AtomicBoolean();
 
+    /**
+     * Number of EPUB downloads the fake site served.
+     */
     private static final AtomicInteger DOWNLOADS = new AtomicInteger();
 
     /**
@@ -67,9 +79,15 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
         }
     }
 
+    /**
+     * Client driving the whole filter chain.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Repository emptied before each test.
+     */
     @Autowired
     private BookRepository repository;
 
@@ -202,12 +220,26 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
             .andExpect(status().isUnauthorized());
     }
 
+    /**
+     * Searches the catalogue with the administrator key.
+     *
+     * @param query search query
+     * @return response
+     * @throws Exception when the request cannot be performed
+     */
     private ResultActions search(String query) throws Exception {
         return mockMvc.perform(get("/api/admin/catalogue")
             .param("query", query)
             .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY));
     }
 
+    /**
+     * Activates a catalogue entry with the administrator key.
+     *
+     * @param entryId entry identifier
+     * @return response
+     * @throws Exception when the request cannot be performed
+     */
     private ResultActions importEntry(String entryId) throws Exception {
         return mockMvc.perform(post("/api/admin/books/from-catalogue")
             .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
@@ -215,6 +247,11 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
             .content("{\"entryId\": \"" + entryId + "\"}"));
     }
 
+    /**
+     * Checks how many EPUBs the fake site served since the test started.
+     *
+     * @param expected expected download count
+     */
     private static void assertDownloads(int expected) {
         assertThat(DOWNLOADS.get()).isEqualTo(expected);
     }
@@ -224,6 +261,12 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
      */
     private static final class FakeCatalogue extends Dispatcher {
 
+        /**
+         * Routes the feed and download paths the client uses; anything else is a 404.
+         *
+         * @param request request received by the fake site
+         * @return recorded feed, fixture EPUB or error
+         */
         @Override
         public MockResponse dispatch(RecordedRequest request) {
             if (SITE_DOWN.get()) {
@@ -244,6 +287,9 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
             return new MockResponse.Builder().code(404).build();
         }
 
+        /**
+         * Holds a download until the expected number of downloads is in flight, at most five seconds.
+         */
         private static void awaitBarrier() {
             CountDownLatch barrier = DOWNLOAD_BARRIER.get();
             if (barrier == null) {

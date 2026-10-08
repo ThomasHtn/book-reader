@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { SwUpdate, VersionEvent } from '@angular/service-worker';
+
 import { Subject } from 'rxjs';
+
 import { APP_RELOAD, AppUpdater, IDLE_BEFORE_UPDATE_MS, isIdleLongEnough } from './app-updater';
 
 describe('isIdleLongEnough', () => {
@@ -11,8 +13,19 @@ describe('isIdleLongEnough', () => {
 });
 
 describe('AppUpdater', () => {
+  /**
+   * Version events the fake service worker emits.
+   */
   let versions: Subject<VersionEvent>;
+
+  /**
+   * Stands for the page reload, so the test runner is never reloaded.
+   */
   let reload: ReturnType<typeof vi.fn>;
+
+  /**
+   * Spy on the periodic update check.
+   */
   let checkForUpdate: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -34,6 +47,9 @@ describe('AppUpdater', () => {
 
   afterEach(() => vi.useRealTimers());
 
+  /**
+   * Emits the event of a new version downloaded in the background.
+   */
   const versionReady = () =>
     versions.next({
       type: 'VERSION_READY',

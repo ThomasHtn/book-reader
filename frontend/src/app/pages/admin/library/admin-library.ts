@@ -1,5 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+
 import {
   LucideBookCheck,
   LucideBookX,
@@ -13,44 +14,18 @@ import {
   LucideTrash,
   LucideX,
 } from '@lucide/angular';
+
+import { AdminBook, BookPatch } from '@core/admin/admin.model';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminMessage, failureMessage, successMessage } from '@core/admin/admin-message';
-import { AdminBook, BookPatch } from '@core/admin/admin.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
-const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'Europe/Paris',
-});
+import { RowAction, StateFilter } from './admin-library.model';
+import { bookMeta, fold, MATCHES, STATE_FILTERS } from './admin-library.utils';
 
-/** State filter of the library list. */
-type StateFilter = 'all' | 'active' | 'withdrawn' | 'finished';
-
-const STATE_FILTERS: readonly { value: StateFilter; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'active', label: 'Actifs' },
-  { value: 'withdrawn', label: 'Retirés' },
-  { value: 'finished', label: 'Lus' },
-];
-
-const MATCHES: Record<StateFilter, (book: AdminBook) => boolean> = {
-  all: () => true,
-  active: (book) => book.active,
-  withdrawn: (book) => !book.active,
-  finished: (book) => Boolean(book.finishedAt),
-};
-
-/** Row action in flight, so only the pressed button spins while the whole row waits. */
-type RowAction = 'active' | 'finished' | 'save' | 'delete';
-
-/** Lower case without diacritics, so "baudélaire" finds "Baudelaire". */
-function fold(text: string): string {
-  return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
-}
-
-/** Every imported book: withdraw, reactivate, mark as read, delete, correct title and author. */
+/**
+ * Every imported book, withdrawn ones included: withdraw, reactivate, mark as read, delete, edit.
+ */
 @Component({
   selector: 'app-admin-library',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,16 +45,34 @@ function fold(text: string): string {
   templateUrl: './admin-library.html',
 })
 export class AdminLibrary {
+  /**
+   * Admin endpoints for book changes.
+   */
   private readonly api = inject(AdminApi);
 
+  /**
+   * Whole library, reloaded after each successful row action.
+   */
   protected readonly books = httpResource<AdminBook[]>(() => API_ENDPOINTS.admin.books);
 
+  /**
+   * Buttons of the state filter, exposed to the template.
+   */
   protected readonly stateFilters = STATE_FILTERS;
 
+  /**
+   * Text filter on title and author, applied as typed.
+   */
   protected readonly filterText = signal('');
 
+  /**
+   * State filter currently pressed.
+   */
   protected readonly stateFilter = signal<StateFilter>('all');
 
+  /**
+   * Number of books each state filter keeps, regardless of the text filter.
+   */
   protected readonly counts = computed(() => {
     const books = this.books.hasValue() ? this.books.value() : [];
     return Object.fromEntries(
@@ -87,6 +80,9 @@ export class AdminLibrary {
     ) as Record<StateFilter, number>;
   });
 
+  /**
+   * Books passing both the state filter and the accent-insensitive text filter.
+   */
   protected readonly visibleBooks = computed(() => {
     const books = this.books.hasValue() ? this.books.value() : [];
     const text = fold(this.filterText().trim());
@@ -96,39 +92,72 @@ export class AdminLibrary {
     );
   });
 
+  /**
+   * Book whose row waits for the server; all its buttons are disabled meanwhile.
+   */
   protected readonly busyId = signal<string | null>(null);
 
+  /**
+   * Action in flight on the busy row, so only its button spins.
+   */
   private readonly busyAction = signal<RowAction | null>(null);
 
+  /**
+   * Book whose row shows the title and author form, at most one at a time.
+   */
   protected readonly editingId = signal<string | null>(null);
 
+  /**
+   * Book whose row asks to confirm the deletion, which cannot be undone.
+   */
   protected readonly confirmingId = signal<string | null>(null);
 
+  /**
+   * Title field of the edit form.
+   */
   protected readonly title = signal('');
 
+  /**
+   * Author field of the edit form.
+   */
   protected readonly author = signal('');
 
+  /**
+   * Outcome of the last row action, shown above the list.
+   */
   protected readonly message = signal<AdminMessage | null>(null);
 
-  protected meta(book: AdminBook): string {
-    const source = book.source === 'catalogue' ? 'catalogue' : 'dépôt';
-    return `${book.author}, ${source}, ajouté le ${DATE_FORMAT.format(new Date(book.createdAt))}`;
-  }
+  /**
+   * Line under each title: author, origin and date of addition.
+   */
+  protected readonly meta = bookMeta;
 
+  /**
+   * Opens the edit form prefilled with the current title and author.
+   */
   protected edit(book: AdminBook): void {
     this.title.set(book.title);
     this.author.set(book.author);
     this.editingId.set(book.id);
   }
 
+  /**
+   * Closes the edit form without saving.
+   */
   protected cancel(): void {
     this.editingId.set(null);
   }
 
+  /**
+   * Whether this button of this row is the one waiting for the server.
+   */
   protected spinning(book: AdminBook, action: RowAction): boolean {
     return this.busyId() === book.id && this.busyAction() === action;
   }
 
+  /**
+   * Withdraws the book from the reader's list or puts it back.
+   */
   protected setActive(book: AdminBook, active: boolean): Promise<void> {
     return this.change(
       book,
@@ -138,6 +167,9 @@ export class AdminLibrary {
     );
   }
 
+  /**
+   * Sets or clears the read mark; the reader then treats the book as finished at that date.
+   */
   protected setFinished(book: AdminBook, finished: boolean): Promise<void> {
     return this.change(
       book,
@@ -147,20 +179,24 @@ export class AdminLibrary {
     );
   }
 
-  protected async remove(book: AdminBook): Promise<void> {
-    this.busyId.set(book.id);
-    this.busyAction.set('delete');
-    try {
-      await this.api.deleteBook(book.id);
-      this.message.set(successMessage(`Livre supprimé : ${book.title}`));
-      this.confirmingId.set(null);
-      this.books.reload();
-    } catch (error) {
-      this.message.set(failureMessage(error));
-    }
-    this.busyId.set(null);
+  /**
+   * Deletes a book for good, once confirmed.
+   */
+  protected remove(book: AdminBook): Promise<void> {
+    return this.run(
+      book,
+      'delete',
+      async () => {
+        await this.api.deleteBook(book.id);
+        this.confirmingId.set(null);
+      },
+      `Livre supprimé : ${book.title}`,
+    );
   }
 
+  /**
+   * Saves the corrected title and author; both are required.
+   */
   protected async save(event: Event, book: AdminBook): Promise<void> {
     event.preventDefault();
     const title = this.title().trim();
@@ -171,18 +207,40 @@ export class AdminLibrary {
     await this.change(book, 'save', { title, author }, 'Titre et auteur enregistrés');
   }
 
-  private async change(
+  /**
+   * Applies a patch to a book and closes its edit form.
+   */
+  private change(
     book: AdminBook,
     action: RowAction,
     patch: BookPatch,
     success: string,
   ): Promise<void> {
+    return this.run(
+      book,
+      action,
+      async () => {
+        await this.api.updateBook(book.id, patch);
+        this.editingId.set(null);
+      },
+      success,
+    );
+  }
+
+  /**
+   * Runs a row action: the row waits, then the list reloads on success or the reason is shown.
+   */
+  private async run(
+    book: AdminBook,
+    action: RowAction,
+    call: () => Promise<void>,
+    success: string,
+  ): Promise<void> {
     this.busyId.set(book.id);
     this.busyAction.set(action);
     try {
-      await this.api.updateBook(book.id, patch);
+      await call();
       this.message.set(successMessage(success));
-      this.editingId.set(null);
       this.books.reload();
     } catch (error) {
       this.message.set(failureMessage(error));

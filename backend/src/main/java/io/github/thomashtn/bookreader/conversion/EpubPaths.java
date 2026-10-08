@@ -10,6 +10,9 @@ import java.util.Deque;
  */
 final class EpubPaths {
 
+    /**
+     * Prevents instantiation of this static helper.
+     */
     private EpubPaths() {
     }
 
@@ -53,11 +56,23 @@ final class EpubPaths {
         return hash < 0 || hash == href.length() - 1 ? null : href.substring(hash + 1);
     }
 
+    /**
+     * Drops the fragment of an href.
+     *
+     * @param href reference
+     * @return href up to its {@code #}
+     */
     private static String withoutFragment(String href) {
         int hash = href.indexOf('#');
         return hash < 0 ? href : href.substring(0, hash);
     }
 
+    /**
+     * Percent-decodes an href; a literal {@code +} is kept, since only query strings encode spaces as {@code +}.
+     *
+     * @param href percent-encoded reference
+     * @return decoded reference
+     */
     private static String decode(String href) {
         return URLDecoder.decode(href.replace("+", "%2B"), StandardCharsets.UTF_8);
     }

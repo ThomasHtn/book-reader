@@ -5,6 +5,9 @@ package io.github.thomashtn.bookreader.catalogue.client;
  */
 public class CatalogueUnavailableException extends RuntimeException {
 
+    /**
+     * Serialization identifier.
+     */
     private static final long serialVersionUID = 1L;
 
     /**

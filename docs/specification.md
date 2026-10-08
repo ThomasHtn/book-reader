@@ -97,7 +97,7 @@ Règles :
 - L'indicateur affiche "Page 12 sur 840" dès l'ouverture, sans mettre en page d'autre chapitre que
   celui affiché. Un chapitre déjà affiché compte pour son nombre réel de pages, mémorisé par livre et
   par mise en page (taille de la zone de texte et palier) ; les autres sont estimés par un calcul pur
-  (`core/reader/page-count.ts`) : largeurs de caractères lues une fois au canvas, coupure des lignes
+  (`pages/reader/pagination/page-count.ts`) : largeurs de caractères lues une fois au canvas, coupure des lignes
   entre les mots avec une césure approchée (mots de 7 lettres et plus, 3 de chaque côté), remplissage
   des colonnes avec deux lignes au moins de part et d'autre d'une coupure, sauf un paragraphe de trois
   lignes coupé deux et un, comme Blink. Les numéros se suivent de un en un ; seul le total s'ajuste
@@ -328,7 +328,7 @@ compression.
 ## 11. Architecture
 
 **Frontend** : Angular 22, composants autonomes, signaux, sans zone, vitest, eslint, prettier.
-Tailwind 4 pour le backoffice seulement ; la liseuse n'utilise que `tokens.css`, sans valeur en dur.
+Aucun framework CSS : la liseuse et le backoffice n'utilisent que `tokens.css`, sans valeur en dur.
 Aucune bibliothèque de composants. Routes `/`, `/livres`, `/lire/:id`, `/admin` (différé). Données
 par `httpResource`, URLs dans `core/http/api-endpoints.ts`, dernière réponse valide conservée pour
 les ressources interrogées périodiquement. Manifeste et service worker Angular limité aux ressources
@@ -392,7 +392,7 @@ La version 1 est livrable quand :
 | Indicateur en petit dans le coin supérieur droit | bande d'état au-dessus des commandes, indicateur supprimé, indicateur dans le bouton "Suivant" | 22 septembre 2026 : une bande pleine largeur donnait trop de poids à une information secondaire ; le coin la garde visible sans voler de surface au texte ni à une cible |
 | Accent rose `#ffa6c1`, réservé aux commandes | tangerine `#ffa03c`, rose sur le seul thème clair | 22 septembre 2026 : demande de l'utilisateur ; le rose ne colore que ce qui s'active, donc une surface rose veut toujours dire "appuyez ici" |
 | Bordure des commandes à 2 px (remplacée le 23 septembre 2026, voir plus bas) | 6 px | les aplats pleins portent les formes, un filet de 6 px alourdissait sans rien ajouter au contraste |
-| Grille de trois blocs par ligne, paginée par rangées | une ligne par livre en multi-colonnes | 22 septembre 2026 : demande de l'utilisateur ; une grille ne se fragmente pas en colonnes CSS, d'où le découpage par rangées entières (`core/reader/grid-math.ts`) |
+| Grille de trois blocs par ligne, paginée par rangées | une ligne par livre en multi-colonnes | 22 septembre 2026 : demande de l'utilisateur ; une grille ne se fragmente pas en colonnes CSS, d'où le découpage par rangées entières (`pages/library/grid-math.ts`) |
 | Grille sur 1 500 px avec des marges de 20 px, des blocs deux fois plus hauts qu'une commande et un titre plafonné à `8cqi` | grille sur 1 100 px, marges de lecture, titre à `11cqi` | 22 septembre 2026 : demande de l'utilisateur ; sur cet écran les blocs sont le contenu, donc ils prennent la largeur que les marges abandonnent, et le plafond du titre garde neuf titres par page au palier 100 sur 1080 px, barres de pagination comprises |
 | Bloc plein portant le titre, l'auteur et l'état | plateau 3:4 avec l'initiale du titre, couverture extraite de l'EPUB | 22 septembre 2026 : demande de l'utilisateur ; sans couverture à afficher, le plateau ne faisait que voler la place du titre. L'auteur, d'abord écarté avec le plateau, est rétabli le même jour : il tient sur une ligne sous le titre, à `--card-author-size`, sans reprendre de place au titre |
 | Barre retirée quand elle ne mène nulle part | barre laissée en place et désactivée | 22 septembre 2026 : demande de l'utilisateur ; contrepartie assumée, la cible restante change de largeur au premier et au dernier tour de page |
@@ -415,6 +415,7 @@ La version 1 est livrable quand :
 | Bouton engrenage discret, libellé accessible seulement, en haut à droite de `/livres` | aucun lien depuis la liseuse, bouton avec libellé visible | 22 septembre 2026 : demande de l'utilisateur ; destiné à l'aidant, pas à l'utilisatrice, seul point d'entrée vers `/admin` depuis la liseuse |
 | `page-title` fixé au palier 100, indépendant du palier choisi | `page-title` proportionnel au corps du texte (un tiers) | 22 septembre 2026 : demande de l'utilisateur ; "Mes livres" est du décor d'écran, pas du texte de lecture, il ne doit pas grossir ni rétrécir avec le palier |
 | Thème unique, noir sur blanc cassé, surfaces beige | trois thèmes (noir sur blanc, blanc sur noir, jaune sur noir), choisis dans le backoffice | 22 septembre 2026 : demande de l'utilisateur ; le thème clair suffit, les deux autres n'étaient jamais utilisés |
+| Backoffice en CSS simple sur les tokens `--admin-*` | Tailwind 4 réservé au backoffice | 8 octobre 2026 : demande de l'utilisateur ; Tailwind ne fournissait plus qu'une unité d'espacement et `sr-only`, au prix d'un plugin PostCSS et d'un balayage des gabarits qui générait des classes à partir des mots des commentaires |
 
 ## 15. Vitrine
 

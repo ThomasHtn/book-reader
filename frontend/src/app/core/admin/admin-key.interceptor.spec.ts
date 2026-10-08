@@ -2,13 +2,26 @@ import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+
 import { firstValueFrom } from 'rxjs';
+
 import { adminKeyInterceptor } from './admin-key.interceptor';
 import { AdminSession } from './admin-session';
 
 describe('adminKeyInterceptor', () => {
+  /**
+   * Backend double answering the intercepted calls.
+   */
   let http: HttpTestingController;
+
+  /**
+   * Client wired with the interceptor under test.
+   */
   let client: HttpClient;
+
+  /**
+   * Session double; its key is reset before each test.
+   */
   const session = { key: signal<string | null>('secret-key'), signOut: vi.fn() };
 
   beforeEach(() => {

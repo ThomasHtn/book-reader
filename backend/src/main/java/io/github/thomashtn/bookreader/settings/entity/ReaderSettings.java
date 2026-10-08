@@ -24,12 +24,21 @@ public class ReaderSettings {
      */
     public static final Set<Integer> FONT_TIERS = Set.of(48, 72, 100, 140);
 
+    /**
+     * Always {@link #SINGLETON_ID}, enforced by a check constraint.
+     */
     @Id
     private short id;
 
+    /**
+     * Font tier in pixels, one of {@link #FONT_TIERS}.
+     */
     @Column(name = "font_tier", nullable = false)
     private int fontTier;
 
+    /**
+     * Instant of the last change from the backoffice.
+     */
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 

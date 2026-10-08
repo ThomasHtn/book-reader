@@ -1,0 +1,19 @@
+/* Below the phone breakpoint: three per row stays, footer bars keep labels and drop chevrons */
+@media (width <= 480px) {
+  :root {
+    --grid-gap: var(--space-2);
+
+    /* A third of a phone leaves no room for a 24px inset: titles broke mid-word */
+    --book-block-padding: var(--space-1) var(--space-1) var(--space-2);
+  }
+
+  /* Three labelled commands on one row: the chevrons and inner margins give way to the labels */
+  .nav-bar svg {
+    display: none;
+  }
+
+  .nav-bar,
+  .nav-bar--exit {
+    padding-inline: var(--space-1);
+  }
+}

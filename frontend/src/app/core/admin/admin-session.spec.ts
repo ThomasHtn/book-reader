@@ -1,14 +1,26 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { BROWSER_STORAGE } from '@core/storage/browser-storage';
+
 import { AdminSession } from './admin-session';
 
 describe('AdminSession', () => {
+  /**
+   * Backing map of the storage double, emptied before each test.
+   */
   let storage: Map<string, string>;
+
+  /**
+   * Backend double answering the key check.
+   */
   let http: HttpTestingController;
 
+  /**
+   * Builds the session after the test has seeded `storage`, since the key is read at creation.
+   */
   function create(): AdminSession {
     TestBed.configureTestingModule({
       providers: [

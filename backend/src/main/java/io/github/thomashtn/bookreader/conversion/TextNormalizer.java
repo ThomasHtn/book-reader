@@ -8,14 +8,29 @@ import java.util.stream.Collectors;
  */
 public final class TextNormalizer {
 
+    /**
+     * Runs of ordinary spaces and tabs within a line; no-break spaces are left alone.
+     */
     private static final Pattern ORDINARY_SPACES = Pattern.compile("[ \\t\\r\\f]+");
 
+    /**
+     * Spaces, no-break ones included, at the start or end of a line.
+     */
     private static final Pattern LINE_EDGES = Pattern.compile("^[ \\u00a0\\u202f]+|[ \\u00a0\\u202f]+$");
 
+    /**
+     * Ordinary space before French double punctuation, which must not start a line.
+     */
     private static final Pattern SPACE_BEFORE_PUNCTUATION = Pattern.compile(" (?=[;:!?»])");
 
+    /**
+     * Ordinary space after an opening guillemet, which must not end a line.
+     */
     private static final Pattern SPACE_AFTER_GUILLEMET = Pattern.compile("(?<=«) ");
 
+    /**
+     * Prevents instantiation of this static helper.
+     */
     private TextNormalizer() {
     }
 

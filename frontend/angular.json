@@ -30,7 +30,13 @@
             ],
             "styles": [
               "src/styles/tokens.css",
-              "src/styles.css"
+              "src/styles/base.css",
+              "src/styles/screen.css",
+              "src/styles/controls.css",
+              "src/styles/reading.css",
+              "src/styles/book-grid.css",
+              "src/styles/status.css",
+              "src/styles/phone.css"
             ]
           },
           "configurations": {
@@ -86,7 +92,9 @@
           "options": {
             "lintFilePatterns": [
               "src/**/*.ts",
-              "src/**/*.html"
+              "src/**/*.html",
+              "e2e/**/*.ts",
+              "playwright.config.ts"
             ]
           }
         }

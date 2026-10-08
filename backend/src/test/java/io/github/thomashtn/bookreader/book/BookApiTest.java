@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.jayway.jsonpath.JsonPath;
 import io.github.thomashtn.bookreader.book.repository.BookRepository;
 import io.github.thomashtn.bookreader.conversion.EpubFixtures;
-import io.github.thomashtn.bookreader.shared.config.AdminApiKeyFilter;
+import io.github.thomashtn.bookreader.shared.security.AdminApiKeyFilter;
 import io.github.thomashtn.bookreader.support.PostgreSqlIntegrationTest;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -32,9 +32,15 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 class BookApiTest extends PostgreSqlIntegrationTest {
 
+    /**
+     * Client driving the whole filter chain.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Repository emptied before each test.
+     */
     @Autowired
     private BookRepository repository;
 
@@ -199,21 +205,50 @@ class BookApiTest extends PostgreSqlIntegrationTest {
         mockMvc.perform(get("/api/admin/books")).andExpect(status().isUnauthorized());
     }
 
+    /**
+     * Uploads an EPUB with the administrator key.
+     *
+     * @param epub archive bytes
+     * @return response
+     * @throws Exception when the request cannot be performed
+     */
     private ResultActions upload(byte[] epub) throws Exception {
         return mockMvc.perform(multipart("/api/admin/books/upload")
             .file(new MockMultipartFile("file", "book.epub", "application/epub+zip", epub))
             .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY));
     }
 
+    /**
+     * Uploads an EPUB that must be accepted.
+     *
+     * @param epub archive bytes
+     * @return identifier of the created book
+     * @throws Exception when the request cannot be performed
+     */
     private String uploadId(byte[] epub) throws Exception {
         String json = upload(epub).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return JsonPath.read(json, "$.id");
     }
 
+    /**
+     * Deletes a book with the administrator key.
+     *
+     * @param id book identifier
+     * @return response
+     * @throws Exception when the request cannot be performed
+     */
     private ResultActions deleteBook(String id) throws Exception {
         return mockMvc.perform(delete("/api/admin/books/{id}", id).header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY));
     }
 
+    /**
+     * Sends a partial change with the administrator key.
+     *
+     * @param id   book identifier
+     * @param body JSON body
+     * @return response
+     * @throws Exception when the request cannot be performed
+     */
     private ResultActions patchBook(String id, String body) throws Exception {
         return mockMvc.perform(patch("/api/admin/books/{id}", id)
             .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)

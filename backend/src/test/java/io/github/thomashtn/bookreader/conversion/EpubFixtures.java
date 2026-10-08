@@ -17,6 +17,9 @@ import java.util.zip.ZipOutputStream;
  */
 public final class EpubFixtures {
 
+    /**
+     * Prevents instantiation of this static helper.
+     */
     private EpubFixtures() {
     }
 

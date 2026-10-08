@@ -10,9 +10,9 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { COMMAND_INTERVAL_MS, CommandGate } from '@core/reader/command-gate';
-import { assignCoverTones } from '@core/reader/cover-tone';
-import { paginateGrid, visibleRange } from '@core/reader/grid-math';
+
+import { CommandGate } from '@core/reader/command-gate';
+import { PageCommand, pageCommandOf } from '@core/reader/page-command';
 import { ProgressStore } from '@core/reader/progress-store';
 import { ReaderData } from '@core/reader/reader-data';
 import { sortLibrary } from '@core/reader/reading-progress';
@@ -20,102 +20,75 @@ import { BookCard } from '@shared/book-card/book-card';
 import { NavBar } from '@shared/nav-bar/nav-bar';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
-/** Two rows of the three-column grid, so a page never shows more than six titles. */
+import { assignCoverTones } from './cover-tone';
+import { paginateGrid, visibleRange } from './grid-math';
+
+/**
+ * Two rows of the three-column grid, so a page never shows more than six titles.
+ */
 const MAX_ROWS_PER_PAGE = 2;
 
-/** Books per row, as `--grid-columns` in tokens.css. */
+/**
+ * Books per row, as `--grid-columns` in tokens.css.
+ */
 const GRID_COLUMNS = 3;
 
-/** Route `/livres`: three title blocks per row, paged by whole rows with the same two bars as the text. */
+/**
+ * Route `/livres`: three title blocks per row, paged by whole rows with the same two bars as the text.
+ */
 @Component({
   selector: 'app-library',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [BookCard, NavBar, StatusScreen],
   host: { '(document:keydown)': 'onKeydown($event)' },
-  template: `
-    @if (data.unreachable()) {
-      <app-status-screen (retry)="data.retry()" />
-    } @else {
-      <div class="screen">
-        <header class="page-head page-head--grid">
-          <h1 class="page-title">Mes livres</h1>
-          <p class="page-indicator" aria-live="polite">{{ indicator() }}</p>
-          <button
-            type="button"
-            class="button--settings"
-            aria-label="Réglages"
-            (click)="openAdmin()"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.61l-1.92-3.32a.5.5 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94L14.4 2.81a.49.49 0 0 0-.48-.41h-3.84a.49.49 0 0 0-.48.41L9.25 5.35c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.59.22L2.74 8.87a.5.5 0 0 0 .12.61l2.03 1.58c-.05.3-.09.62-.09.94s.02.64.07.94l-2.03 1.58a.5.5 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.5.5 0 0 0-.12-.61l-2.03-1.58ZM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2Z"
-              />
-            </svg>
-          </button>
-        </header>
-        <main>
-          @if (data.books()?.length === 0) {
-            <p class="book-empty">
-              Aucun livre pour l'instant. Ils apparaîtront ici dès leur ajout.
-            </p>
-          } @else {
-            <div class="book-grid-viewport" #viewport>
-              <div class="book-grid" #grid [style.transform]="transform()">
-                @for (entry of entries(); track entry.book.id; let index = $index) {
-                  <app-book-card
-                    [title]="entry.book.title"
-                    [author]="entry.book.author"
-                    [current]="entry.current"
-                    [finished]="entry.finished"
-                    [tone]="tones()[index]"
-                    [attr.inert]="cardPages()[index] === page() ? null : ''"
-                    (activate)="open(entry.book.id)"
-                  />
-                }
-              </div>
-            </div>
-          }
-        </main>
-        @if (pages() > 1) {
-          <footer class="nav-footer">
-            <div class="nav-row">
-              @if (page() > 0) {
-                <app-nav-bar
-                  direction="previous"
-                  name="Titres précédents"
-                  (activate)="previous(false)"
-                />
-              }
-              @if (page() < pages() - 1) {
-                <app-nav-bar direction="next" name="Titres suivants" (activate)="next(false)" />
-              }
-            </div>
-          </footer>
-        }
-      </div>
-    }
-  `,
+  templateUrl: './library.html',
 })
 export class Library {
+  /**
+   * Polled list and settings; also says when the server is unreachable.
+   */
   protected readonly data = inject(ReaderData);
 
+  /**
+   * Progress per book, which orders the list and marks current and finished books.
+   */
   private readonly store = inject(ProgressStore);
 
+  /**
+   * Opens a book or the backoffice.
+   */
   private readonly router = inject(Router);
 
+  /**
+   * Clipping box one page high; its height decides how many rows fit.
+   */
   private readonly viewport = viewChild<ElementRef<HTMLElement>>('viewport');
 
+  /**
+   * Grid of cards, translated vertically by whole rows.
+   */
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
 
-  private readonly gate = new CommandGate(COMMAND_INTERVAL_MS, () => performance.now());
+  /**
+   * Ignores commands under 400 ms apart and held-key repeats (spec 5.1).
+   */
+  private readonly gate = new CommandGate();
 
+  /**
+   * Bumped by the resize observer so the render effect measures again.
+   */
   private readonly resized = signal(0);
 
+  /**
+   * Books in list order: last read first, then never opened, newest first (spec 5.4).
+   */
   protected readonly entries = computed(() =>
     sortLibrary(this.data.books() ?? [], (id) => this.store.progressOf(id)),
   );
 
-  /** Current and finished books show no cloth, so they neither take a tone nor block one. */
+  /**
+   * Current and finished books show no cloth, so they neither take a tone nor block one.
+   */
   protected readonly tones = computed(() =>
     assignCoverTones(
       this.entries().map((entry) => (entry.current || entry.finished ? null : entry.book.id)),
@@ -123,27 +96,49 @@ export class Library {
     ),
   );
 
+  /**
+   * Zero-based page of titles shown.
+   */
   protected readonly page = signal(0);
 
+  /**
+   * Page of each card, in list order; cards off the shown page are made `inert`.
+   */
   protected readonly cardPages = signal<number[]>([]);
 
+  /**
+   * Vertical translation of the grid for each page, in CSS pixels.
+   */
   private readonly offsets = signal<readonly number[]>([0]);
 
+  /**
+   * Number of pages of titles; the footer shows only past one (spec 5.1).
+   */
   protected readonly pages = computed(() => this.offsets().length);
 
+  /**
+   * Translation showing the current page: the list is paged, never scrolled.
+   */
   protected readonly transform = computed(
     () => `translateY(${-(this.offsets()[this.page()] ?? 0)}px)`,
   );
 
+  /**
+   * "Titres 1 à 6 sur 7", announced politely on each turn (spec 5.4).
+   */
   protected readonly indicator = computed(() => {
     const range = visibleRange(this.cardPages(), this.page());
     return range ? `Titres ${range.first} à ${range.last} sur ${this.cardPages().length}` : '';
   });
 
+  /**
+   * Measures the grid again after any render where the list, the tier or the viewport size changed.
+   */
   constructor() {
     const observer = new ResizeObserver(() => this.resized.update((count) => count + 1));
     inject(DestroyRef).onDestroy(() => observer.disconnect());
     afterRenderEffect(() => {
+      // Read only to subscribe: each of these can change the rows.
       this.entries();
       this.data.settings();
       this.resized();
@@ -155,39 +150,55 @@ export class Library {
     });
   }
 
+  /**
+   * Opens a book; the reader resumes it where it was left (spec 5.4).
+   */
   protected open(bookId: string): void {
     void this.router.navigateByUrl(`/lire/${bookId}`);
   }
 
+  /**
+   * Gear button for the caregiver, the reader side's only way to `/admin` (spec 14).
+   */
   protected openAdmin(): void {
     void this.router.navigateByUrl('/admin');
   }
 
-  protected previous(repeated: boolean): void {
-    if (this.page() > 0 && this.gate.accept(repeated)) {
-      this.page.update((page) => page - 1);
-    }
+  /**
+   * Turns the page of titles from a footer bar.
+   */
+  protected onBar(command: PageCommand): void {
+    this.turn(command, false);
   }
 
-  protected next(repeated: boolean): void {
-    if (this.page() < this.pages() - 1 && this.gate.accept(repeated)) {
-      this.page.update((page) => page + 1);
-    }
-  }
-
+  /**
+   * Turns the page of titles from the arrows; Space is left to the focused block, which it opens.
+   */
   protected onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'ArrowRight') {
+    const command = pageCommandOf(event, false);
+    if (command) {
       event.preventDefault();
-      this.next(event.repeat);
-    } else if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      this.previous(event.repeat);
+      this.turn(command, event.repeat);
     }
   }
 
+  /**
+   * Shows the previous or next page of titles, if any, unless the command comes too fast.
+   */
+  private turn(command: PageCommand, repeated: boolean): void {
+    const target = this.page() + (command === 'next' ? 1 : -1);
+    if (target >= 0 && target < this.pages() && this.gate.accept(repeated)) {
+      this.page.set(target);
+    }
+  }
+
+  /**
+   * Pages the cards by whole rows from their rendered boxes (spec 5.4).
+   */
   private measure(viewport: HTMLElement): void {
     const grid = this.grid()?.nativeElement;
     const height = viewport.clientHeight;
+    // Empty list or no layout yet: a single page holding every card.
     if (!grid || height <= 0) {
       this.offsets.set([0]);
       this.cardPages.set(this.entries().map(() => 0));
@@ -206,6 +217,7 @@ export class Library {
     );
     this.offsets.set(offsets);
     this.cardPages.set([...pages]);
+    // A shorter list or a larger tier may remove the page shown.
     this.page.update((page) => Math.min(page, offsets.length - 1));
   }
 }

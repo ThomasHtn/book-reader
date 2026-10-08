@@ -1,14 +1,24 @@
 import { DestroyRef, DOCUMENT, inject, InjectionToken, Service } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
 
-/** Inactivity after which a downloaded version is applied (specification 5.7). */
+/**
+ * Inactivity after which a downloaded version is applied (specification 5.7).
+ */
 export const IDLE_BEFORE_UPDATE_MS = 10 * 60_000;
 
+/**
+ * How often idleness is checked once a version is ready; a reload may lag idleness by this much.
+ */
 const IDLE_CHECK_MS = 60_000;
 
+/**
+ * How often the service worker asks the server for a new version, on top of its own checks at start.
+ */
 const UPDATE_CHECK_MS = 30 * 60_000;
 
-/** Reloads the page; a token so tests never reload the test runner. */
+/**
+ * Reloads the page; a token so tests never reload the test runner.
+ */
 export const APP_RELOAD = new InjectionToken<() => void>('APP_RELOAD', {
   providedIn: 'root',
   factory: () => {
@@ -35,6 +45,9 @@ export function isIdleLongEnough(lastCommandAt: number, now: number): boolean {
  */
 @Service()
 export class AppUpdater {
+  /**
+   * Wires everything at once; does nothing in development, where the service worker is off.
+   */
   constructor() {
     const updates = inject(SwUpdate);
     if (!updates.isEnabled) {
@@ -45,6 +58,7 @@ export class AppUpdater {
     let lastCommandAt = Date.now();
     let versionReady = false;
 
+    // Capture phase, so a component stopping propagation still counts as activity.
     const onCommand = () => (lastCommandAt = Date.now());
     document.addEventListener('keydown', onCommand, true);
     document.addEventListener('pointerdown', onCommand, true);
@@ -60,6 +74,7 @@ export class AppUpdater {
       }
     }, IDLE_CHECK_MS);
     const checkTimer = setInterval(
+      // A failed check (offline) is retried at the next interval.
       () => void updates.checkForUpdate().catch(() => false),
       UPDATE_CHECK_MS,
     );

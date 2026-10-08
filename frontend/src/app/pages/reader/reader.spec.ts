@@ -2,17 +2,21 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { API_ENDPOINTS } from '@core/http/api-endpoints';
+
 import { BookContent } from '@core/http/api.model';
+import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { ProgressStore } from '@core/reader/progress-store';
 import { ReaderData } from '@core/reader/reader-data';
-import { PageGeometry } from '@core/reader/page-count';
 import { TextPosition } from '@core/reader/reading-progress';
+
 import { FakeProgressStore, FakeReaderData, stubResizeObserver } from '../../testing/reader-fakes';
-import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './chapter-layout';
+import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './pagination/chapter-layout';
+import { PageGeometry } from './pagination/page-count';
 import { Reader } from './reader';
 
-/** Two chapters: blocks 0-2 (3 pages) and 3-4 (2 pages). */
+/**
+ * Two chapters: blocks 0-2 (3 pages) and 3-4 (2 pages).
+ */
 const BOOK: BookContent = {
   id: 'b1',
   title: 'Le Horla',
@@ -27,28 +31,56 @@ const BOOK: BookContent = {
   finishedAt: null,
 };
 
-/** One page per block, so pages and positions are easy to predict; the title page may take one too. */
+/**
+ * One page per block, so pages and positions are easy to predict; the title page may take one too.
+ */
 class FakeLayout implements ChapterLayout {
+  /**
+   * Chapter rendered last.
+   */
   public content: ChapterContent | undefined;
+
+  /**
+   * Page shown last, -1 before any.
+   */
   public shownPage = -1;
+
+  /**
+   * Number of renders, to check when a relayout happens.
+   */
   public renders = 0;
 
+  /**
+   * Takes the pages the title page fills on the first chapter.
+   */
   constructor(private readonly titlePagePages = 0) {}
 
+  /**
+   * One page per block, plus the title page's on the first chapter.
+   */
   public render(content: ChapterContent): number {
     this.content = content;
     this.renders++;
     return content.blocks.length + this.lead();
   }
 
+  /**
+   * Records the page for assertions.
+   */
   public show(page: number): void {
     this.shownPage = page;
   }
 
+  /**
+   * Page of the position's block.
+   */
   public pageOf(position: TextPosition): number {
     return position.blockIndex - this.content!.firstBlock + this.lead();
   }
 
+  /**
+   * Start of the block shown on that page.
+   */
   public positionOfPage(page: number): TextPosition {
     return {
       blockIndex: this.content!.firstBlock + Math.max(0, page - this.lead()),
@@ -56,25 +88,55 @@ class FakeLayout implements ChapterLayout {
     };
   }
 
-  /** One line per block, one line per page, so estimates match one page per block. */
+  /**
+   * One line per block, one line per page, so estimates match one page per block.
+   */
   public geometry(): PageGeometry {
     return { width: 1000, height: 14, fontSize: 10, charWidth: () => 1 };
   }
 
+  /**
+   * Pages before the first block: the title page's, on the first chapter only.
+   */
   private lead(): number {
     return this.content?.titlePage ? this.titlePagePages : 0;
   }
 }
 
-/** Layout key in jsdom at tier 100: no layout, so no size. */
+/**
+ * Layout key in jsdom at tier 100: no layout, so no size.
+ */
 const JSDOM_LAYOUT = '0x0:100';
 
 describe('Reader', () => {
+  /**
+   * Answers the book request.
+   */
   let http: HttpTestingController;
+
+  /**
+   * Settings the reader polls, set by each test.
+   */
   let data: FakeReaderData;
+
+  /**
+   * In-memory progress, inspected after page turns.
+   */
   let store: FakeProgressStore;
+
+  /**
+   * Every layout the reader created, in order.
+   */
   let layouts: FakeLayout[];
+
+  /**
+   * Router spy, so no navigation really happens.
+   */
   let navigate: ReturnType<typeof vi.fn>;
+
+  /**
+   * Pages the title page fills in layouts created from now on.
+   */
   let titlePagePages: number;
 
   beforeEach(() => {
@@ -109,9 +171,20 @@ describe('Reader', () => {
     vi.useRealTimers();
   });
 
+  /**
+   * Layout of the opened book.
+   */
   const visible = () => layouts[0];
 
-  async function flush(fixture: { detectChanges(): void }): Promise<void> {
+  /**
+   * Runs renders, effects and the zero-delay relayout timer.
+   */
+  async function flush(fixture: {
+    /**
+     * Renders the fixture's view; the only member flush needs.
+     */
+    detectChanges(): void;
+  }): Promise<void> {
     fixture.detectChanges();
     TestBed.tick();
     await vi.advanceTimersByTimeAsync(0);
@@ -119,6 +192,9 @@ describe('Reader', () => {
     TestBed.tick();
   }
 
+  /**
+   * Opens a book and returns its fixture with accessors for the bars and the indicator.
+   */
   async function open(book: BookContent = BOOK) {
     const fixture = TestBed.createComponent(Reader);
     fixture.componentRef.setInput('id', book.id);

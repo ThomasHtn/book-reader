@@ -49,13 +49,24 @@
     <!-- ==================================================================
          Documentation
 
-         Full @param and @return tags are required on the public API, which is
-         the contract other code depends on. Private helpers still need a
-         summary sentence but are not forced to restate their signature.
+         Every declaration carries a Javadoc, private ones included, so a
+         newcomer never meets an unexplained name. Full @param and @return
+         tags are required on the public API only; test methods are named by
+         their @DisplayName instead.
          ================================================================== -->
-    <module name="MissingJavadocType"/>
+    <module name="MissingJavadocType">
+      <property name="scope" value="private"/>
+    </module>
+    <!-- Overrides too: an implementation states what it adds to its contract. -->
     <module name="MissingJavadocMethod">
-      <property name="scope" value="public"/>
+      <property name="scope" value="private"/>
+      <property name="allowMissingPropertyJavadoc" value="false"/>
+      <property name="allowedAnnotations"
+                value="Test, ParameterizedTest, RepeatedTest, BeforeEach, AfterEach, BeforeAll, AfterAll"/>
+    </module>
+    <!-- Every field and enum constant, private ones included. -->
+    <module name="JavadocVariable">
+      <property name="scope" value="private"/>
     </module>
     <module name="JavadocMethod">
       <property name="accessModifiers" value="public,protected"/>

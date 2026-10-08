@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader.shared.config;
 
+import io.github.thomashtn.bookreader.shared.security.AdminApiKeyFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,11 +52,21 @@ public class HttpCachingConfig {
      */
     static final class CacheControlFilter extends OncePerRequestFilter {
 
+        /**
+         * Picks the policy with the admin filter's decoded-path matching, so an encoded path such as
+         * {@code /api/%61dmin/books} is never stored either.
+         *
+         * @param request  current HTTP request
+         * @param response current HTTP response
+         * @param chain    remaining filter chain
+         * @throws ServletException when the chain fails
+         * @throws IOException      when the chain cannot write the response
+         */
         @Override
         protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain chain
         ) throws ServletException, IOException {
-            boolean admin = request.getRequestURI().startsWith(request.getContextPath() + "/api/admin");
+            boolean admin = AdminApiKeyFilter.isAdminRoute(request);
             response.setHeader(HttpHeaders.CACHE_CONTROL, admin ? "no-store" : "no-cache");
             chain.doFilter(request, response);
         }

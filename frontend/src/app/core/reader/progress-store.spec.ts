@@ -1,38 +1,76 @@
 import { TestBed } from '@angular/core/testing';
+
 import { BROWSER_STORAGE } from '@core/storage/browser-storage';
+
 import { ProgressStore } from './progress-store';
 
+/**
+ * In-memory `Storage`, so each test starts from an empty, isolated store.
+ */
 class MemoryStorage implements Storage {
+  /**
+   * Stored entries in insertion order.
+   */
   private readonly items = new Map<string, string>();
+  /**
+   * Number of stored entries.
+   */
   public get length(): number {
     return this.items.size;
   }
+  /**
+   * Removes every entry.
+   */
   public clear(): void {
     this.items.clear();
   }
+  /**
+   * Returns an entry, `null` when absent, as `localStorage` does.
+   */
   public getItem(key: string): string | null {
     return this.items.get(key) ?? null;
   }
+  /**
+   * Returns the key at a position, `null` past the end.
+   */
   public key(index: number): string | null {
     return [...this.items.keys()][index] ?? null;
   }
+  /**
+   * Removes one entry.
+   */
   public removeItem(key: string): void {
     this.items.delete(key);
   }
+  /**
+   * Stores or replaces one entry.
+   */
   public setItem(key: string, value: string): void {
     this.items.set(key, value);
   }
 }
 
+/**
+ * Storage that throws like a browser with privacy settings or a full quota.
+ */
 class BrokenStorage extends MemoryStorage {
+  /**
+   * Fails as a blocked `localStorage` does.
+   */
   public override getItem(): string | null {
     throw new DOMException('denied', 'SecurityError');
   }
+  /**
+   * Fails as a full quota does.
+   */
   public override setItem(): void {
     throw new DOMException('full', 'QuotaExceededError');
   }
 }
 
+/**
+ * Builds a store on the given storage, `null` standing for a browser without one.
+ */
 function storeWith(storage: Storage | null): ProgressStore {
   TestBed.configureTestingModule({ providers: [{ provide: BROWSER_STORAGE, useValue: storage }] });
   return TestBed.inject(ProgressStore);

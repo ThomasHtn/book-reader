@@ -1,0 +1,62 @@
+/* === Segmented control ================================================ */
+
+/* Segmented control: settings tiers, library state filter. */
+.a-seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: calc(var(--admin-radius) + 4px);
+  background: var(--admin-surface-muted);
+  border: 1px solid var(--admin-border);
+}
+
+/* Segment: muted until pressed. */
+.a-seg button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--admin-spacing);
+  min-height: calc(var(--admin-control-height) - 2px);
+  padding: 0 calc(var(--admin-spacing) * 2);
+  border: 0;
+  border-radius: var(--admin-radius);
+  background: none;
+  color: var(--admin-fg-muted);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background var(--admin-duration),
+    color var(--admin-duration);
+}
+
+.a-seg button:hover {
+  color: var(--admin-fg);
+}
+
+/* Pressed segment raised like a card. */
+.a-seg button[aria-pressed='true'] {
+  background: var(--admin-surface);
+  color: var(--admin-fg);
+  font-weight: var(--admin-weight-strong);
+  box-shadow:
+    var(--admin-shadow),
+    inset 0 0 0 1px var(--admin-border);
+}
+
+/* Count badge of a state filter, in accent colours when its segment is pressed. */
+.a-count {
+  min-width: 2ch;
+  padding: 0 6px;
+  border-radius: var(--admin-radius-pill);
+  background: var(--admin-border);
+  color: var(--admin-fg);
+  font-size: var(--admin-text-xs);
+  font-weight: var(--admin-weight-strong);
+}
+
+.a-seg button[aria-pressed='true'] .a-count {
+  background: var(--admin-accent);
+  color: var(--admin-accent-fg);
+}

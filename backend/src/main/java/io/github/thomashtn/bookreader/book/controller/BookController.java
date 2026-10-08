@@ -7,6 +7,7 @@ import io.github.thomashtn.bookreader.book.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,10 +19,18 @@ import org.springframework.web.bind.annotation.RestController;
  * Public read access to active books, used by the reader.
  */
 @RestController
-@RequestMapping("/api/books")
+@RequestMapping(BookController.PATH)
 @Tag(name = "Books", description = "Books the reader can open.")
 public class BookController {
 
+    /**
+     * Base path of the public books API, also the parent of every book's location.
+     */
+    public static final String PATH = "/api/books";
+
+    /**
+     * Service reading the library.
+     */
     private final BookService service;
 
     /**
@@ -31,10 +40,21 @@ public class BookController {
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
-        justification = "Spring-managed singleton service, shared by design; its delete method trips the heuristic."
+        justification = "BookService is a stateless singleton shared on purpose; "
+            + "SpotBugs only deems it mutable because it declares deleteBook."
     )
     public BookController(BookService service) {
         this.service = service;
+    }
+
+    /**
+     * Returns the public URI of a book, sent as {@code Location} when the backoffice creates one.
+     *
+     * @param id book identifier
+     * @return location of the book in the public API
+     */
+    public static URI locationOf(UUID id) {
+        return URI.create(PATH + "/" + id);
     }
 
     /**

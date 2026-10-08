@@ -1,0 +1,76 @@
+/* === Buttons ============================================================== */
+
+/* Base button: shape and short colour transitions; variants set the colours. */
+.a-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--admin-spacing) * 2);
+  box-sizing: border-box;
+  min-height: var(--admin-control-height);
+  padding: 0 calc(var(--admin-spacing) * 4.5);
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius);
+  font: inherit;
+  font-weight: var(--admin-weight-strong);
+  white-space: nowrap;
+  transition:
+    background var(--admin-duration),
+    border-color var(--admin-duration),
+    color var(--admin-duration);
+}
+
+/* A disabled button is usually waiting for the server, hence the progress cursor. */
+.a-btn:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* Icon size in regular buttons. */
+.a-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Main action: accent fill. */
+.a-btn--primary {
+  background: var(--admin-accent);
+  color: var(--admin-accent-fg);
+}
+
+.a-btn--primary:hover:not(:disabled) {
+  background: var(--admin-accent-hover);
+}
+
+/* Every non-primary action looks the same: a soft fill, no outline. */
+.a-btn--secondary {
+  background: var(--admin-control-bg);
+  color: var(--admin-fg);
+}
+
+.a-btn--secondary:hover:not(:disabled) {
+  background: var(--admin-control-bg-hover);
+}
+
+/* Destructive action: soft red, full red on hover and in the delete confirmation. */
+.a-btn--danger {
+  background: var(--admin-danger-soft);
+  color: var(--admin-danger);
+}
+
+.a-btn--danger:hover:not(:disabled),
+.a-confirm .a-btn--danger {
+  background: var(--admin-danger);
+  color: var(--admin-surface);
+}
+
+/* Small variant for row and card actions. */
+.a-btn--sm {
+  padding: 0 calc(var(--admin-spacing) * 3);
+  font-size: var(--admin-text-sm);
+}
+
+.a-btn--sm svg {
+  width: 16px;
+  height: 16px;
+}

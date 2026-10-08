@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Settings", description = "Reader display settings.")
 public class ReaderSettingsController {
 
+    /**
+     * Service holding the display settings.
+     */
     private final ReaderSettingsService service;
 
     /**

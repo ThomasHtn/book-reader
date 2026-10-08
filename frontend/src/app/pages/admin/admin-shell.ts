@@ -8,6 +8,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
 import {
   LucideArrowLeft,
   LucideLibrary,
@@ -18,8 +19,12 @@ import {
   LucideSettings,
   LucideUpload,
 } from '@lucide/angular';
+
 import { AdminSession, SignInOutcome } from '@core/admin/admin-session';
 
+/**
+ * French message shown under the key field for each refused sign-in.
+ */
 const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
   invalid: 'Clé incorrecte',
   locked: "Trop d'essais, réessayez dans une minute",
@@ -27,8 +32,8 @@ const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
 };
 
 /**
- * Route `/admin`: sign-in screen, then header, sections and tabs. Mobile first, system colour scheme;
- * its stylesheet, Tailwind included, only loads with this lazy route.
+ * Route `/admin`: sign-in screen, then header and sections; its stylesheet only loads with this
+ * lazy route, and applies to every view under it, hence `ViewEncapsulation.None`.
  */
 @Component({
   selector: 'app-admin-shell',
@@ -51,20 +56,38 @@ const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
   templateUrl: './admin-shell.html',
 })
 export class AdminShell {
+  /**
+   * Holds the admin key; its presence switches the sign-in screen for the backoffice.
+   */
   protected readonly session = inject(AdminSession);
 
+  /**
+   * Key typed so far, cleared once accepted so it never lingers in the DOM.
+   */
   protected readonly keyInput = signal('');
 
+  /**
+   * True while the server checks the key; blocks double submissions.
+   */
   protected readonly checking = signal(false);
 
+  /**
+   * Reason of the last refused key, `null` when there is none to show.
+   */
   protected readonly error = signal<string | null>(null);
 
+  /**
+   * Switches `<html>` to the backoffice density for the lifetime of this route.
+   */
   constructor() {
     const root = inject(DOCUMENT).documentElement;
     root.dataset['density'] = 'admin';
     inject(DestroyRef).onDestroy(() => delete root.dataset['density']);
   }
 
+  /**
+   * Checks the typed key against the server and shows why it was refused.
+   */
   protected async signIn(event: Event): Promise<void> {
     event.preventDefault();
     const key = this.keyInput().trim();

@@ -1,0 +1,4 @@
+<!-- Blank while the list loads, then the component redirects; status screen if the server is down. -->
+@if (data.unreachable()) {
+  <app-status-screen (retry)="data.retry()" />
+}

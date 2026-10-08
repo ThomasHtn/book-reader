@@ -1,17 +1,29 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, Page, test } from '@playwright/test';
-import { AMOUR, E2E_ADMIN_KEY, LE_HORLA } from './support/books';
+
+import { seedProgress, uploadBook } from './support/api';
+import { AMOUR, LE_HORLA } from './support/books';
+import { E2E_ADMIN_KEY } from './support/env';
 import { buildEpub } from './support/epub';
 
-/** Minimum delay between two reader commands, plus a margin. */
+/**
+ * Minimum delay between two reader commands, plus a margin.
+ */
 const COMMAND_GAP_MS = 450;
 
-/** Poll cadence of books and settings, plus a margin. */
+/**
+ * Poll cadence of books and settings, plus a margin.
+ */
 const POLL_MS = 12_000;
 
-/** The page indicator, "Page 12 sur 840". */
+/**
+ * The page indicator, "Page 12 sur 840".
+ */
 const PROGRESS_PATTERN = /^Page \d+ sur \d+$/;
 
+/**
+ * Search result served in place of the real OPDS catalogue; its activation is intercepted too.
+ */
 const FAKE_ENTRY = {
   entryId: 'https://www.ebooksgratuits.com/details.php?book=476',
   title: 'Le Horla',
@@ -43,16 +55,7 @@ test('reader journey', async ({ page }) => {
   await test.step('activates a catalogue book from the backoffice', async () => {
     await page.route('**/api/admin/catalogue?*', (route) => route.fulfill({ json: [FAKE_ENTRY] }));
     await page.route('**/api/admin/books/from-catalogue', async (route) => {
-      const upload = await page.request.post('/api/admin/books/upload', {
-        headers: { 'X-Admin-Key': E2E_ADMIN_KEY },
-        multipart: {
-          file: {
-            name: 'le-horla.epub',
-            mimeType: 'application/epub+zip',
-            buffer: buildEpub(LE_HORLA),
-          },
-        },
-      });
+      const upload = await uploadBook(page.request, LE_HORLA);
       await route.fulfill({
         status: upload.status(),
         contentType: 'application/json',
@@ -99,6 +102,7 @@ test('reader journey', async ({ page }) => {
     await expectAccessible(page);
   });
 
+  // Reader URL of Le Horla, captured on opening and reused by the later steps.
   let horlaUrl = '';
 
   await test.step('opens a book and reads ten pages', async () => {
@@ -180,19 +184,10 @@ test('reader journey', async ({ page }) => {
   });
 
   await test.step('marks the book finished on its last page, and unmarks it when turning back', async () => {
-    await page.evaluate(async (path) => {
-      const id = path.split('/').pop()!;
-      const book = await (await fetch(`/api/books/${id}`)).json();
-      localStorage.setItem(
-        `reader.progress.${id}`,
-        JSON.stringify({
-          blockIndex: book.blocks.length - 1,
-          charOffset: 0,
-          finished: false,
-          updatedAt: new Date().toISOString(),
-        }),
-      );
-    }, horlaUrl);
+    const id = horlaUrl.split('/').pop()!;
+    const book = await page.request.get(`/api/books/${id}`);
+    const blocks: unknown[] = (await book.json()).blocks;
+    await seedProgress(page, id, blocks.length - 1);
     await page.reload();
     await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
 
@@ -211,15 +206,36 @@ test('reader journey', async ({ page }) => {
   });
 });
 
+/**
+ * Fails on any axe violation, listing each rule with its summary.
+ */
 async function expectAccessible(page: Page): Promise<void> {
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([]);
 }
 
+/**
+ * Reads the progress the reader saved for the book of a `/lire/:id` path.
+ */
 async function storedProgress(
   page: Page,
   readerPath: string,
-): Promise<{ blockIndex: number; charOffset: number; finished: boolean }> {
+): Promise<{
+  /**
+   * Block holding the page's first character.
+   */
+  blockIndex: number;
+
+  /**
+   * Offset of that character inside its block.
+   */
+  charOffset: number;
+
+  /**
+   * Whether the last page was reached.
+   */
+  finished: boolean;
+}> {
   return page.evaluate(
     (path) =>
       JSON.parse(localStorage.getItem(`reader.progress.${path.split('/').pop()}`) ?? 'null'),

@@ -1,7 +1,11 @@
 import { TestBed } from '@angular/core/testing';
+
 import { LargeCursor } from './large-cursor';
 
 describe('LargeCursor', () => {
+  /**
+   * Whether the large cursor media query matches.
+   */
   let matches: boolean;
 
   beforeEach(() => {
@@ -22,6 +26,9 @@ describe('LargeCursor', () => {
     vi.unstubAllGlobals();
   });
 
+  /**
+   * Renders the overlay in the document and returns a helper dispatching pointer moves.
+   */
   function create() {
     const fixture = TestBed.createComponent(LargeCursor);
     fixture.detectChanges();
@@ -34,6 +41,9 @@ describe('LargeCursor', () => {
     return { fixture, overlay, move };
   }
 
+  /**
+   * Cursor kind the overlay draws, `null` when the native cursor shows.
+   */
   const drawn = () => document.documentElement.getAttribute('data-cursor');
 
   it('leaves the native cursor alone where its whole image fits in the window', () => {

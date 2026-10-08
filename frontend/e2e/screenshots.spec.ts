@@ -1,80 +1,135 @@
 import { expect, Page, test } from '@playwright/test';
-import { AMOUR, E2E_ADMIN_KEY, LE_HORLA } from './support/books';
-import { buildEpub } from './support/epub';
 
+import type { CatalogueEntry } from '../src/app/core/admin/admin.model';
+import { seedProgress, uploadBook } from './support/api';
+import { AMOUR, LE_HORLA } from './support/books';
+import { E2E_ADMIN_KEY } from './support/env';
+
+/**
+ * Folder the README embeds, relative to `frontend`.
+ */
 const OUTPUT = '../docs/screenshots';
 
-/** README captures; run on demand with SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts. */
+/**
+ * Captured screens: her PC and a phone, each with where the pointer rests on "Mes livres", below the
+ * grid, where nothing reacts to hovering.
+ */
+const VIEWPORTS = [
+  { name: '1920', size: { width: 1920, height: 1080 }, listRestY: 900 },
+  { name: '400', size: { width: 400, height: 860 }, listRestY: 840 },
+] as const;
+
+/**
+ * Search results served in place of the catalogue: one book already active, two not imported yet.
+ */
+const CATALOGUE_RESULTS: CatalogueEntry[] = [
+  {
+    entryId: 'https://www.ebooksgratuits.com/details.php?book=476',
+    title: 'Le Horla',
+    author: 'Guy de Maupassant',
+    summary: 'Le journal d’un homme qui sent une présence invisible s’emparer de sa maison.',
+    state: 'active',
+  },
+  {
+    entryId: 'https://www.ebooksgratuits.com/details.php?book=1201',
+    title: 'Bel-Ami',
+    author: 'Guy de Maupassant',
+    summary: 'L’ascension d’un séducteur sans scrupules dans le Paris de la presse.',
+    state: 'not-imported',
+  },
+  {
+    entryId: 'https://www.ebooksgratuits.com/details.php?book=1202',
+    title: 'Pierre et Jean',
+    author: 'Guy de Maupassant',
+    summary: 'Deux frères qu’un héritage inattendu dresse l’un contre l’autre.',
+    state: 'not-imported',
+  },
+];
+
+/**
+ * README captures; run on demand with SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts.
+ */
 test.skip(!process.env['SCREENSHOTS'], 'Captures are generated on demand only');
 
 test('README screenshots', async ({ page }) => {
-  const admin = { 'X-Admin-Key': E2E_ADMIN_KEY };
-  const books: { id: string; title: string }[] = await (
-    await page.request.get('/api/books')
-  ).json();
+  const books: {
+    /**
+     * Book identifier.
+     */
+    id: string;
+
+    /**
+     * Title, matched to skip books already uploaded by an earlier run.
+     */
+    title: string;
+  }[] = await (await page.request.get('/api/books')).json();
   for (const book of [LE_HORLA, AMOUR]) {
     if (!books.some((existing) => existing.title === book.title)) {
-      await page.request.post('/api/admin/books/upload', {
-        headers: admin,
-        multipart: {
-          file: { name: 'book.epub', mimeType: 'application/epub+zip', buffer: buildEpub(book) },
-        },
-      });
+      await uploadBook(page.request, book);
     }
   }
   const horla = (
-    (await (await page.request.get('/api/books')).json()) as { id: string; title: string }[]
+    (await (await page.request.get('/api/books')).json()) as {
+      /**
+       * Book identifier.
+       */
+      id: string;
+
+      /**
+       * Title, matched to find Le Horla.
+       */
+      title: string;
+    }[]
   ).find((book) => book.title === 'Le Horla')!;
 
   await page.request.put('/api/admin/settings', {
-    headers: admin,
+    headers: { 'X-Admin-Key': E2E_ADMIN_KEY },
     data: { fontTier: 100 },
   });
-  for (const width of [1920, 400]) {
-    await page.setViewportSize(
-      width === 1920 ? { width: 1920, height: 1080 } : { width: 400, height: 860 },
-    );
+  for (const viewport of VIEWPORTS) {
+    await page.setViewportSize(viewport.size);
     await openAt(page, horla.id, 6);
-    await page.screenshot({ path: `${OUTPUT}/lecture-${width}.png` });
+    await page.screenshot({ path: `${OUTPUT}/lecture-${viewport.name}.png` });
   }
 
-  for (const width of [1920, 400]) {
-    await page.setViewportSize(
-      width === 1920 ? { width: 1920, height: 1080 } : { width: 400, height: 860 },
-    );
+  for (const viewport of VIEWPORTS) {
+    await page.setViewportSize(viewport.size);
     await page.goto('/livres');
     await expect(page.locator('button.book-card')).toHaveCount(2);
-    // Rest the pointer below the grid, where nothing reacts to hovering.
-    await page.mouse.move(width / 2, width === 1920 ? 900 : 840);
-    await page.screenshot({ path: `${OUTPUT}/livres-${width}.png` });
+    await page.mouse.move(viewport.size.width / 2, viewport.listRestY);
+    await page.screenshot({ path: `${OUTPUT}/livres-${viewport.name}.png` });
   }
 
-  await page.setViewportSize({ width: 400, height: 860 });
+  const phone = VIEWPORTS[1];
+  await page.setViewportSize(phone.size);
   await page.evaluate((key) => localStorage.setItem('admin.key', key), E2E_ADMIN_KEY);
+  // The search is intercepted, so the catalogue site is never contacted.
+  await page.route('**/api/admin/catalogue?*', (route) =>
+    route.fulfill({ json: CATALOGUE_RESULTS }),
+  );
+  await page.goto('/admin/catalogue');
+  await page.getByLabel('Titre ou auteur').fill('Maupassant');
+  await page.getByRole('button', { name: 'Rechercher' }).click();
+  await expect(page.locator('.a-card')).toHaveCount(CATALOGUE_RESULTS.length);
+  await page.screenshot({ path: `${OUTPUT}/admin-catalogue-${phone.name}.png` });
+
+  await page.goto('/admin/bibliotheque');
+  await expect(page.getByText('Le Horla', { exact: true })).toBeVisible();
+  await page.screenshot({ path: `${OUTPUT}/admin-bibliotheque-${phone.name}.png` });
+
   await page.goto('/admin/reglages');
   await expect(page.getByRole('button', { name: '100' })).toHaveAttribute('aria-pressed', 'true');
-  await page.screenshot({ path: `${OUTPUT}/admin-reglages-400.png` });
+  await page.screenshot({ path: `${OUTPUT}/admin-reglages-${phone.name}.png` });
 });
 
+/**
+ * Opens a book at a block, with the pointer resting on the text where nothing reacts to hovering.
+ */
 async function openAt(page: Page, bookId: string, blockIndex: number): Promise<void> {
   await page.goto('/livres');
-  await page.evaluate(
-    ([id, block]) => {
-      localStorage.setItem(
-        `reader.progress.${id}`,
-        JSON.stringify({
-          blockIndex: block,
-          charOffset: 0,
-          finished: false,
-          updatedAt: new Date().toISOString(),
-        }),
-      );
-    },
-    [bookId, blockIndex] as const,
-  );
+  await seedProgress(page, bookId, blockIndex);
   await page.goto(`/lire/${bookId}`);
   await expect(page.locator('.page-indicator')).toHaveText(/^Page \d+ sur \d+$/);
-  // Rest the pointer on the text, where nothing reacts to hovering.
   const viewport = page.viewportSize()!;
   await page.mouse.move(viewport.width / 2, viewport.height / 2);
 }

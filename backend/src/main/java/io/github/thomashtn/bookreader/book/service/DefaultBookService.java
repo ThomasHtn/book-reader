@@ -16,17 +16,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Default {@link BookService}.
+ * Default {@link BookService}: reads run in read-only transactions, the upload converts outside any.
  */
 @Service
 public class DefaultBookService implements BookService {
 
+    /**
+     * Caller-facing message of every unknown book.
+     */
     private static final String NOT_FOUND = "Book not found.";
 
+    /**
+     * Repository holding books.
+     */
     private final BookRepository repository;
 
+    /**
+     * Converter turning an uploaded EPUB into blocks.
+     */
     private final EpubConverter converter;
 
+    /**
+     * Clock stamping imports, activations and read marks.
+     */
     private final Clock clock;
 
     /**
@@ -42,12 +54,24 @@ public class DefaultBookService implements BookService {
         this.clock = clock;
     }
 
+    /**
+     * Lists active books from a projection, so the JSONB content is never loaded.
+     *
+     * @return active books, most recently activated first
+     */
     @Override
     @Transactional(readOnly = true)
     public List<BookSummaryResponse> listActiveBooks() {
         return repository.findByActiveTrueOrderByActivatedAtDesc().stream().map(BookSummaryResponse::from).toList();
     }
 
+    /**
+     * Loads an active book with its content; a withdrawn book is as unknown as a missing one.
+     *
+     * @param id book identifier
+     * @return book in the internal format
+     * @throws ResourceNotFoundException when unknown or withdrawn
+     */
     @Override
     @Transactional(readOnly = true)
     public BookContentResponse getActiveBook(UUID id) {
@@ -56,12 +80,25 @@ public class DefaultBookService implements BookService {
             .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND));
     }
 
+    /**
+     * Lists every book from a projection, so the JSONB content is never loaded.
+     *
+     * @return all books, most recently imported first
+     */
     @Override
     @Transactional(readOnly = true)
     public List<AdminBookResponse> listAllBooks() {
         return repository.findAllByOrderByCreatedAtDesc().stream().map(AdminBookResponse::from).toList();
     }
 
+    /**
+     * Applies each present field in one transaction; a {@code null} field is left unchanged.
+     *
+     * @param id      book identifier
+     * @param request fields to change
+     * @return book after the change
+     * @throws ResourceNotFoundException when unknown
+     */
     @Override
     @Transactional
     public AdminBookResponse updateBook(UUID id, UpdateBookRequest request) {
@@ -85,6 +122,12 @@ public class DefaultBookService implements BookService {
         return AdminBookResponse.from(book);
     }
 
+    /**
+     * Deletes the row and its content; a catalogue entry can then be imported again.
+     *
+     * @param id book identifier
+     * @throws ResourceNotFoundException when unknown
+     */
     @Override
     @Transactional
     public void deleteBook(UUID id) {
@@ -94,6 +137,10 @@ public class DefaultBookService implements BookService {
 
     /**
      * Converts outside any transaction, then persists in the repository's own short transaction.
+     *
+     * @param epub archive bytes
+     * @return imported book, active
+     * @throws io.github.thomashtn.bookreader.conversion.EpubRejectedException when the EPUB is unusable
      */
     @Override
     public AdminBookResponse importUpload(byte[] epub) {

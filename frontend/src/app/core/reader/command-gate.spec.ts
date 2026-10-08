@@ -1,7 +1,14 @@
 import { CommandGate } from './command-gate';
 
 describe('CommandGate', () => {
+  /**
+   * Fake clock in milliseconds, moved by hand.
+   */
   let now = 0;
+
+  /**
+   * Builds a gate reading the fake clock.
+   */
   const gate = () => new CommandGate(400, () => now);
 
   beforeEach(() => {

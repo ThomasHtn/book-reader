@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = ADMIN_KEY_SECURITY_SCHEME)
 public class AdminReaderSettingsController {
 
+    /**
+     * Service holding the display settings.
+     */
     private final ReaderSettingsService service;
 
     /**

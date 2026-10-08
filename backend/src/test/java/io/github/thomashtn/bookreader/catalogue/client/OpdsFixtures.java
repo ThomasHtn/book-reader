@@ -10,6 +10,9 @@ import java.nio.charset.StandardCharsets;
  */
 public final class OpdsFixtures {
 
+    /**
+     * Prevents instantiation of this static helper.
+     */
     private OpdsFixtures() {
     }
 

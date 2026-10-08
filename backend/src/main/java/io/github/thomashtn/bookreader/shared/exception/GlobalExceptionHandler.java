@@ -2,10 +2,11 @@ package io.github.thomashtn.bookreader.shared.exception;
 
 import io.github.thomashtn.bookreader.catalogue.client.CatalogueRefusedException;
 import io.github.thomashtn.bookreader.catalogue.client.CatalogueUnavailableException;
+import io.github.thomashtn.bookreader.catalogue.config.CatalogueProperties;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
+import io.github.thomashtn.bookreader.conversion.EpubRejectedException.Reason;
 import jakarta.servlet.http.HttpServletRequest;
-import java.net.URI;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -27,14 +28,49 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
  * Converts exceptions into {@link ApiErrorResponse} problem payloads.
  *
  * <p>Every caller mistake gets its own 4xx handler; anything else reaches the catch-all, is logged
- * and answered with a generic 500 that never echoes an internal message.
+ * and answered with a generic 500 that never echoes an internal message.</p>
+ *
+ * <p>The {@code code} values are a contract with the backoffice, which maps them to French messages
+ * in {@code frontend/src/app/core/admin/admin-errors.ts}: change one on both sides or not at all.</p>
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Application logger.
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /**
+     * Code of a request value the API cannot accept.
+     */
     private static final String INVALID_ARGUMENT = "INVALID_ARGUMENT";
+
+    /**
+     * Code of an unknown resource, whether an entity or a route.
+     */
+    private static final String RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND";
+
+    /**
+     * Clock stamping each problem response.
+     */
+    private final Clock clock;
+
+    /**
+     * Catalogue settings, whose EPUB size limit is also the upload limit quoted by the 413.
+     */
+    private final CatalogueProperties catalogueProperties;
+
+    /**
+     * Creates the handler.
+     *
+     * @param clock               application clock
+     * @param catalogueProperties catalogue settings holding the EPUB size limit
+     */
+    public GlobalExceptionHandler(Clock clock, CatalogueProperties catalogueProperties) {
+        this.clock = clock;
+        this.catalogueProperties = catalogueProperties;
+    }
 
     /**
      * Handles an unknown application resource.
@@ -47,7 +83,7 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiErrorResponse> handleResourceNotFound(
         ResourceNotFoundException exception, HttpServletRequest request
     ) {
-        return problem(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", exception.getMessage(), request);
+        return problem(HttpStatus.NOT_FOUND, RESOURCE_NOT_FOUND, exception.getMessage(), request);
     }
 
     /**
@@ -114,7 +150,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles an EPUB the reader cannot use; the backoffice turns {@code EPUB_<REASON>} into a message.
+     * Handles an EPUB the reader cannot use, answering with the code of its {@link Reason}.
      *
      * @param exception rejection with its reason
      * @param request   current HTTP request
@@ -125,14 +161,12 @@ public class GlobalExceptionHandler {
         EpubRejectedException exception, HttpServletRequest request
     ) {
         LOGGER.info("EPUB rejected ({}): {}", exception.reason(), exception.getMessage());
-        return problem(
-            HttpStatus.UNPROCESSABLE_CONTENT, "EPUB_" + exception.reason().name(), "The EPUB cannot be converted.",
-            request
-        );
+        String detail = "The EPUB cannot be converted.";
+        return problem(HttpStatus.UNPROCESSABLE_CONTENT, exception.reason().code(), detail, request);
     }
 
     /**
-     * Handles an upload above the multipart limit.
+     * Handles an upload above the multipart limit, which is the configured EPUB size limit.
      *
      * @param exception exception raised by the multipart resolver
      * @param request   current HTTP request
@@ -142,7 +176,8 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiErrorResponse> handleUploadTooLarge(
         MaxUploadSizeExceededException exception, HttpServletRequest request
     ) {
-        return problem(HttpStatus.CONTENT_TOO_LARGE, "EPUB_TOO_LARGE", "The file exceeds 20 MB.", request);
+        String detail = "The file exceeds " + catalogueProperties.maxEpubSize().toMegabytes() + " MB.";
+        return problem(HttpStatus.CONTENT_TOO_LARGE, Reason.TOO_LARGE.code(), detail, request);
     }
 
     /**
@@ -220,7 +255,7 @@ public class GlobalExceptionHandler {
         NoResourceFoundException exception, HttpServletRequest request
     ) {
         String detail = "The requested resource does not exist.";
-        return problem(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", detail, request);
+        return problem(HttpStatus.NOT_FOUND, RESOURCE_NOT_FOUND, detail, request);
     }
 
     /**
@@ -252,25 +287,36 @@ public class GlobalExceptionHandler {
         return problem(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "An unexpected error occurred.", request);
     }
 
-    private static ResponseEntity<ApiErrorResponse> problem(
+    /**
+     * Builds a problem response without field errors.
+     *
+     * @param status  HTTP status
+     * @param code    application error code
+     * @param detail  caller-facing explanation
+     * @param request current HTTP request
+     * @return response carrying the problem
+     */
+    private ResponseEntity<ApiErrorResponse> problem(
         HttpStatus status, String code, String detail, HttpServletRequest request
     ) {
         return problem(status, code, detail, request, Map.of());
     }
 
-    private static ResponseEntity<ApiErrorResponse> problem(
+    /**
+     * Builds a problem response.
+     *
+     * @param status  HTTP status
+     * @param code    application error code
+     * @param detail  caller-facing explanation
+     * @param request current HTTP request
+     * @param errors  first validation error of each invalid field
+     * @return response carrying the problem
+     */
+    private ResponseEntity<ApiErrorResponse> problem(
         HttpStatus status, String code, String detail, HttpServletRequest request, Map<String, String> errors
     ) {
-        ApiErrorResponse body = new ApiErrorResponse(
-            URI.create("about:blank"),
-            status.getReasonPhrase(),
-            status.value(),
-            code,
-            detail,
-            URI.create(request.getRequestURI()),
-            Instant.now(),
-            errors
-        );
+        ApiErrorResponse body =
+            ApiErrorResponse.of(status, code, detail, request.getRequestURI(), clock.instant(), errors);
         return ResponseEntity.status(status).body(body);
     }
 }

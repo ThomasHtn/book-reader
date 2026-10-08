@@ -1,0 +1,78 @@
+/* Reading screen: the paged surface, the book text inside it and the screen-reader-only helper. */
+
+/* ---- Paginated surfaces: one page is one column of exactly the viewport width ---- */
+.paged {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  padding: var(--reading-padding);
+  max-width: var(--reading-max-width);
+  width: 100%;
+  justify-self: center;
+}
+
+/* Focused by script only, after a click, so Space keeps turning pages: no ring on it. */
+.paged:focus {
+  outline: none;
+}
+
+/* Clips the columns to exactly one page. */
+.paged-viewport {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* One column per page, `--column-width` being the viewport width set by DomChapterLayout (spec 5.2). */
+.paged-columns {
+  height: 100%;
+  column-width: var(--column-width);
+  column-gap: 0;
+  column-fill: auto;
+}
+
+/* Book text: left aligned, hyphenated, unselectable; `pre-line` renders the line breaks of `<br>`. */
+.reading {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  text-align: left;
+  white-space: pre-line;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  user-select: none;
+}
+
+/* Paragraph gap; page-count.ts mirrors these metrics in its estimates. */
+.reading p {
+  margin: 0 0 var(--gap-paragraph);
+}
+
+/* Title page and chapter headings, never left alone at the bottom of a column (spec 5.2). */
+.reading .book-title,
+.reading h2 {
+  margin: 0 0 var(--gap-paragraph);
+  font-size: var(--text-heading);
+  font-weight: var(--weight-heading);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+  break-after: avoid;
+}
+
+/* Author on the title page and "Fin du livre", muted and smaller. */
+.reading .author,
+.reading .end {
+  color: var(--color-fg-muted);
+  font-size: var(--text-meta);
+}
+
+/* Read by screen readers only. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

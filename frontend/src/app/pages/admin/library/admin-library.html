@@ -1,3 +1,4 @@
+<!-- Library section: counts, filters, status messages, then one row per book. -->
 <section class="a-view" aria-labelledby="library-title">
   <header class="a-view-head">
     <h2 id="library-title">Bibliothèque</h2>
@@ -6,11 +7,12 @@
     }
   </header>
 
+  <!-- Filters only make sense once the list has arrived. -->
   @if (books.hasValue()) {
     <div class="a-toolbar">
       <div class="a-filter" role="search">
         <svg aria-hidden="true" lucideSearch></svg>
-        <label for="library-filter" class="sr-only">Filtrer par titre ou auteur</label>
+        <label for="library-filter" class="visually-hidden">Filtrer par titre ou auteur</label>
         <input
           id="library-filter"
           class="a-input"
@@ -20,6 +22,7 @@
           (input)="filterText.set($any($event.target).value)"
         />
       </div>
+      <!-- Toggle buttons: aria-pressed marks the state filter in use, each with its count. -->
       <div class="a-seg a-seg--tabs" role="group" aria-label="État des livres">
         @for (option of stateFilters; track option.value) {
           <button
@@ -34,6 +37,7 @@
     </div>
   }
 
+  <!-- Live region for action outcomes and for the first load, its failure included. -->
   <div aria-live="polite">
     @if (message(); as current) {
       <p class="a-message" [class.a-message--failure]="current.kind === 'failure'">
@@ -46,6 +50,7 @@
         Chargement de la bibliothèque
       </p>
     }
+    <!-- A failed reload keeps the last list; only a first load failure replaces it. -->
     @if (books.error() && !books.hasValue()) {
       <div class="a-empty">
         <p class="a-message a-message--failure">Échec : bibliothèque indisponible</p>
@@ -58,10 +63,12 @@
   </div>
 
   @if (books.hasValue()) {
+    <!-- Muted rows are withdrawn books, which the reader no longer lists. -->
     @if (visibleBooks().length) {
       <ul class="a-list">
         @for (book of visibleBooks(); track book.id) {
           <li class="a-item" [class.a-item--muted]="!book.active">
+            <!-- Edit mode: the row becomes a title and author form. -->
             @if (editingId() === book.id) {
               <form class="a-edit" (submit)="save($event, book)">
                 <div class="a-field">
@@ -109,6 +116,7 @@
                 <p class="t">{{ book.title }}</p>
                 <p class="m">{{ meta(book) }}</p>
               </div>
+              <!-- Deletion cannot be undone, so it takes a second, explicit press. -->
               @if (confirmingId() === book.id) {
                 <div class="actions a-confirm">
                   <p class="m">Supprimer définitivement ce livre ?</p>
@@ -136,6 +144,7 @@
                   </button>
                 </div>
               } @else {
+                <!-- State chips, then the row actions; each button spins only for its own action. -->
                 <div class="a-item__state">
                   @if (book.active) {
                     <span class="a-chip a-chip--ok">Active</span>
@@ -147,37 +156,22 @@
                   }
                 </div>
                 <div class="actions">
-                  @if (book.active) {
-                    <button
-                      type="button"
-                      class="a-btn a-btn--secondary a-btn--sm"
-                      [disabled]="busyId() === book.id"
-                      [attr.aria-busy]="spinning(book, 'active') || null"
-                      (click)="setActive(book, false)"
-                    >
-                      @if (spinning(book, 'active')) {
-                        <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
-                      } @else {
-                        <svg aria-hidden="true" lucideEyeOff></svg>
-                      }
-                      Retirer
-                    </button>
-                  } @else {
-                    <button
-                      type="button"
-                      class="a-btn a-btn--secondary a-btn--sm"
-                      [disabled]="busyId() === book.id"
-                      [attr.aria-busy]="spinning(book, 'active') || null"
-                      (click)="setActive(book, true)"
-                    >
-                      @if (spinning(book, 'active')) {
-                        <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
-                      } @else {
-                        <svg aria-hidden="true" lucideEye></svg>
-                      }
-                      Réactiver
-                    </button>
-                  }
+                  <button
+                    type="button"
+                    class="a-btn a-btn--secondary a-btn--sm"
+                    [disabled]="busyId() === book.id"
+                    [attr.aria-busy]="spinning(book, 'active') || null"
+                    (click)="setActive(book, !book.active)"
+                  >
+                    @if (spinning(book, 'active')) {
+                      <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+                    } @else if (book.active) {
+                      <svg aria-hidden="true" lucideEyeOff></svg>
+                    } @else {
+                      <svg aria-hidden="true" lucideEye></svg>
+                    }
+                    {{ book.active ? 'Retirer' : 'Réactiver' }}
+                  </button>
                   <button
                     type="button"
                     class="a-btn a-btn--secondary a-btn--sm"
@@ -217,6 +211,7 @@
         }
       </ul>
     } @else {
+      <!-- Empty list: tell a filter that matches nothing apart from an empty library. -->
       <p class="a-empty">
         @if (counts().all) {
           Aucun livre ne correspond à ce filtre.

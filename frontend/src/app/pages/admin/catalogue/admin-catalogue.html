@@ -1,0 +1,104 @@
+<!-- Catalogue section: search form, search status, then one card per entry. -->
+<section class="a-view" aria-labelledby="catalogue-title">
+  <header class="a-view-head">
+    <h2 id="catalogue-title">Catalogue</h2>
+    <p class="a-view-sub">Recherche en direct dans Ebooks libres et gratuits</p>
+  </header>
+  <!-- Search runs on submit only: the site is queried live, never on each keystroke. -->
+  <form class="a-search" role="search" (submit)="search($event)">
+    <label for="catalogue-query" class="visually-hidden">Titre ou auteur</label>
+    <div class="a-filter">
+      <svg aria-hidden="true" lucideSearch></svg>
+      <input
+        id="catalogue-query"
+        class="a-input"
+        type="search"
+        placeholder="Titre ou auteur"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </div>
+    <button type="submit" class="a-btn a-btn--primary">Rechercher</button>
+  </form>
+
+  <!-- Live region announcing loading, failure, empty result or result count. -->
+  <div aria-live="polite">
+    @if (results.isLoading()) {
+      <p class="a-loading" role="status">
+        <span class="a-brand__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        Recherche de « {{ submitted() }} » dans le catalogue
+      </p>
+    } @else if (searchFailure(); as failure) {
+      <!-- The site may be down: let the caregiver retry without retyping. -->
+      <div class="a-empty">
+        <p class="a-message a-message--failure">{{ failure }}</p>
+        <div class="actions">
+          <button type="button" class="a-btn a-btn--secondary a-btn--sm" (click)="retry()">
+            <svg aria-hidden="true" lucideRotateCw></svg>
+            Réessayer
+          </button>
+        </div>
+      </div>
+    } @else if (results.hasValue() && results.value().length === 0) {
+      <p class="a-empty">Aucun résultat pour « {{ submitted() }} »</p>
+    } @else if (results.hasValue()) {
+      <p class="a-help">
+        {{ results.value().length }}
+        {{ results.value().length === 1 ? 'résultat' : 'résultats' }} pour « {{ submitted() }} »
+      </p>
+    } @else {
+      <!-- Nothing searched yet. -->
+      <p class="a-empty">Cherchez un titre ou un auteur pour l'ajouter à sa bibliothèque.</p>
+    }
+  </div>
+
+  <!-- Results, kept outside the live region so the count alone is announced. -->
+  @if (results.hasValue() && results.value().length) {
+    <div class="a-results">
+      @for (entry of results.value(); track entry.entryId) {
+        <article class="a-card a-result">
+          <div class="a-result__text">
+            <h3 class="t">{{ entry.title }}</h3>
+            @if (entry.author) {
+              <p class="m">{{ entry.author }}</p>
+            }
+            @if (entry.summary) {
+              <p class="s">{{ entry.summary }}</p>
+            }
+          </div>
+          <div class="actions">
+            <!-- An active book needs no action; otherwise offer activation, busy while it converts. -->
+            @if (stateOf(entry) === 'active') {
+              <span class="a-chip a-chip--ok">Déjà active</span>
+            } @else {
+              <button
+                type="button"
+                class="a-btn a-btn--primary a-btn--sm"
+                [disabled]="busy()[entry.entryId]"
+                [attr.aria-busy]="busy()[entry.entryId] || null"
+                (click)="activate(entry)"
+              >
+                @if (busy()[entry.entryId]) {
+                  <svg aria-hidden="true" lucideLoaderCircle class="a-spin"></svg>
+                } @else {
+                  <svg aria-hidden="true" lucideDownload></svg>
+                }
+                {{ busy()[entry.entryId] ? 'Activation en cours' : 'Activer' }}
+              </button>
+            }
+          </div>
+          <!-- Outcome of the activation, announced on the card it concerns. -->
+          @if (messages()[entry.entryId]; as message) {
+            <p
+              class="a-message"
+              [class.a-message--failure]="message.kind === 'failure'"
+              role="status"
+            >
+              {{ message.text }}
+            </p>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

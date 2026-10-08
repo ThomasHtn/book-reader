@@ -8,8 +8,14 @@ import java.util.regex.Pattern;
  */
 public final class CatalogueQuery {
 
+    /**
+     * Combining marks left by canonical decomposition, such as the acute accent of an "e".
+     */
     private static final Pattern COMBINING_MARKS = Pattern.compile("\\p{M}+");
 
+    /**
+     * Prevents instantiation of this static helper.
+     */
     private CatalogueQuery() {
     }
 

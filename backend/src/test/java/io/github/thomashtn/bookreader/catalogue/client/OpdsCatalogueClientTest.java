@@ -27,8 +27,14 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 class OpdsCatalogueClientTest {
 
+    /**
+     * Fake catalogue site, restarted for each test.
+     */
     private MockWebServer server;
 
+    /**
+     * Client pointed at the fake site, with short timeouts.
+     */
     private OpdsCatalogueClient client;
 
     @BeforeEach
@@ -143,12 +149,33 @@ class OpdsCatalogueClientTest {
                 exception -> assertThat(exception.reason()).isEqualTo(Reason.TOO_LARGE));
     }
 
+    @Test
+    @DisplayName("Reads the book number from a catalogue book page only")
+    void readsBookNumber() {
+        assertThat(OpdsCatalogueClient.bookNumberOf("https://www.ebooksgratuits.com/details.php?book=726"))
+            .hasValue(726);
+        assertThat(OpdsCatalogueClient.bookNumberOf("https://evil.example/details.php?book=726")).isEmpty();
+    }
+
+    /**
+     * Creates a client with half-second timeouts.
+     *
+     * @param baseUrl     site root
+     * @param maxEpubSize largest EPUB accepted
+     * @return client
+     */
     private static OpdsCatalogueClient clientFor(URI baseUrl, DataSize maxEpubSize) {
         CatalogueProperties properties =
             new CatalogueProperties(baseUrl, Duration.ofMillis(500), Duration.ofMillis(500), maxEpubSize);
         return new OpdsCatalogueClient(WebClient.builder(), properties);
     }
 
+    /**
+     * Wraps a feed in a response with the Atom content type.
+     *
+     * @param body feed XML
+     * @return response
+     */
     private static MockResponse atom(String body) {
         return new MockResponse.Builder()
             .addHeader("Content-Type", "application/atom+xml; charset=UTF-8")

@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.MediaType;
@@ -37,6 +36,9 @@ import org.springframework.web.multipart.MultipartFile;
 @SecurityRequirement(name = ADMIN_KEY_SECURITY_SCHEME)
 public class AdminBookController {
 
+    /**
+     * Service managing the library.
+     */
     private final BookService service;
 
     /**
@@ -46,7 +48,8 @@ public class AdminBookController {
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
-        justification = "Spring-managed singleton service, shared by design; its delete method trips the heuristic."
+        justification = "BookService is a stateless singleton shared on purpose; "
+            + "SpotBugs only deems it mutable because it declares deleteBook."
     )
     public AdminBookController(BookService service) {
         this.service = service;
@@ -76,7 +79,7 @@ public class AdminBookController {
     @ApiResponse(responseCode = "422", description = "Encrypted, invalid, too large or without text.")
     public ResponseEntity<AdminBookResponse> upload(@RequestPart("file") MultipartFile file) throws IOException {
         AdminBookResponse book = service.importUpload(file.getBytes());
-        return ResponseEntity.created(URI.create("/api/books/" + book.id())).body(book);
+        return ResponseEntity.created(BookController.locationOf(book.id())).body(book);
     }
 
     /**

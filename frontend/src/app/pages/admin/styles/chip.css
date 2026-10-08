@@ -1,0 +1,33 @@
+/* === State chip ======================================================= */
+
+/* State chip: pill with a leading dot; --ok for active books, --off for withdrawn ones. */
+.a-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px calc(var(--admin-spacing) * 2.5);
+  border-radius: var(--admin-radius-pill);
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent);
+  font-size: var(--admin-text-xs);
+  font-weight: var(--admin-weight-strong);
+  white-space: nowrap;
+}
+
+.a-chip::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+.a-chip--ok {
+  background: var(--admin-success-soft);
+  color: var(--admin-success);
+}
+
+.a-chip--off {
+  background: var(--admin-surface-muted);
+  color: var(--admin-fg-muted);
+}

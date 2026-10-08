@@ -18,14 +18,26 @@ import org.junit.jupiter.api.Test;
  */
 class EpubConverterTest {
 
+    /**
+     * No-break space the normalizer puts around French punctuation.
+     */
     private static final String NBSP = " ";
 
+    /**
+     * Converter under test, with the production limits.
+     */
     private final EpubConverter converter = new EpubConverter(EpubLimits.DEFAULT);
 
+    /**
+     * EPUB 2 with an NCX whose entries target anchors inside documents.
+     */
     @Nested
     @DisplayName("Atlantis Word Processor export")
     class Atlantis {
 
+        /**
+         * Fixture converted once per test.
+         */
         private final ConvertedBook book = converter.convert(EpubFixtures.epub("atlantis"));
 
         @Test
@@ -67,10 +79,16 @@ class EpubConverterTest {
         }
     }
 
+    /**
+     * EPUB 2 with a guide listing front matter to skip.
+     */
     @Nested
     @DisplayName("Feedbooks export")
     class Feedbooks {
 
+        /**
+         * Fixture converted once per test.
+         */
         private final ConvertedBook book = converter.convert(EpubFixtures.epub("feedbooks"));
 
         @Test
@@ -88,10 +106,16 @@ class EpubConverterTest {
         }
     }
 
+    /**
+     * EPUB 3 whose navigation document sits in the spine.
+     */
     @Nested
     @DisplayName("EPUB 3 with a navigation document")
     class Epub3 {
 
+        /**
+         * Fixture converted once per test.
+         */
         private final ConvertedBook book = converter.convert(EpubFixtures.epub("epub3"));
 
         @Test
@@ -119,6 +143,9 @@ class EpubConverterTest {
         }
     }
 
+    /**
+     * EPUBs refused with a reason the backoffice can explain.
+     */
     @Nested
     @DisplayName("Rejections")
     class Rejections {
@@ -194,6 +221,12 @@ class EpubConverterTest {
                     exception -> assertThat(exception.reason()).isEqualTo(Reason.TOO_LARGE));
         }
 
+        /**
+         * Checks that the production converter refuses an archive for a given reason.
+         *
+         * @param epub   archive bytes
+         * @param reason expected rejection reason
+         */
         private void assertRejected(byte[] epub, Reason reason) {
             assertThatThrownBy(() -> converter.convert(epub))
                 .isInstanceOfSatisfying(EpubRejectedException.class,

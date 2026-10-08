@@ -319,6 +319,7 @@
   --admin-shadow-pop: 0 12px 32px -8px rgb(22 26 36 / 0.28);
   --admin-control-height: 44px;
   --admin-gutter: 16px;
+  --admin-spacing: 0.25rem;
   --admin-content-max: 1040px;
   --admin-nav-height: 64px;
   --admin-rail-width: 248px;

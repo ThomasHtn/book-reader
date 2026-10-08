@@ -1,0 +1,12 @@
+#!/bin/sh
+# Fixes formatting, imports and auto-fixable lint errors on the staged files, then re-stages them.
+# Errors that need a human (a missing comment, a real lint error) abort the commit.
+ROOT="$(git rev-parse --show-toplevel)"
+LINT_STAGED="$ROOT/frontend/node_modules/.bin/lint-staged"
+
+if [ ! -x "$LINT_STAGED" ]; then
+  echo "pre-commit: run 'npm install' in frontend/ first, or commit with --no-verify." >&2
+  exit 1
+fi
+
+cd "$ROOT" && exec "$LINT_STAGED"

@@ -123,8 +123,9 @@ quoi un tiers d'écran de téléphone coupait les titres en plein mot.
 
 Backoffice : aucune contrainte de basse vision ne s'y applique, ni curseur agrandi, ni paliers, ni
 contraste 7:1. Les classes de la liseuse sont toutes préfixées (`book-grid`, `book-card`,
-`book-cover`) : un nom nu comme `grid` entrerait en collision avec les utilitaires Tailwind du
-backoffice. Sous 900 px, en-tête de 64 px, une colonne, gouttière 16 px, barre d'onglets fixe en bas
+`book-cover`) et celles du backoffice portent `a-` : les deux registres partagent la feuille globale,
+un nom nu comme `grid` finirait par entrer en collision. Les espacements du backoffice sont des
+multiples de `--admin-spacing` (4 px au corps par défaut). Sous 900 px, en-tête de 64 px, une colonne, gouttière 16 px, barre d'onglets fixe en bas
 (Catalogue, Bibliothèque, Dépôt, Réglages) au-dessus de la zone de sécurité ; à partir de 900 px,
 rail de 240 px à gauche, contenu limité à 960 px. Rayons 6 et 10 px, contrôles de 44 px, une ombre en
 clair, aucune en sombre.

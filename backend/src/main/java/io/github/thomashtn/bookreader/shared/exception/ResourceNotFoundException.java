@@ -1,11 +1,17 @@
 package io.github.thomashtn.bookreader.shared.exception;
 
 /**
- * Indicates that a requested application resource could not be found.
+ * Signals an unknown resource, or one the caller may not see; answered with 404 and its message.
  */
 public class ResourceNotFoundException extends RuntimeException {
+
     /**
-     * Creates a not-found exception with the supplied message.
+     * Serialization identifier.
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * Creates the exception with a message written for the caller.
      *
      * @param message error message exposed by the API
      */

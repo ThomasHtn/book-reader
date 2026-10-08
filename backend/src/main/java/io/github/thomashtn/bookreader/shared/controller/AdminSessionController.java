@@ -22,13 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminSessionController {
 
     /**
-     * Answers successfully whenever the request carried a valid administrator key.
+     * Answers 204 to a valid key, so the backoffice can check a key without any side effect.
      *
-     * <p>Deliberately empty and free of any collaborator. The whole point of this route is to be
-     * reached, or not: a request without the header never gets here because
-     * {@code AdminApiKeyFilter} rejects it with a 401, and an invalid key gets a 403. That makes it
-     * the one endpoint a client can call to check a key before running a real operation, without
-     * risking a side effect if the key turns out to be valid.
+     * <p>Deliberately empty: a missing or wrong key never gets here, since
+     * {@link io.github.thomashtn.bookreader.shared.security.AdminApiKeyFilter} answers 401 or 403.</p>
      */
     @GetMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)

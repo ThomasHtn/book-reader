@@ -1,13 +1,26 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+
 import { ProgressStore } from '@core/reader/progress-store';
 import { ReaderData } from '@core/reader/reader-data';
+
 import { book, FakeProgressStore, FakeReaderData } from '../../testing/reader-fakes';
 import { Start } from './start';
 
 describe('Start', () => {
+  /**
+   * List the page waits for, set by each test.
+   */
   let data: FakeReaderData;
+
+  /**
+   * In-memory last book and progress.
+   */
   let store: FakeProgressStore;
+
+  /**
+   * Router spy, so no navigation really happens.
+   */
   let navigate: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -23,6 +36,9 @@ describe('Start', () => {
     navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
   });
 
+  /**
+   * Renders the page and runs its redirect effect.
+   */
   function render() {
     const fixture = TestBed.createComponent(Start);
     fixture.detectChanges();
