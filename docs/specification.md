@@ -77,8 +77,8 @@ Règles :
   cette zone ;
 - "Suivant" et "Précédent" tournent toute la vue : les deux pages à la fois ;
 - clavier : flèche droite et espace pour "Suivant", flèche gauche pour "Précédent". Espace est
-  intercepté au niveau du document et le focus revient à la zone de lecture après tout clic, pour
-  qu'espace signifie toujours "Suivant". Entrée garde son rôle natif : après un clic le focus n'est
+  intercepté au niveau du document et le focus revient à la zone de lecture après chaque page
+  tournée, au clic comme au clavier, pour qu'espace signifie toujours "Suivant". Entrée garde son rôle natif : après un clic le focus n'est
   jamais sur un bouton, et au clavier seul c'est la seule façon d'activer "Mes livres" (passage
   clavier complet, section 12). Aucun autre raccourci ;
 - anti-rebond : une commande reçue moins de 400 ms après la précédente est ignorée, la répétition
@@ -234,7 +234,8 @@ auteur au format "Hugo, Victor" (affiché "Victor Hugo"), environ une entrée su
 Mobipocket seuls), masquée car inactivable. Le lien EPUB suit toujours
 `newsendbook.php?id=<n>&format=epub`, `<n>` étant le numéro de la fiche `details.php?book=<n>` de
 l'identifiant ; l'activation construit ce lien depuis l'URL du site configurée, sans jamais télécharger
-une adresse fournie par le client, et suit la redirection vers le fichier statique.
+une adresse fournie par le client, et suit la redirection vers le fichier statique, à condition qu'elle
+reste sur l'hôte du site configuré : une redirection vers un autre hôte est refusée.
 
 ### 7.3 Format interne
 
@@ -258,8 +259,10 @@ une adresse fournie par le client, et suit la redirection vers le fichier statiq
 Trois temps : téléchargement hors transaction, conversion pure en mémoire, transaction courte pour
 persister.
 
-1. Décompression (`java.util.zip`) avec gardes : 20 Mo par fichier, 100 Mo décompressés, rejet des
-   chemins contenant `..` ou commençant par `/` ; lecture de `container.xml` puis de l'OPF.
+1. Décompression (`java.util.zip`) avec gardes, toutes tirées de la taille maximale d'un EPUB
+   (`app.catalogue.max-epub-size`, 20 Mo) : 20 Mo par fichier, 100 Mo décompressés, 10 000 entrées au
+   plus, rejet des chemins contenant `..` ou commençant par `/` ; lecture de `container.xml` puis de
+   l'OPF. Un document XML imbriqué sur plus de 200 niveaux est rejeté comme invalide.
 2. Documents XHTML dans l'ordre du `spine`, analysés avec jsoup en mode XML (le mode HTML transforme
    un `<a id="x"/>` en lien englobant la suite) ; `linear="no"` ignorés.
 3. Extraction des blocs feuilles : `h1` à `h6` vers `heading` ; `p`, `blockquote`, `li`, `div` sans
@@ -360,7 +363,8 @@ JaCoCo (90 % lignes, 70 % branches). Paquets `book`, `catalogue`, `conversion`, 
 en paliers vérifiés par `ArchitectureTest`. `GET /api/**` public, `/api/admin/**` protégé,
 `FORWARD_HEADERS_STRATEGY=native`. Actuator sur son propre port (8081), `/readyz` et `/livez` sur le port
 principal.
-Client OPDS `WebClient` avec délais courts et un réessai. Compression HTTP activée.
+Client OPDS `WebClient` avec délais courts, un délai global de 60 s par appel (réessai compris,
+contre un site qui répond goutte à goutte) et un réessai. Compression HTTP activée.
 
 **Base** :
 
@@ -441,14 +445,16 @@ La version 1 est livrable quand :
 | Backoffice en CSS simple sur les tokens `--admin-*` | Tailwind 4 réservé au backoffice | 8 octobre 2026 : demande de l'utilisateur ; Tailwind ne fournissait plus qu'une unité d'espacement et `sr-only`, au prix d'un plugin PostCSS et d'un balayage des gabarits qui générait des classes à partir des mots des commentaires |
 | Tailwind 4 pour la mise en page et une feuille SCSS par composant, sans preflight ni thème par défaut | CSS simple en feuilles globales | 24 octobre 2026 : demande de l'utilisateur, alignement sur ses autres projets (littlewords, valoquests) ; la collision des noms nus est écartée par les classes BEM et la lecture des seuls gabarits HTML, celle des variables par l'absence du thème par défaut ; migration vérifiée au pixel près sur 46 écrans |
 | Images testées puis publiées sur GHCR, le serveur ne fait que les tirer | construction sur le serveur depuis le dépôt | 24 octobre 2026 : demande de l'utilisateur, alignement sur littlewords et jobfinder ; un commit dont les contrôles échouent n'a pas d'image, et un retour arrière ne prend que quelques secondes |
-| Double page, Luciole 400 au palier 32, alinéas, titre courant séparé du texte par 48 px et numéros de page, fond crème et commandes ton sur ton ; paliers 28, 32, 36 et 40 (100 devient 32) | page unique en gras au palier 100 ; page de livre seule ; mise en page "confort" ; fonds sépia, gris, vert ou nuit ; commandes en aplat d'encre ou adoucies | 24 octobre 2026 : demande de l'utilisateur, après essai des maquettes. La lectrice se fatiguait vite : 21 caractères par ligne en gras obligeaient l'œil à changer de ligne tous les trois mots, alors qu'elle lit son application bancaire à une taille ordinaire. Le livre ouvert donne une cinquantaine de caractères par ligne ; un premier essai au palier 40
+| Double page, Luciole 400 au palier 32, alinéas, titre courant séparé du texte par 48 px et numéros de page, fond crème et commandes ton sur ton ; paliers 28, 32, 36 et 40 (100 devient 32) | page unique en gras au palier 100 ; page de livre seule ; mise en page "confort" ; fonds sépia, gris, vert ou nuit ; commandes en aplat d'encre ou adoucies | 24 octobre 2026 : demande de l'utilisateur, après essai des maquettes. La lectrice se fatiguait vite : 21 caractères par ligne en gras obligeaient l'œil à changer de ligne tous les trois mots, alors qu'elle lit son application bancaire à une taille ordinaire. Le livre ouvert donne une cinquantaine de caractères par ligne ; un premier essai au palier 40 paraissait encore gros, d'où l'échelle de 28 à 40 et moins de pages à tourner ; le crème éblouit moins que le blanc cassé. Les commandes ton sur ton n'atteignent que 1,3:1 sur la page (le principe des 3:1 est levé pour elles) : choix assumé pour que l'œil ne quitte plus le texte, leur libellé encre restant à 9,6:1 |
 | "Mes livres" en haut à gauche de la lecture, "Précédent" et "Suivant" chacun sous sa page, l'écart entre eux sur le pli ; une barre absente laisse sa moitié vide | trois commandes au pied, la barre restante prenant la place libérée | 24 octobre 2026 : demande de l'utilisateur ; avec le livre ouvert, chaque commande tourne la page sous laquelle elle se trouve, et une barre qui changerait de largeur au premier tour casserait cet alignement. "Mes livres" reste la première étape au clavier (Tab puis Entrée) |
 | "Mes livres" sans aplat, précédé d'une flèche de retour ; texte sur 1 880 px avec des marges latérales de 16 à 32 px (marges élargies depuis, voir plus bas) | bouton en aplat ton sur ton ; texte sur 1 700 px, marges jusqu'à 48 px | 24 octobre 2026 : demande de l'utilisateur ; l'aplat alourdissait la ligne de tête, la flèche dit seule que le bouton ramène en arrière, et les marges larges coûtaient environ 150 px de texte par côté sur 1920 px |
 | Marges latérales d'environ 100 px sur 1920 px ; titre du livre en gras dans le titre courant, auteur atténué | marges de 50 px ; titre et auteur dans le même style | 24 octobre 2026 : demande de l'utilisateur ; à 50 px le texte touchait presque les bords, et le titre et l'auteur se confondaient. "Précédent" et "Suivant" compacts aux deux extrémités ont été essayés le même jour puis écartés à sa demande : les grandes barres sous chaque page restent |
 | Curseurs agrandis à 48 px | 64 px | 24 octobre 2026 : demande de l'utilisateur ; 64 px paraissait vraiment gros à l'écran, 48 px reste nettement plus grand qu'un curseur ordinaire |
 | Pied de "Mes livres" en deux moitiés comme en lecture : "Suivant" à droite, "Précédent" à gauche, chacun de la moitié de la largeur, même seul | barre restante sur toute la largeur | 24 octobre 2026 : demande de l'utilisateur ; une barre seule sur toute la largeur était trop grosse, et une commande qui garde sa place d'un écran à l'autre se retrouve sans la chercher |
 | Blocs de livres en lin pastel à texte encre, icône d'état (livre fermé, ouvert, coche) ; trois rangées de titres par page | dix toiles sombres à texte crème ; deux rangées | 24 octobre 2026 : demande de l'utilisateur ; les toiles sombres étaient trop violentes à côté du papier crème, et depuis la baisse des paliers deux rangées laissaient la moitié de l'écran vide. Le rose reste la teinte la plus saturée, donc le livre en cours se repère toujours de loin |
-  paraissait encore gros, d'où l'échelle de 28 à 40 et moins de pages à tourner ; le crème éblouit moins que le blanc cassé. Les commandes ton sur ton n'atteignent que 1,3:1 sur la page (le principe des 3:1 est levé pour elles) : choix assumé pour que l'œil ne quitte plus le texte, leur libellé encre restant à 9,6:1 |
+| Le focus revient au texte après chaque page tournée, au clavier comme au clic ; les deux pieds ("Mes livres" et lecture) partagent un seul composant qui reçoit aussi les flèches et l'anti-rebond | focus rendu après un clic seulement, pied et clavier recopiés dans chaque écran | 24 octobre 2026 : revue du code ; un seul endroit décide quand une commande passe, et le texte garde le focus quelle que soit la façon de tourner |
+| La première mise en page attend les réglages (ou leur échec) ; après un changement de taille, une vue en début de chapitre y reste | mise en page immédiate puis refaite au palier reçu ; position seule pour retrouver la page | 24 octobre 2026 : revue du code ; en ouvrant `/lire/:id` directement la page changeait de taille sous ses yeux, et une page de titre seule sur sa page partage sa position avec la page suivante, qui renvoyait alors sur le titre |
+| Redirections du catalogue limitées à l'hôte configuré, délai global par appel, gardes EPUB sur le nombre d'entrées et la profondeur XML | suivre toute redirection ; délais de connexion et de lecture seuls | 24 octobre 2026 : revue du code ; un site détourné ne doit pas faire appeler une autre adresse au serveur, ni le bloquer en répondant goutte à goutte, ni le faire tomber avec une archive piégée |
 
 ## 15. Vitrine
 
