@@ -1,9 +1,7 @@
 package io.github.thomashtn.bookreader.catalogue.service;
 
 import io.github.thomashtn.bookreader.book.dto.AdminBookResponse;
-import io.github.thomashtn.bookreader.book.entity.Book;
-import io.github.thomashtn.bookreader.book.repository.BookRepository;
-import io.github.thomashtn.bookreader.book.repository.CatalogueBookState;
+import io.github.thomashtn.bookreader.book.service.BookService;
 import io.github.thomashtn.bookreader.catalogue.client.OpdsCatalogueClient;
 import io.github.thomashtn.bookreader.catalogue.client.OpdsEntry;
 import io.github.thomashtn.bookreader.catalogue.dto.CatalogueEntryResponse;
@@ -11,16 +9,15 @@ import io.github.thomashtn.bookreader.catalogue.dto.CatalogueEntryState;
 import io.github.thomashtn.bookreader.conversion.EpubConverter;
 import io.github.thomashtn.bookreader.conversion.model.ConvertedBook;
 import io.github.thomashtn.bookreader.shared.exception.InvalidRequestException;
-import java.time.Clock;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 /**
  * Default {@link CatalogueService}. Deliberately not transactional: the catalogue is called outside any
- * transaction, conversion happens in memory, and each repository call runs its own short transaction.
+ * transaction, conversion happens in memory, and each {@link BookService} call runs its own short one.
  */
 @Service
 public class DefaultCatalogueService implements CatalogueService {
@@ -36,30 +33,21 @@ public class DefaultCatalogueService implements CatalogueService {
     private final EpubConverter converter;
 
     /**
-     * Repository holding books, catalogue ones included.
+     * Library the imported books join.
      */
-    private final BookRepository repository;
-
-    /**
-     * Clock stamping imports and reactivations.
-     */
-    private final Clock clock;
+    private final BookService books;
 
     /**
      * Creates the service.
      *
-     * @param client     OPDS client
-     * @param converter  EPUB converter
-     * @param repository book repository
-     * @param clock      application clock
+     * @param client    OPDS client
+     * @param converter EPUB converter
+     * @param books     library service
      */
-    public DefaultCatalogueService(
-        OpdsCatalogueClient client, EpubConverter converter, BookRepository repository, Clock clock
-    ) {
+    public DefaultCatalogueService(OpdsCatalogueClient client, EpubConverter converter, BookService books) {
         this.client = client;
         this.converter = converter;
-        this.repository = repository;
-        this.clock = clock;
+        this.books = books;
     }
 
     /**
@@ -75,10 +63,8 @@ public class DefaultCatalogueService implements CatalogueService {
             throw new InvalidRequestException("The search query must not be blank.");
         }
         List<OpdsEntry> entries = client.search(query);
-        Map<String, Boolean> activeBySourceId = repository
-            .findBySourceIdIn(entries.stream().map(OpdsEntry::id).toList())
-            .stream()
-            .collect(Collectors.toMap(CatalogueBookState::getSourceId, CatalogueBookState::isActive));
+        Map<String, Boolean> activeBySourceId =
+            books.activeFlagsBySourceId(entries.stream().map(OpdsEntry::id).toList());
         return entries.stream()
             .map(entry -> new CatalogueEntryResponse(
                 entry.id(), entry.title(), entry.author(), entry.summary(), stateOf(activeBySourceId.get(entry.id()))
@@ -99,30 +85,20 @@ public class DefaultCatalogueService implements CatalogueService {
         int bookNumber = OpdsCatalogueClient.bookNumberOf(entryId).orElseThrow(
             () -> new InvalidRequestException("The entry identifier is not a catalogue book page.")
         );
-        Book existing = repository.findBySourceId(entryId).orElse(null);
-        if (existing != null) {
-            return reactivate(existing);
+        Optional<AdminBookResponse> reactivated = books.reactivateCatalogueBook(entryId);
+        if (reactivated.isPresent()) {
+            return new CatalogueImportResult(reactivated.get(), false);
         }
         byte[] epub = client.downloadEpub(bookNumber);
         ConvertedBook converted = converter.convert(epub);
         try {
-            Book book = repository.save(Book.fromCatalogue(converted, entryId, clock.instant()));
-            return new CatalogueImportResult(AdminBookResponse.from(book), true);
+            return new CatalogueImportResult(books.saveCatalogueBook(converted, entryId), true);
         } catch (DataIntegrityViolationException exception) {
             // A concurrent activation of the same entry inserted it first (unique source_id).
-            return reactivate(repository.findBySourceId(entryId).orElseThrow(() -> exception));
+            return new CatalogueImportResult(
+                books.reactivateCatalogueBook(entryId).orElseThrow(() -> exception), false
+            );
         }
-    }
-
-    /**
-     * Shows an imported book again; it counts as newly added in the reader's list.
-     *
-     * @param book imported book
-     * @return reactivated book, not created
-     */
-    private CatalogueImportResult reactivate(Book book) {
-        book.activate(clock.instant());
-        return new CatalogueImportResult(AdminBookResponse.from(repository.save(book)), false);
     }
 
     /**

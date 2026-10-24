@@ -1,6 +1,6 @@
 package io.github.thomashtn.bookreader.book.dto;
 
-import io.github.thomashtn.bookreader.book.repository.BookSummary;
+import io.github.thomashtn.bookreader.book.entity.BookSummary;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;

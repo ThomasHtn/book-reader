@@ -14,7 +14,7 @@ public class EpubRejectedException extends RuntimeException {
      * Why the EPUB was refused.
      *
      * <p>Each {@link #code()} is part of the API contract: the backoffice maps it to a French message
-     * in {@code frontend/src/app/core/admin/admin-errors.ts}, so renaming a constant must not change it.</p>
+     * in {@code frontend/src/app/core/admin/admin-message.ts}, so renaming a constant must not change it.</p>
      */
     public enum Reason {
 

@@ -1,8 +1,7 @@
 package io.github.thomashtn.bookreader.book.dto;
 
-import io.github.thomashtn.bookreader.book.entity.Book;
 import io.github.thomashtn.bookreader.book.entity.BookSource;
-import io.github.thomashtn.bookreader.book.repository.BookSummary;
+import io.github.thomashtn.bookreader.book.entity.BookSummary;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
@@ -36,24 +35,12 @@ public record AdminBookResponse(
 ) {
 
     /**
-     * Maps a summary projection.
+     * Maps a book, whether the entity or its summary projection.
      *
-     * @param book projection
+     * @param book entity or projection
      * @return response
      */
     public static AdminBookResponse from(BookSummary book) {
-        return new AdminBookResponse(book.getId(), book.getTitle(), book.getAuthor(), book.getSource(),
-            book.getSourceUrl(), book.isActive(), book.getBlockCount(), book.getActivatedAt(), book.getCreatedAt(),
-            book.getFinishedAt());
-    }
-
-    /**
-     * Maps the entity.
-     *
-     * @param book entity
-     * @return response
-     */
-    public static AdminBookResponse from(Book book) {
         return new AdminBookResponse(book.getId(), book.getTitle(), book.getAuthor(), book.getSource(),
             book.getSourceUrl(), book.isActive(), book.getBlockCount(), book.getActivatedAt(), book.getCreatedAt(),
             book.getFinishedAt());

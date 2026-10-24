@@ -14,7 +14,7 @@
 
   <groupId>io.github.thomashtn</groupId>
   <artifactId>book-reader</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>Book Reader</name>
   <description>Backend of the accessible book reader: books, EPUB conversion, OPDS catalogue, settings.</description>
@@ -23,10 +23,10 @@
     <java.version>25</java.version>
 
     <springdoc.version>3.1.1</springdoc.version>
-    <spring-dotenv.version>5.1.0</spring-dotenv.version>
     <jsoup.version>1.23.2</jsoup.version>
     <testcontainers.version>2.0.5</testcontainers.version>
     <mockwebserver.version>5.5.0</mockwebserver.version>
+    <archunit.version>1.5.1</archunit.version>
 
     <spotless-maven-plugin.version>3.10.3</spotless-maven-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
@@ -65,6 +65,12 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- Serves /actuator/prometheus for the VPS Prometheus. -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+      <scope>runtime</scope>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-flyway</artifactId>
@@ -93,12 +99,6 @@
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
       <version>${jsoup.version}</version>
-    </dependency>
-    <!-- Loads backend/.env at startup. -->
-    <dependency>
-      <groupId>me.paulschwarz</groupId>
-      <artifactId>springboot4-dotenv</artifactId>
-      <version>${spring-dotenv.version}</version>
     </dependency>
     <!-- Narrowly justified SpotBugs suppressions. -->
     <dependency>
@@ -141,6 +141,13 @@
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>mockwebserver3</artifactId>
       <version>${mockwebserver.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Architecture rules: the one-way package tiers and the layers inside a feature. -->
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit-junit5</artifactId>
+      <version>${archunit.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -233,6 +240,8 @@
         <configuration>
           <effort>Max</effort>
           <threshold>Low</threshold>
+          <!-- Shared false positives, each with its reason; one-offs get a justified @SuppressFBWarnings. -->
+          <excludeFilterFile>config/spotbugs/exclude.xml</excludeFilterFile>
           <failOnError>true</failOnError>
         </configuration>
         <executions>
@@ -295,6 +304,20 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <!-- `spring-boot:run` reads backend/.env; the jar, the image and the tests never do. -->
+        <configuration>
+          <arguments>
+            <argument>--spring.config.import=optional:file:.env[.properties]</argument>
+          </arguments>
+        </configuration>
+        <executions>
+          <!-- Version and build time on /actuator/info, to check what runs on the VPS. -->
+          <execution>
+            <goals>
+              <goal>build-info</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

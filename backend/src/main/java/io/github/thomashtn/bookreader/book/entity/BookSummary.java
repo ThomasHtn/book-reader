@@ -1,11 +1,10 @@
-package io.github.thomashtn.bookreader.book.repository;
+package io.github.thomashtn.bookreader.book.entity;
 
-import io.github.thomashtn.bookreader.book.entity.BookSource;
 import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Book columns without the content, so lists never load the JSONB blocks.
+ * Book columns without the content, so lists never load the JSONB blocks; the entity implements it too.
  */
 public interface BookSummary {
 

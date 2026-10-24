@@ -4,7 +4,11 @@ import io.github.thomashtn.bookreader.book.dto.AdminBookResponse;
 import io.github.thomashtn.bookreader.book.dto.BookContentResponse;
 import io.github.thomashtn.bookreader.book.dto.BookSummaryResponse;
 import io.github.thomashtn.bookreader.book.dto.UpdateBookRequest;
+import io.github.thomashtn.bookreader.conversion.model.ConvertedBook;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -61,4 +65,30 @@ public interface BookService {
      * @throws io.github.thomashtn.bookreader.conversion.EpubRejectedException when the EPUB is unusable
      */
     AdminBookResponse importUpload(byte[] epub);
+
+    /**
+     * Tells which catalogue entries are already in the library, and whether the reader sees them.
+     *
+     * @param sourceIds catalogue entry identifiers
+     * @return active flag of each imported entry; entries never imported are absent
+     */
+    Map<String, Boolean> activeFlagsBySourceId(Collection<String> sourceIds);
+
+    /**
+     * Shows an imported catalogue book again; it counts as newly added in the reader's list.
+     *
+     * @param sourceId catalogue entry identifier
+     * @return reactivated book, empty when the entry was never imported
+     */
+    Optional<AdminBookResponse> reactivateCatalogueBook(String sourceId);
+
+    /**
+     * Saves a converted catalogue book, active.
+     *
+     * @param converted converted EPUB
+     * @param sourceId  catalogue entry identifier
+     * @return imported book
+     * @throws org.springframework.dao.DataIntegrityViolationException when the entry was imported concurrently
+     */
+    AdminBookResponse saveCatalogueBook(ConvertedBook converted, String sourceId);
 }

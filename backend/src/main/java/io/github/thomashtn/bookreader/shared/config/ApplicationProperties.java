@@ -12,7 +12,6 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Application settings under {@code app.*}, validated at startup so a bad value stops the boot.
  *
- * @param frontendOrigin Angular frontend origin allowed by CORS
  * @param adminApiKey    secret protecting administrative endpoints, at least 32 characters
  * @param apiDocsEnabled whether the OpenAPI document and Swagger UI are served and reachable
  * @param adminRateLimit lockout applied to repeated wrong administrator keys
@@ -20,7 +19,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties("app")
 public record ApplicationProperties(
-    @NotBlank String frontendOrigin,
     @NotBlank @Size(min = 32) String adminApiKey,
     boolean apiDocsEnabled,
     @Valid @NotNull AdminRateLimit adminRateLimit

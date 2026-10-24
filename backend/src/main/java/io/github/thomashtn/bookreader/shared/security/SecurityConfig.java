@@ -3,7 +3,6 @@ package io.github.thomashtn.bookreader.shared.security;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.bookreader.shared.config.ApplicationProperties;
 import java.time.Clock;
-import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,13 +10,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Stateless HTTP security and CORS rules.
+ * Stateless HTTP security rules; the app is served from one origin, so no CORS is configured.
  *
  * <p>Every {@code GET /api/**} is public and anything else is denied unless a rule allows it.
  * Administrative routes are authenticated by {@link AdminApiKeyFilter}, which reports <em>why</em> a
@@ -71,9 +67,6 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             // Cache-Control is set by HttpCachingConfig: no-store here would defeat ETag revalidation.
             .headers(headers -> headers.cacheControl(cache -> cache.disable()))
-            .cors(cors -> cors.configurationSource(
-                corsConfigurationSource(properties.frontendOrigin())
-            ))
             .sessionManagement(session -> session.sessionCreationPolicy(
                 SessionCreationPolicy.STATELESS
             ))
@@ -83,7 +76,12 @@ public class SecurityConfig {
                     // every administrative read endpoint.
                     .requestMatchers(AdminApiKeyFilter.ADMIN_PATH_PATTERN)
                     .hasAuthority(AdminApiKeyFilter.ADMIN_ROLE)
-                    .requestMatchers("/actuator/health", "/actuator/info").permitAll();
+                    // Open to probes: /livez and /readyz only tell up or down; the actuator lives on the
+                    // management port, which no proxy routes.
+                    .requestMatchers(
+                        "/livez", "/readyz",
+                        "/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/prometheus"
+                    ).permitAll();
 
                 // Same flag as springdoc, so the exception disappears with the routes it opens.
                 if (properties.apiDocsEnabled()) {
@@ -105,30 +103,5 @@ public class SecurityConfig {
             );
 
         return http.build();
-    }
-
-    /**
-     * Creates the CORS configuration used by the Angular frontend.
-     *
-     * <p>Credentials are not allowed: the key travels in a header and the API sets no cookie, and
-     * allowing them would forbid ever widening {@code frontendOrigin} past a single exact origin.</p>
-     *
-     * @param frontendOrigin allowed frontend origin
-     * @return a URL-based CORS configuration source
-     */
-    private CorsConfigurationSource corsConfigurationSource(String frontendOrigin) {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(frontendOrigin));
-        configuration.setAllowedMethods(
-            List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-        );
-        configuration.setAllowedHeaders(
-            List.of("Content-Type", "Authorization", AdminApiKeyFilter.HEADER_NAME)
-        );
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
     }
 }

@@ -1,6 +1,7 @@
 package io.github.thomashtn.bookreader.book.repository;
 
 import io.github.thomashtn.bookreader.book.entity.Book;
+import io.github.thomashtn.bookreader.book.entity.BookSummary;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;

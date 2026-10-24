@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    SpotBugs findings excluded from every build, each with the reason it is a false positive.
+    A finding specific to one class stays next to that class, as a justified @SuppressFBWarnings.
+-->
+<FindBugsFilter
+  xmlns="https://github.com/spotbugs/filter/3.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+  <!--
+      Constructor injection of Spring beans: a controller or service keeps the singletons it is given
+      (services, repositories, settings, clock), shared on purpose. SpotBugs flags any of them that
+      declares a setter or a delete method as mutable state stored from outside.
+  -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+    <Method name="&lt;init&gt;"/>
+    <Or>
+      <Package name="~.*\.controller"/>
+      <Package name="~.*\.service"/>
+    </Or>
+  </Match>
+
+</FindBugsFilter>

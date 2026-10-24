@@ -6,12 +6,17 @@ import io.github.thomashtn.bookreader.book.dto.BookSummaryResponse;
 import io.github.thomashtn.bookreader.book.dto.UpdateBookRequest;
 import io.github.thomashtn.bookreader.book.entity.Book;
 import io.github.thomashtn.bookreader.book.repository.BookRepository;
+import io.github.thomashtn.bookreader.book.repository.CatalogueBookState;
 import io.github.thomashtn.bookreader.conversion.EpubConverter;
 import io.github.thomashtn.bookreader.conversion.model.ConvertedBook;
 import io.github.thomashtn.bookreader.shared.exception.ResourceNotFoundException;
 import java.time.Clock;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -146,5 +151,45 @@ public class DefaultBookService implements BookService {
     public AdminBookResponse importUpload(byte[] epub) {
         ConvertedBook converted = converter.convert(epub);
         return AdminBookResponse.from(repository.save(Book.fromUpload(converted, clock.instant())));
+    }
+
+    /**
+     * Reads the import states in a single query, without the content.
+     *
+     * @param sourceIds catalogue entry identifiers
+     * @return active flag of each imported entry
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Boolean> activeFlagsBySourceId(Collection<String> sourceIds) {
+        return repository.findBySourceIdIn(sourceIds).stream()
+            .collect(Collectors.toMap(CatalogueBookState::getSourceId, CatalogueBookState::isActive));
+    }
+
+    /**
+     * Activates the book in one transaction, stamping the activation with the clock.
+     *
+     * @param sourceId catalogue entry identifier
+     * @return reactivated book, empty when never imported
+     */
+    @Override
+    @Transactional
+    public Optional<AdminBookResponse> reactivateCatalogueBook(String sourceId) {
+        return repository.findBySourceId(sourceId).map(book -> {
+            book.activate(clock.instant());
+            return AdminBookResponse.from(book);
+        });
+    }
+
+    /**
+     * Persists in the repository's own short transaction, so a concurrent import fails right here.
+     *
+     * @param converted converted EPUB
+     * @param sourceId  catalogue entry identifier
+     * @return imported book, active
+     */
+    @Override
+    public AdminBookResponse saveCatalogueBook(ConvertedBook converted, String sourceId) {
+        return AdminBookResponse.from(repository.save(Book.fromCatalogue(converted, sourceId, clock.instant())));
     }
 }

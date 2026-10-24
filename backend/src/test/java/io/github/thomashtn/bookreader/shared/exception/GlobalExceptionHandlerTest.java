@@ -2,14 +2,7 @@ package io.github.thomashtn.bookreader.shared.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.thomashtn.bookreader.catalogue.client.CatalogueRefusedException;
-import io.github.thomashtn.bookreader.catalogue.client.CatalogueUnavailableException;
-import io.github.thomashtn.bookreader.catalogue.config.CatalogueProperties;
-import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
-import io.github.thomashtn.bookreader.conversion.EpubRejectedException.Reason;
-import java.net.URI;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
@@ -19,11 +12,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.util.unit.DataSize;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -38,15 +29,10 @@ class GlobalExceptionHandlerTest {
     private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
 
     /**
-     * Handler under test, with the production EPUB size limit.
+     * Handler under test.
      */
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(
-        Clock.fixed(NOW, ZoneOffset.UTC),
-        new CatalogueProperties(
-            URI.create("https://catalogue.test/"), Duration.ofSeconds(1), Duration.ofSeconds(1),
-            DataSize.ofMegabytes(20)
-        )
-    );
+    private final GlobalExceptionHandler handler =
+        new GlobalExceptionHandler(new ApiProblems(Clock.fixed(NOW, ZoneOffset.UTC)));
 
     /**
      * Request every failure is reported for.
@@ -119,50 +105,12 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("Renders a refused EPUB as 422 with a code per reason")
-    void rendersEpubRejection() {
-        ResponseEntity<ApiErrorResponse> response = handler.handleEpubRejected(
-            new EpubRejectedException(Reason.NO_TEXT, "internal detail"), request);
-
-        assertError(response, HttpStatus.UNPROCESSABLE_CONTENT, "EPUB_NO_TEXT");
-        assertThat(response.getBody().detail()).doesNotContain("internal");
-    }
-
-    @Test
-    @DisplayName("Renders an upload above 20 MB as 413 with the too-large EPUB code")
-    void rendersUploadTooLarge() {
-        ResponseEntity<ApiErrorResponse> response =
-            handler.handleUploadTooLarge(new MaxUploadSizeExceededException(20L * 1024 * 1024), request);
-
-        assertError(response, HttpStatus.CONTENT_TOO_LARGE, "EPUB_TOO_LARGE");
-        assertThat(response.getBody().detail()).isEqualTo("The file exceeds 20 MB.");
-    }
-
-    @Test
     @DisplayName("Renders an upload without file as 400")
     void rendersMissingPart() {
         ResponseEntity<ApiErrorResponse> response =
             handler.handleMissingPart(new MissingServletRequestPartException("file"), request);
 
         assertError(response, HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT");
-    }
-
-    @Test
-    @DisplayName("Renders an unreachable catalogue as 503")
-    void rendersCatalogueUnavailable() {
-        ResponseEntity<ApiErrorResponse> response = handler.handleCatalogueUnavailable(
-            new CatalogueUnavailableException("timeout", new IllegalStateException()), request);
-
-        assertError(response, HttpStatus.SERVICE_UNAVAILABLE, "CATALOGUE_UNAVAILABLE");
-    }
-
-    @Test
-    @DisplayName("Renders a download refused by the catalogue as 503 with its own code")
-    void rendersCatalogueRefused() {
-        ResponseEntity<ApiErrorResponse> response =
-            handler.handleCatalogueRefused(new CatalogueRefusedException("text/html"), request);
-
-        assertError(response, HttpStatus.SERVICE_UNAVAILABLE, "CATALOGUE_REFUSED");
     }
 
     @Test
