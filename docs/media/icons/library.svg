@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Library">
+  <style>
+    .s { fill: none; stroke: #2b251d; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
+    @media (prefers-color-scheme: dark) { .s { stroke: #efe6d3 } }
+  </style>
+  <path class="s" d="m16 6 4 14" />
+  <path class="s" d="M12 6v14" />
+  <path class="s" d="M8 8v12" />
+  <path class="s" d="M4 4v16" />
+</svg>

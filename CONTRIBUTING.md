@@ -64,7 +64,8 @@ Green here means green on GitHub. Coverage floors only ever go up: 90 % of lines
 ```text
 backend/            the API (Spring Boot): EPUB conversion, OPDS catalogue, books, settings
 frontend/           the reader and its backoffice (Angular), served by nginx, which relays /api
-docs/               specification, design system, deployment contract, screenshots
+docs/               specification, design system, deployment contract, README media
+tools/tour/         films the README tour and screens from the real app (tools/tour/README.md)
 compose.yaml        the whole app on your machine, also started by every delivery
 ```
 
@@ -153,8 +154,8 @@ in `admin.routes.ts` and a link in `admin-shell.html`. It reuses the `a-*` primi
 (`page-math.utils.ts`, `chapters.utils.ts`, `page-count.utils.ts`) is tested with Vitest; the real
 measurement (DomChapterLayout) can only be checked in a browser, through `make e2e`.
 
-**Refresh the README screenshots**: `make reset up`, then from frontend/
-`SCREENSHOTS=1 npx playwright test e2e/screenshots.e2e.ts`.
+**Refresh the README tour and screens**: `tools/tour/tour.sh`, on a stack of its own
+([tools/tour/README.md](tools/tour/README.md)).
 
 ## Shipping a release
 

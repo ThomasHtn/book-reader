@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Open book">
+  <style>
+    .s { fill: none; stroke: #2b251d; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round }
+    @media (prefers-color-scheme: dark) { .s { stroke: #efe6d3 } }
+  </style>
+  <path class="s" d="M12 7v14" />
+  <path class="s" d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+</svg>

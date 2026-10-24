@@ -1,0 +1,541 @@
+<!doctype html>
+<!-- The set of the tour: title cards, a caption, and the app in a phone and a browser. record.mjs drives it. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Liseuse tour</title>
+    <style>
+      /* Stage styles: the app's palette and typeface, served by the app itself on the same origin. */
+
+      /* The reader's Luciole for titles, so captions and screens share their typeface. */
+      @font-face {
+        font-family: Luciole;
+        font-weight: 400;
+        src: url('/fonts/luciole/Luciole-Regular.woff2') format('woff2');
+      }
+
+      /* Luciole bold, for the titles. */
+      @font-face {
+        font-family: Luciole;
+        font-weight: 700;
+        src: url('/fonts/luciole/Luciole-Bold.woff2') format('woff2');
+      }
+
+      /* The backoffice's Atkinson Hyperlegible Next for text. */
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        font-weight: 400;
+        src: url('/fonts/atkinson-hyperlegible-next/atkinson-hyperlegible-next-latin-400-normal.woff2')
+          format('woff2');
+      }
+
+      /* The cream, umber and bookmark red of frontend/src/styles/tokens.css and the icon, plus the device greys. */
+      :root {
+        --paper: #efe6d3;
+        --surface: #f7f1e4;
+        --surface-2: #dbd3c1;
+        --ink: #2b251d;
+        --ink-2: #5c5346;
+        --ink-3: #8a8070;
+        --accent: #7a2233;
+        --accent-soft: rgb(122 34 51 / 9%);
+        --bright: #e6cf9f;
+        --device: #2b251d;
+        --device-line: rgb(43 37 29 / 18%);
+      }
+
+      /* No default margins anywhere. */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      /* Exactly the video size, nothing scrolls. */
+      html,
+      body {
+        width: 1200px;
+        height: 760px;
+        overflow: hidden;
+      }
+
+      /* The paper of the app, as the backdrop. */
+      body {
+        position: relative;
+        background: var(--paper);
+        font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+        color: var(--ink);
+      }
+
+      /* Soft bookmark-red blobs, the only decoration. */
+      .blob {
+        position: absolute;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        transition: transform 1.2s ease;
+      }
+
+      /* Top left blob. */
+      .blob--a {
+        width: 520px;
+        height: 520px;
+        left: -200px;
+        top: -240px;
+      }
+
+      /* Bottom right blob, in the sand of the pastel book blocks. */
+      .blob--b {
+        width: 420px;
+        height: 420px;
+        right: -140px;
+        bottom: -220px;
+        background: rgb(230 207 159 / 45%);
+      }
+
+      /* Bottom middle blob. */
+      .blob--c {
+        width: 260px;
+        height: 260px;
+        left: 360px;
+        bottom: -190px;
+      }
+
+      /* Blobs make room for the wide browser. */
+      body[data-layout='desktop'] .blob--a {
+        transform: translate(-60px, -40px);
+      }
+
+      /* Same, other corner. */
+      body[data-layout='desktop'] .blob--b {
+        transform: translate(60px, 40px);
+      }
+
+      /* Intro, scene and outro, cross-faded. */
+      .layer {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.55s ease,
+          transform 0.55s ease;
+      }
+
+      /* The layer on screen. */
+      .layer.is-on {
+        opacity: 1;
+      }
+
+      /* Title cards, centred, rising slightly as they appear. */
+      .card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transform: translateY(12px);
+      }
+
+      /* A title card in place. */
+      .card.is-on {
+        transform: none;
+      }
+
+      /* The app icon above the title. */
+      .card__icon {
+        width: 96px;
+        height: 96px;
+        margin-bottom: 44px;
+      }
+
+      /* Card title. */
+      .card h1 {
+        font-family: Luciole, system-ui, sans-serif;
+        font-size: 54px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+      }
+
+      /* Card subtitle. */
+      .card p {
+        margin-top: 18px;
+        font-size: 22px;
+        color: var(--ink-2);
+      }
+
+      /* The one command of the outro, as a terminal line. */
+      .card code {
+        display: inline-block;
+        margin-top: 34px;
+        padding: 12px 22px;
+        border-radius: 12px;
+        background: var(--surface-2);
+        color: var(--ink);
+        font:
+          500 20px ui-monospace,
+          'JetBrains Mono',
+          monospace;
+      }
+
+      /* The prompt sign. */
+      .card code b {
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      /* The accented half of a title. */
+      em {
+        font-style: normal;
+        color: var(--accent);
+      }
+
+      /* Caption: left of the phone, or above the browser. */
+      .caption {
+        position: absolute;
+        transition:
+          opacity 0.45s ease,
+          transform 0.45s ease;
+      }
+
+      /* Caption fading out while its text changes. */
+      .caption.is-out {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      /* Small pill naming the scene. */
+      .caption__eyebrow {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      /* Caption title, on two lines next to the phone. */
+      .caption__title {
+        font-family: Luciole, system-ui, sans-serif;
+        margin-top: 22px;
+        font-size: 50px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.12;
+      }
+
+      /* Caption sentence. */
+      .caption__sub {
+        margin-top: 18px;
+        font-size: 21px;
+        line-height: 1.45;
+        color: var(--ink-2);
+      }
+
+      /* Phone scenes: caption on the left, vertically centred. */
+      body[data-layout='phone'] .caption {
+        left: 96px;
+        top: 50%;
+        width: 560px;
+        translate: 0 -50%;
+      }
+
+      /* Desktop scenes: caption centred above the browser. */
+      body[data-layout='desktop'] .caption {
+        left: 0;
+        right: 0;
+        top: 22px;
+        text-align: center;
+      }
+
+      /* Desktop title on one line. */
+      body[data-layout='desktop'] .caption__title {
+        margin-top: 10px;
+        font-size: 36px;
+      }
+
+      /* The line break of the phone title is dropped... */
+      body[data-layout='desktop'] .caption__title br {
+        display: none;
+      }
+
+      /* ...and replaced by a space. */
+      body[data-layout='desktop'] .caption__title em::before {
+        content: ' ';
+      }
+
+      /* No room for a sentence above the browser. */
+      body[data-layout='desktop'] .caption__sub {
+        display: none;
+      }
+
+      /* Phone and browser, rising in when their layout starts. */
+      .device {
+        position: absolute;
+        opacity: 0;
+        transform: translateY(30px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+      }
+
+      /* The device of the current layout. */
+      .device.is-on {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* Phone body, on the right. */
+      .phone {
+        right: 110px;
+        top: 38px;
+        width: 328px;
+        height: 684px;
+        padding: 12px;
+        border-radius: 52px;
+        background: var(--device);
+        box-shadow:
+          0 30px 60px rgb(43 37 29 / 30%),
+          0 0 0 1px var(--device-line);
+      }
+
+      /* Phone screen, cropping the scaled app. */
+      .phone__screen {
+        position: relative;
+        width: 304px;
+        height: 660px;
+        overflow: hidden;
+        border-radius: 40px;
+        background: var(--paper);
+      }
+
+      /* The app at a real phone width, scaled into the screen. */
+      .phone iframe {
+        width: 390px;
+        height: 847px;
+        border: 0;
+        transform: scale(0.7795);
+        transform-origin: 0 0;
+      }
+
+      /* Browser window, centred under the caption. */
+      .browser {
+        left: 50%;
+        top: 108px;
+        width: 980px;
+        margin-left: -490px;
+        overflow: hidden;
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow:
+          0 30px 70px rgb(43 37 29 / 30%),
+          0 0 0 1px var(--device-line);
+      }
+
+      /* Browser title bar. */
+      .browser__bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 34px;
+        padding: 0 14px;
+        background: var(--device);
+      }
+
+      /* The three window buttons. */
+      .browser__dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--ink-3);
+      }
+
+      /* Address field. */
+      .browser__url {
+        flex: 1;
+        max-width: 420px;
+        height: 22px;
+        margin-left: 18px;
+        padding: 0 12px;
+        border-radius: 7px;
+        background: var(--surface-2);
+        font-size: 12px;
+        line-height: 22px;
+        color: var(--ink-3);
+      }
+
+      /* Browser viewport, the app's whole screen: the reader is paged, never scrolled. */
+      .browser__screen {
+        width: 980px;
+        height: 613px;
+        overflow: hidden;
+      }
+
+      /* The app on a desktop screen wide enough for two facing pages, scaled into the window. */
+      .browser iframe {
+        width: 1440px;
+        height: 900px;
+        border: 0;
+        transform: scale(0.68056);
+        transform-origin: 0 0;
+      }
+
+      /* Tap feedback, drawn where the recorder clicks. */
+      .tap {
+        position: absolute;
+        z-index: 10;
+        width: 44px;
+        height: 44px;
+        margin: -22px 0 0 -22px;
+        border: 2px solid rgb(122 34 51 / 60%);
+        border-radius: 50%;
+        background: rgb(122 34 51 / 22%);
+        opacity: 0;
+        transform: scale(0.4);
+        pointer-events: none;
+      }
+
+      /* One ripple per tap. */
+      .tap.is-on {
+        animation: tap 0.7s ease-out forwards;
+      }
+
+      /* Grows, then fades. */
+      @keyframes tap {
+        0% {
+          opacity: 0;
+          transform: scale(0.4);
+        }
+        25% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.5);
+        }
+      }
+    </style>
+  </head>
+  <body data-layout="none">
+    <!-- Background decoration. -->
+    <div class="blob blob--a"></div>
+    <div class="blob blob--b"></div>
+    <div class="blob blob--c"></div>
+
+    <!-- Opening card: the problem. -->
+    <section class="layer card" id="intro">
+      <img class="card__icon" src="/favicon.svg" alt="" />
+      <h1>Reading had become <em>too hard.</em></h1>
+      <p>Macular degeneration blurs the middle of the page. Large print was not large enough.</p>
+    </section>
+
+    <!-- Every scene: a caption and the two devices, both apps loaded once for the whole take. -->
+    <section class="layer" id="scene">
+      <!-- Caption, rewritten by window.tour.caption. -->
+      <div class="caption" id="caption">
+        <span class="caption__eyebrow" id="eyebrow"></span>
+        <h2 class="caption__title" id="title"></h2>
+        <p class="caption__sub" id="sub"></p>
+      </div>
+
+      <!-- The app on a phone. -->
+      <div class="device phone" id="phone">
+        <div class="phone__screen"><iframe id="phone-frame" title="phone"></iframe></div>
+      </div>
+
+      <!-- The app in a browser window. -->
+      <div class="device browser" id="browser">
+        <div class="browser__bar">
+          <span class="browser__dot"></span>
+          <span class="browser__dot"></span>
+          <span class="browser__dot"></span>
+          <span class="browser__url">liseuse.example</span>
+        </div>
+        <div class="browser__screen"><iframe id="desktop-frame" title="desktop"></iframe></div>
+      </div>
+    </section>
+
+    <!-- Closing card: the pitch and the one command. -->
+    <section class="layer card" id="outro">
+      <img class="card__icon" src="/favicon.svg" alt="" />
+      <h1>Her books, her page.<br /><em>Nothing else.</em></h1>
+      <p>Self-hosted, free and open source, no tracking.</p>
+      <code><b>$</b> docker compose up</code>
+    </section>
+
+    <!-- Tap ripple, moved over the element being clicked. -->
+    <div class="tap" id="tap"></div>
+
+    <!-- The commands record.mjs calls, one per stage change. -->
+    <script>
+      /**
+       * Shorthand for the stage's elements.
+       */
+      const byId = (id) => document.getElementById(id);
+
+      /**
+       * Stage commands, called by record.mjs through page.evaluate.
+       */
+      window.tour = {
+        /**
+         * Cross-fades to one layer: intro, scene or outro.
+         */
+        show(id) {
+          for (const layer of document.querySelectorAll('.layer')) {
+            layer.classList.toggle('is-on', layer.id === id);
+          }
+        },
+
+        /**
+         * Brings in the phone, the browser, or neither.
+         */
+        layout(name) {
+          document.body.dataset.layout = name;
+          byId('phone').classList.toggle('is-on', name === 'phone');
+          byId('browser').classList.toggle('is-on', name === 'desktop');
+        },
+
+        /**
+         * Fades the caption out, swaps its text, fades it back in; resolves once swapped.
+         */
+        caption(eyebrow, title, sub) {
+          byId('caption').classList.add('is-out');
+          return new Promise((done) =>
+            setTimeout(() => {
+              byId('eyebrow').textContent = eyebrow;
+              byId('title').innerHTML = title;
+              byId('sub').textContent = sub;
+              byId('caption').classList.remove('is-out');
+              done();
+            }, 450),
+          );
+        },
+
+        /**
+         * Ripples over the nth visible match of a selector inside a device, then clicks it.
+         */
+        tap(device, selector, index = 0) {
+          const iframe = byId(`${device}-frame`);
+          const visible = [...iframe.contentDocument.querySelectorAll(selector)].filter(
+            (element) => element.getClientRects().length,
+          );
+          const target = visible[index];
+          if (!target) throw new Error(`No ${selector} in ${device}`);
+          const box = target.getBoundingClientRect();
+          const frame = iframe.getBoundingClientRect();
+          const scale = frame.width / iframe.offsetWidth;
+          const ripple = byId('tap');
+          ripple.style.left = `${frame.left + (box.left + box.width / 2) * scale}px`;
+          ripple.style.top = `${frame.top + (box.top + box.height / 2) * scale}px`;
+          ripple.classList.remove('is-on');
+          void ripple.offsetWidth;
+          ripple.classList.add('is-on');
+          setTimeout(() => target.click(), 180);
+        },
+      };
+    </script>
+  </body>
+</html>

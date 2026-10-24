@@ -1,0 +1,11 @@
+# Tour stack, layered over compose.yaml by tour.sh under its own project name, so its database is a
+# throwaway volume and the app answers on a port of its own: `make up` and `make db` keep theirs.
+services:
+  # No published port: only the backend reaches it.
+  postgres:
+    ports: !reset []
+
+  # The app on 8100 instead of 8000.
+  frontend:
+    ports: !override
+      - "127.0.0.1:8100:8080"

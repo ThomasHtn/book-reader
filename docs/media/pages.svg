@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 480" width="1400" height="480" role="img" aria-label="Only the shown chapter is laid out; chapters already read keep their real count, the others are estimated">
+  <style>
+    text { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .bg { fill: #f6f0e3 }
+    .card { fill: #fffaf0 }
+    .ink { fill: #2b251d }
+    .ink2 { fill: #5c5346 }
+    .ink3 { fill: #776d5f }
+    .acc { fill: #7a2233 }
+    .hair { stroke: #2b251d; stroke-opacity: .14; stroke-width: 1.5; fill: none }
+    .dash { stroke: #2b251d; stroke-opacity: .3; stroke-width: 1.5; fill: none; stroke-dasharray: 7 6 }
+    .arrow { stroke: #776d5f; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round }
+    .lead { stroke: #7a2233; stroke-opacity: .55; stroke-width: 1.5; fill: none }
+    .shown { fill: #7a2233 }
+    .known { fill: #2b251d; fill-opacity: .55 }
+    .guess { fill: none; stroke: #2b251d; stroke-opacity: .4; stroke-width: 1.5; stroke-dasharray: 5 4 }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #1c1915 }
+      .card { fill: #26221c }
+      .ink { fill: #efe6d3 }
+      .ink2 { fill: #c8bfaf }
+      .ink3 { fill: #a39a8a }
+      .acc { fill: #e8a3b0 }
+      .hair { stroke: #ffffff; stroke-opacity: .14 }
+      .dash { stroke: #ffffff; stroke-opacity: .3 }
+      .arrow { stroke: #a39a8a }
+      .lead { stroke: #e8a3b0; stroke-opacity: .6 }
+      .shown { fill: #e8a3b0 }
+      .known { fill: #efe6d3; fill-opacity: .55 }
+      .guess { stroke: #ffffff; stroke-opacity: .4 }
+    }
+  </style>
+
+  <rect class="bg" width="1400" height="480" rx="26" />
+  <text class="ink" x="80" y="78" font-size="23" font-weight="600" letter-spacing="-.3">"Page 12 sur 840", with one chapter laid out</text>
+  <text class="ink3" x="80" y="104" font-size="17">A book, chapter by chapter: the width of each block is its page count.</text>
+  <rect class="known" x="80.0" y="150" width="82.6" height="56" rx="8" />
+  <rect class="known" x="168.6" y="150" width="133.2" height="56" rx="8" />
+  <rect class="shown" x="307.8" y="150" width="50.9" height="56" rx="8" />
+  <rect class="guess" x="364.7" y="150" width="190.1" height="56" rx="8" />
+  <rect class="guess" x="560.8" y="150" width="107.9" height="56" rx="8" />
+  <rect class="guess" x="674.7" y="150" width="158.5" height="56" rx="8" />
+  <rect class="guess" x="839.2" y="150" width="69.9" height="56" rx="8" />
+  <rect class="guess" x="915.1" y="150" width="171.1" height="56" rx="8" />
+  <rect class="guess" x="1092.2" y="150" width="120.5" height="56" rx="8" />
+  <rect class="guess" x="1218.8" y="150" width="95.2" height="56" rx="8" />
+  <rect class="shown" x="80" y="250" width="36" height="24" rx="6" />
+  <text class="ink" x="136" y="268" font-size="20" font-weight="600">On screen</text>
+  <text class="ink3" x="300" y="268" font-size="17">Laid out by the browser in columns: its real page count.</text>
+  <rect class="known" x="80" y="306" width="36" height="24" rx="6" />
+  <text class="ink" x="136" y="324" font-size="20" font-weight="600">Already read</text>
+  <text class="ink3" x="300" y="324" font-size="17">Counted for real when shown, then remembered for this screen and size.</text>
+  <rect class="guess" x="80" y="362" width="36" height="24" rx="6" />
+  <text class="ink" x="136" y="380" font-size="20" font-weight="600">Not shown yet</text>
+  <text class="ink3" x="300" y="380" font-size="17">Estimated without any layout: character widths, line breaks, columns.</text>
+  <text class="ink3" x="80" y="436" font-size="17">The estimate lands within a page or two per chapter; a font or style change forgets every count on its own.</text>
+</svg>

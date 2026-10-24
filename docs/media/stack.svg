@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1410 540" width="1410" height="540" role="img" aria-label="Architecture: her PC and the caregiver's phone, the Angular frontend, the Spring Boot backend, PostgreSQL and the OPDS catalogue">
+  <style>
+    text { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .bg { fill: #f6f0e3 }
+    .card { fill: #fffaf0 }
+    .ink { fill: #2b251d }
+    .ink2 { fill: #5c5346 }
+    .ink3 { fill: #776d5f }
+    .acc { fill: #7a2233 }
+    .hair { stroke: #2b251d; stroke-opacity: .14; stroke-width: 1.5; fill: none }
+    .dash { stroke: #2b251d; stroke-opacity: .3; stroke-width: 1.5; fill: none; stroke-dasharray: 7 6 }
+    .arrow { stroke: #776d5f; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round }
+    .lead { stroke: #7a2233; stroke-opacity: .55; stroke-width: 1.5; fill: none }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #1c1915 }
+      .card { fill: #26221c }
+      .ink { fill: #efe6d3 }
+      .ink2 { fill: #c8bfaf }
+      .ink3 { fill: #a39a8a }
+      .acc { fill: #e8a3b0 }
+      .hair { stroke: #ffffff; stroke-opacity: .14 }
+      .dash { stroke: #ffffff; stroke-opacity: .3 }
+      .arrow { stroke: #a39a8a }
+      .lead { stroke: #e8a3b0; stroke-opacity: .6 }
+    }
+  </style>
+
+  <rect class="bg" width="1410" height="540" rx="26" />
+  <rect x="60" y="90" width="230" height="110" rx="14" class="dash" />
+  <text class="ink" x="88" y="134" font-size="21" font-weight="600">Her PC</text>
+  <text class="ink3" x="88" y="162" font-size="17">Chrome, full screen</text>
+  <text class="ink3" x="88" y="186" font-size="17">one desktop icon</text>
+  <rect x="60" y="300" width="230" height="110" rx="14" class="dash" />
+  <text class="ink" x="88" y="344" font-size="21" font-weight="600">Caregiver</text>
+  <text class="ink3" x="88" y="372" font-size="17">backoffice on a phone</text>
+  <text class="ink3" x="88" y="396" font-size="17">one key</text>
+  <rect class="card" x="380" y="170" width="280" height="170" rx="16" />
+  <rect x="380" y="170" width="280" height="170" rx="16" class="hair" />
+  <text class="ink" x="412" y="214" font-size="23" font-weight="600" letter-spacing="-.3">frontend</text>
+  <text class="ink3" x="412" y="244" font-size="18">Angular 22, signals</text>
+  <text class="ink3" x="412" y="270" font-size="18">Paged in CSS columns</text>
+  <text class="ink3" x="412" y="296" font-size="18">Served by nginx</text>
+  <rect class="card" x="760" y="170" width="300" height="170" rx="16" />
+  <rect x="760" y="170" width="300" height="170" rx="16" class="hair" />
+  <text class="ink" x="792" y="214" font-size="23" font-weight="600" letter-spacing="-.3">backend</text>
+  <text class="ink3" x="792" y="244" font-size="18">Spring Boot 4, Java 25</text>
+  <text class="ink3" x="792" y="270" font-size="18">EPUB to plain text</text>
+  <text class="ink3" x="792" y="296" font-size="18">Settings, books, catalogue</text>
+  <rect class="card" x="1140" y="170" width="210" height="170" rx="16" />
+  <rect x="1140" y="170" width="210" height="170" rx="16" class="hair" />
+  <text class="ink" x="1172" y="214" font-size="23" font-weight="600" letter-spacing="-.3">PostgreSQL</text>
+  <text class="ink3" x="1172" y="244" font-size="18">Books as JSONB</text>
+  <text class="ink3" x="1172" y="270" font-size="18">Display settings</text>
+  <text class="ink3" x="1172" y="296" font-size="18">Flyway</text>
+  <path class="arrow" d="M296 145 C340 145 340 220 372 236" />
+  <path class="arrow" d="M364 230l8 6-9 3" />
+  <path class="arrow" d="M296 355 C340 355 340 290 372 274" />
+  <path class="arrow" d="M363 271l9 3-8 6" />
+  <path class="arrow" d="M672 255h76" />
+  <path class="arrow" d="M742 249l6 6-6 6" />
+  <text class="ink3" x="710" y="241" font-size="17" text-anchor="middle">/api</text>
+  <path class="arrow" d="M1072 255h56" />
+  <path class="arrow" d="M1122 249l6 6-6 6" />
+  <text class="ink3" x="1100" y="241" font-size="17" text-anchor="middle">JDBC</text>
+  <rect x="760" y="410" width="300" height="70" rx="14" class="dash" />
+  <text class="ink2" x="910" y="452" font-size="19" text-anchor="middle">Ebooks libres et gratuits</text>
+  <path class="arrow" d="M910 352v46" />
+  <path class="arrow" d="M904 392l6 6 6-6" />
+  <text class="ink3" x="928" y="382" font-size="17">OPDS search, EPUB</text>
+  <text class="ink3" x="380" y="400" font-size="17">Reading position in her browser only.</text>
+  <text class="ink3" x="380" y="426" font-size="17">Settings and books polled every ten seconds.</text>
+</svg>
