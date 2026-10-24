@@ -229,6 +229,12 @@ describe('Library', () => {
     expect(document.activeElement).toBe(cards()[6]);
   });
 
+  it('names each bar by its visible label first, so voice control finds it', async () => {
+    const { fixture } = await renderSevenBooks(() => 100);
+    const bar = () => (fixture.nativeElement as HTMLElement).querySelector('button.nav-bar');
+    expect(bar()?.getAttribute('aria-label')).toBe('Suivant, titres suivants');
+  });
+
   it('shows the unavailable screen only while the list has never loaded', async () => {
     data.unreachable.set(true);
     const element = await render();

@@ -39,7 +39,7 @@ describe('NavBar', () => {
 
     expect(button.type).toBe('button');
     expect(button.textContent?.trim()).toBe('Suivant');
-    expect(button.getAttribute('aria-label')).toBe('Page suivante');
+    expect(button.getAttribute('aria-label')).toBe('Suivant, page suivante');
     expect(button.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
     expect(button.classList).toContain('nav-bar--next');
   });
@@ -50,7 +50,7 @@ describe('NavBar', () => {
     fixture.detectChanges();
 
     expect(button.textContent?.trim()).toBe('Précédent');
-    expect(button.getAttribute('aria-label')).toBe('Page précédente');
+    expect(button.getAttribute('aria-label')).toBe('Précédent, page précédente');
     expect(button.classList).toContain('nav-bar--prev');
   });
 

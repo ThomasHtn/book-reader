@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
-import { ACCESSIBLE_NAMES, LABELS } from './nav-bar.constants';
+import { CONTEXTS, LABELS } from './nav-bar.constants';
 import { NavBarDirection } from './nav-bar.model';
 
 /**
@@ -20,9 +20,9 @@ export class NavBar {
   public readonly direction = input.required<NavBarDirection>();
 
   /**
-   * Accessible name, "Page précédente" by default; the list says "Titres précédents".
+   * What the bar turns, read after its label: "page précédente" by default, "titres précédents" on the list.
    */
-  public readonly name = input<string>();
+  public readonly context = input<string>();
 
   /**
    * Emitted on click; the caller turns the page.
@@ -35,9 +35,11 @@ export class NavBar {
   protected readonly label = computed(() => LABELS[this.direction()]);
 
   /**
-   * Name read by screen readers, more explicit than the visible label.
+   * Name read by screen readers: the visible label first (WCAG 2.5.3, so voice control finds the bar),
+   * then what it turns.
    */
-  protected readonly accessibleName = computed(
-    () => this.name() ?? ACCESSIBLE_NAMES[this.direction()],
-  );
+  protected readonly accessibleName = computed(() => {
+    const context = this.context() ?? CONTEXTS[this.direction()];
+    return context ? `${this.label()}, ${context}` : null;
+  });
 }

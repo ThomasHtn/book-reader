@@ -10,10 +10,10 @@ export const LABELS: Readonly<Record<NavBarDirection, string>> = {
 };
 
 /**
- * Default name read by screen readers; `null` when the visible label already says it all.
+ * Default context read after the visible label; `null` when the label already says it all.
  */
-export const ACCESSIBLE_NAMES: Readonly<Record<NavBarDirection, string | null>> = {
-  previous: 'Page précédente',
-  next: 'Page suivante',
+export const CONTEXTS: Readonly<Record<NavBarDirection, string | null>> = {
+  previous: 'page précédente',
+  next: 'page suivante',
   exit: null,
 };

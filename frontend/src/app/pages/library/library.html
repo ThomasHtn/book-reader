@@ -60,12 +60,12 @@
           @if (page() > 0) {
             <app-nav-bar
               direction="previous"
-              name="Titres précédents"
+              context="titres précédents"
               (activate)="onBar('previous')"
             />
           }
           @if (page() < pages() - 1) {
-            <app-nav-bar direction="next" name="Titres suivants" (activate)="onBar('next')" />
+            <app-nav-bar direction="next" context="titres suivants" (activate)="onBar('next')" />
           }
         </div>
       </footer>
