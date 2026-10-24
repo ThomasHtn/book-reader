@@ -4,9 +4,9 @@
 export const COVER_TONES = 10;
 
 /**
- * Two rows of the three-column grid, so a page never shows more than six titles.
+ * Three rows of the three-column grid, so a page never shows more than nine titles.
  */
-export const MAX_ROWS_PER_PAGE = 2;
+export const MAX_ROWS_PER_PAGE = 3;
 
 /**
  * Books per row, as `--grid-columns` in tokens.css.

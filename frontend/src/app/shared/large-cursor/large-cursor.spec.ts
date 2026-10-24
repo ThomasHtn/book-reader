@@ -60,7 +60,7 @@ describe('LargeCursor', () => {
     move(500, 780);
 
     expect(drawn()).toBe('arrow');
-    expect(overlay.style.transform).toBe('translate(494px, 776px)');
+    expect(overlay.style.transform).toBe('translate(495px, 777px)');
   });
 
   it('draws the hand over a button near the right edge, and hands back once inside', () => {
@@ -70,9 +70,9 @@ describe('LargeCursor', () => {
     button.append(label);
     document.body.append(button);
 
-    move(990, 400, label);
+    move(1000, 400, label);
     expect(drawn()).toBe('hand');
-    expect(overlay.style.transform).toBe('translate(968px, 396px)');
+    expect(overlay.style.transform).toBe('translate(983px, 397px)');
 
     move(500, 400, label);
     expect(drawn()).toBeNull();

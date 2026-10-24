@@ -8,6 +8,12 @@
   [attr.aria-label]="accessibleName()"
   (click)="activate.emit()"
 >
+  <!-- Back arrow before "Mes livres": a shaft and a head, unlike the page-turn chevrons. -->
+  @if (direction() === 'exit') {
+    <svg class="nav-bar__arrow nav-bar__arrow--back" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M85 50 H18 M45 22 L17 50 L45 78" />
+    </svg>
+  }
   <!-- Decorative arrow on the outer side: before the label for Précédent, after it for Suivant. -->
   @if (direction() === 'previous') {
     <svg class="nav-bar__arrow" viewBox="0 0 100 100" aria-hidden="true">

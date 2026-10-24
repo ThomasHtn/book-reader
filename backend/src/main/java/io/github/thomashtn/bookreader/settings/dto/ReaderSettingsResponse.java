@@ -6,11 +6,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * Display settings as the reader applies them.
  *
- * @param fontTier font tier in pixels (48, 72, 100 or 140)
+ * @param fontTier font tier in pixels (28, 32, 36 or 40)
  */
 @Schema(description = "Global reader display settings.")
 public record ReaderSettingsResponse(
-    @Schema(example = "100") int fontTier
+    @Schema(example = "32") int fontTier
 ) {
 
     /**

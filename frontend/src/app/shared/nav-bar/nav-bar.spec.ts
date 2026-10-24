@@ -54,14 +54,16 @@ describe('NavBar', () => {
     expect(button.classList).toContain('nav-bar--prev');
   });
 
-  it('labels the way back to the list by its visible text alone, without an arrow', () => {
+  it('labels the way back to the list by its visible text alone, after a back arrow', () => {
     const { fixture, button, host } = render();
     host.direction.set('exit');
     fixture.detectChanges();
 
     expect(button.textContent?.trim()).toBe('Mes livres');
     expect(button.hasAttribute('aria-label')).toBe(false);
-    expect(button.querySelector('svg')).toBeNull();
+    expect(button.querySelector('svg.nav-bar__arrow--back')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    );
     expect(button.classList).toContain('nav-bar--exit');
   });
 

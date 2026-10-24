@@ -36,15 +36,15 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
      */
     @AfterEach
     void restoreDefaults() throws Exception {
-        putSettings("{\"fontTier\": 100}");
+        putSettings("{\"fontTier\": 32}");
     }
 
     @Test
-    @DisplayName("Serves the default settings: tier 100")
+    @DisplayName("Serves the default settings: tier 32")
     void servesDefaults() throws Exception {
         mockMvc.perform(get("/api/settings"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.fontTier").value(100));
+            .andExpect(jsonPath("$.fontTier").value(32));
     }
 
     @Test
@@ -64,7 +64,7 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void setsCacheControl() throws Exception {
         mockMvc.perform(get("/api/settings"))
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache"));
-        putSettings("{\"fontTier\": 100}")
+        putSettings("{\"fontTier\": 32}")
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
     }
 
@@ -81,17 +81,17 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void updatesSettings() throws Exception {
         String before = mockMvc.perform(get("/api/settings")).andReturn().getResponse().getHeader(HttpHeaders.ETAG);
 
-        putSettings("{\"fontTier\": 140}")
+        putSettings("{\"fontTier\": 40}")
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.fontTier").value(140));
+            .andExpect(jsonPath("$.fontTier").value(40));
 
         mockMvc.perform(get("/api/settings").header(HttpHeaders.IF_NONE_MATCH, before))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.fontTier").value(140));
+            .andExpect(jsonPath("$.fontTier").value(40));
     }
 
     @Test
-    @DisplayName("Rejects a font tier outside 48, 72, 100 and 140")
+    @DisplayName("Rejects a font tier outside 28, 32, 36 and 40")
     void rejectsUnknownTier() throws Exception {
         putSettings("{\"fontTier\": 90}")
             .andExpect(status().isBadRequest())
@@ -111,7 +111,7 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void requiresAdminKey() throws Exception {
         mockMvc.perform(put("/api/admin/settings")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"fontTier\": 48}"))
+                .content("{\"fontTier\": 28}"))
             .andExpect(status().isUnauthorized());
     }
 
@@ -120,7 +120,7 @@ class ReaderSettingsApiTest extends PostgreSqlIntegrationTest {
     void refusesWritesOnPublicApi() throws Exception {
         mockMvc.perform(post("/api/settings")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"fontTier\": 48}"))
+                .content("{\"fontTier\": 28}"))
             .andExpect(status().isForbidden());
     }
 

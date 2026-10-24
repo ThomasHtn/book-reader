@@ -1,9 +1,10 @@
 /* Design tokens for the accessible reader.
    Three layers: primitives (raw values), semantic (purpose), component.
    Attributes on <html>:
-     data-tier    = 48 | 72 | 100 | 140 (default 100), the tier value itself as served by GET /api/settings
+     data-tier    = 28 | 32 | 36 | 40 (default 32), the tier value itself as served by GET /api/settings
      data-density = admin, on backoffice routes only
-   Every text/background pair below is >= 7:1, every control edge >= 3:1 against its surroundings. */
+   Every text/background pair below is >= 7:1, every control edge >= 3:1 against its surroundings,
+   except the reader's tone-on-tone command plates (1,3:1), which their ink labels identify. */
 
 /* === PRIMITIVES ========================================================= */
 :root {
@@ -15,18 +16,27 @@
   --color-ink-700: #4a4a4a;
   --color-ink-800: #333;
 
-  /* Book cloths, spread round the hue circle: cream text on each is 7,6:1 or more, and each
-     stands as far off the page */
-  --color-cloth-oxblood: #7a2233;
-  --color-cloth-rust: #803014;
-  --color-cloth-umber: #5a3a1a;
-  --color-cloth-olive: #4a4a14;
-  --color-cloth-green: #1f4d3d;
-  --color-cloth-teal: #16535a;
-  --color-cloth-navy: #223a63;
-  --color-cloth-indigo: #3a3079;
-  --color-cloth-plum: #553059;
-  --color-cloth-magenta: #7a1f5c;
+  /* Cream theme: brown-black ink on cream paper, softer on the eyes than black on off-white
+     (12,2:1); the lighter creams mix the ink into the paper at 10, 13 and 20 %. */
+  --color-cream-50: #efe6d3;
+  --color-cream-100: #dbd3c1;
+  --color-cream-150: #d6cdbb;
+  --color-cream-200: #c8bfaf;
+  --color-umber-900: #2b251d;
+  --color-umber-700: #464036;
+
+  /* Book linens: soft tints spread round the hue circle, ink text on each at 9:1 or more. Light
+     enough to stay calm, distinct enough to find a book by its colour. */
+  --color-linen-sage: #bfd3b4;
+  --color-linen-mist: #b9cfe3;
+  --color-linen-clay: #ecbfa8;
+  --color-linen-plum: #dcbfdf;
+  --color-linen-sand: #e6cf9f;
+  --color-linen-teal: #b3dcd5;
+  --color-linen-ochre: #f0c98a;
+  --color-linen-olive: #d4d79f;
+  --color-linen-lavender: #cfc5e8;
+  --color-linen-slate: #c6ccd8;
 
   /* Backoffice: cool slate neutrals, navy cloth rail, stamp-blue accent (library date stamp) */
   --color-slate-50: #eff0f2;
@@ -84,16 +94,16 @@
     'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, 'Segoe UI', Arial, sans-serif;
 
   /* Tiers are unitless: the size in px on any viewport of 1280px CSS or more */
-  --tier-current: 100;
+  --tier-current: 32;
   --text-floor: 20px;
 
-  /* Luciole ships 400 and 700 only. Bold is kept for reading text and book titles; the chrome
-     around them (commands, authors, labels, head line) is regular. */
-  --weight-body: 700;
+  /* Luciole ships 400 and 700 only. Reading text is regular, which tires the eye less over a long
+     reading; bold is kept for headings and book titles. */
+  --weight-body: 400;
   --weight-heading: 700;
   --weight-regular: 400;
-  --leading-body: 1.4;
-  --leading-tight: 1.15;
+  --leading-body: 1.55;
+  --leading-tight: 1.2;
   --tracking-body: 0.01em;
 
   /* Spacing, 8px base */
@@ -114,71 +124,75 @@
   --focus-ring-width: 6px;
   --focus-gap-width: 6px;
 
-  /* Large hand (64px), same treatment as the arrow, hotspot at the fingertip. Desktop only, and
-     the system pointer takes over everywhere else. Chrome drops a cursor over 32px that would
-     cross the window edge, so `LargeCursor` draws the same images there (hotspots mirrored in it). */
-  --cursor-size: 64px;
-  --cursor-hand-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><path d='M22 4c-3 0-5 2-5 5v24l-5-4c-3-2-7-1-8 2-1 2 0 4 1 6l11 14c3 4 7 6 12 6h12c7 0 12-5 12-12V28c0-3-2-5-5-5-2 0-4 1-4 3v-2c0-3-2-5-5-5-2 0-4 1-4 3v-2c0-3-2-5-5-5-1 0-2 0-3 1V9c0-3-2-5-4-5z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>");
-  --cursor-large-pointer: var(--cursor-hand-image) 22 4, pointer;
+  /* Large hand (48px, the 64px drawing scaled down), same treatment as the arrow, hotspot at the
+     fingertip. Desktop only, and the system pointer takes over everywhere else. Chrome drops a cursor
+     over 32px that would cross the window edge, so `LargeCursor` draws the same images there
+     (hotspots mirrored in it). */
+  --cursor-size: 48px;
+  --cursor-hand-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 64 64'><path d='M22 4c-3 0-5 2-5 5v24l-5-4c-3-2-7-1-8 2-1 2 0 4 1 6l11 14c3 4 7 6 12 6h12c7 0 12-5 12-12V28c0-3-2-5-5-5-2 0-4 1-4 3v-2c0-3-2-5-5-5-2 0-4 1-4 3v-2c0-3-2-5-5-5-1 0-2 0-3 1V9c0-3-2-5-4-5z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>");
+  --cursor-large-pointer: var(--cursor-hand-image) 17 3, pointer;
 
-  /* Large arrow (64px), black with white outline, hotspot at the tip: the page's own cursor. */
-  --cursor-arrow-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><path d='M6 4 L6 52 L18 40 L28 60 L38 55 L28 36 L44 36 Z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>");
-  --cursor-large: var(--cursor-arrow-image) 6 4, auto;
+  /* Large arrow (48px), black with white outline, hotspot at the tip: the page's own cursor. */
+  --cursor-arrow-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 64 64'><path d='M6 4 L6 52 L18 40 L28 60 L38 55 L28 36 L44 36 Z' fill='%23000' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/></svg>");
+  --cursor-large: var(--cursor-arrow-image) 5 3, auto;
 }
 
 /* === SEMANTIC ============================================================ */
 
-/* Default theme: dark text on warm off-white (reduces glare compared to pure white). */
+/* Single theme: brown-black ink on cream paper, the least glaring of the light grounds tried. */
 :root {
-  --color-bg: var(--color-paper-50);
-  --color-fg: var(--color-ink-900);
-  --color-fg-muted: var(--color-ink-700);
-  --color-surface-raised: var(--color-paper-100);
-  --color-surface-raised-strong: var(--color-paper-200);
+  --color-bg: var(--color-cream-50);
+  --color-fg: var(--color-umber-900);
+  --color-fg-muted: var(--color-umber-700);
+  --color-surface-raised: var(--color-cream-100);
+  --color-surface-raised-strong: var(--color-cream-200);
   --color-marker: var(--color-rose-300);
 
-  /* Commands share the blocks' surface; their ink edge is what tells them from the page, and both
-     edge and label follow the text colour. */
-
-  /* Commands are solid ink plates with cream labels (16,1:1): with no rule around them, the fill
-     alone has to set them off the page. Hover lifts the plate one tone (12,1:1), pressed turns it
-     to the paper surface with ink text (10,8:1). */
-  --color-control-bg: var(--color-ink-900);
-  --color-control-bg-hover: var(--color-ink-800);
-  --color-control-bg-active: var(--color-surface-raised-strong);
-  --color-control-fg: var(--color-bg);
-  --color-control-fg-active: var(--color-fg);
-  --color-focus-ring: var(--color-ink-900);
-  --color-focus-gap: var(--color-paper-50);
+  /* Commands are plates one tone darker than the page with ink labels (9,6:1): calm enough not to
+     pull the eye off the text, at the cost of a 1,3:1 edge (user decision, 24 October 2026). Hover
+     darkens the plate one more tone (8,3:1), pressed inverts it to ink with a cream label (12,2:1). */
+  --color-control-bg: var(--color-cream-150);
+  --color-control-bg-hover: var(--color-surface-raised-strong);
+  --color-control-bg-active: var(--color-fg);
+  --color-control-fg: var(--color-fg);
+  --color-control-fg-active: var(--color-bg);
+  --color-focus-ring: var(--color-umber-900);
+  --color-focus-gap: var(--color-cream-50);
   --color-error: var(--color-rust-700);
 
   /* Body size = tier on any viewport of 1280px CSS or more (covers her PC at 100% and 125% Windows
-     scaling), scaled down proportionally below, never under the floor. 100 -> 31px on a 400px phone. */
+     scaling), scaled down proportionally below, never under the floor. 40 -> 20px on a 400px phone. */
   --text-body: clamp(
     var(--text-floor),
     calc(var(--tier-current) / 12.8 * 1vw),
     calc(var(--tier-current) * 1px)
   );
-  --text-heading: calc(var(--text-body) * 1.15);
-  --text-control: clamp(20px, calc(var(--text-body) * 0.55), 72px);
-  --text-meta: clamp(16px, calc(var(--text-body) * 0.5), 64px);
-  --gap-paragraph: 0.6em;
+  --text-heading: calc(var(--text-body) * 1.5);
+  --text-control: clamp(20px, calc(var(--text-body) * 0.85), 72px);
+  --text-meta: clamp(16px, calc(var(--text-body) * 0.6), 64px);
+
+  /* Paragraphs open on an indent, as in a printed book, with no gap between them. */
+  --indent-paragraph: 1.5em;
+
+  /* Room above and below a heading, in ems of the heading. */
+  --heading-space-before: 0.4em;
+  --heading-space-after: 1em;
 }
 
-:root[data-tier='48'] {
-  --tier-current: 48;
+:root[data-tier='28'] {
+  --tier-current: 28;
 }
 
-:root[data-tier='72'] {
-  --tier-current: 72;
+:root[data-tier='32'] {
+  --tier-current: 32;
 }
 
-:root[data-tier='100'] {
-  --tier-current: 100;
+:root[data-tier='36'] {
+  --tier-current: 36;
 }
 
-:root[data-tier='140'] {
-  --tier-current: 140;
+:root[data-tier='40'] {
+  --tier-current: 40;
 }
 
 /* === COMPONENT (reader) ================================================== */
@@ -215,18 +229,30 @@
   /* Reading surface */
   --reading-bg: var(--color-bg);
   --reading-fg: var(--color-fg);
-  --reading-padding: clamp(16px, 2.5vw, 48px);
-  --reading-max-width: 1500px;
+
+  /* Side margins of about 100 px on her screen: room around the pages without starving the text. */
+  --reading-padding: clamp(16px, 4vw, 80px);
+  --reading-max-width: 1880px;
+
+  /* Two pages side by side on a wide screen, like an open book, parted by a fold line. */
+  --spread-gap: clamp(48px, 5vw, 120px);
+  --fold-color: var(--color-surface-raised);
+  --fold-width: 2px;
+
+  /* Room between the running head and the text, so the book title never reads as its first line;
+     the page numbers keep a narrower one. */
+  --reader-head-gap: var(--space-6);
+  --reader-folio-gap: var(--space-2);
 
   /* Head line: screen title on the left, page indicator on the right. Both are status, never a
      command, so both stay small next to the reading text. The title is chrome, not reading text: it
      keeps the tier-100 size at every tier, or "Mes livres" would grow and shrink with her font size. */
   --page-title-size: clamp(20px, 2.734vw, 35px);
-  --indicator-size: clamp(16px, calc(var(--text-body) * 0.25), 32px);
+  --indicator-size: clamp(16px, calc(var(--text-body) * 0.6), 32px);
   --head-padding: var(--space-3) var(--reading-padding) var(--space-2);
 
   /* Book grid: three blocks per row, each carrying a title and its state. No cover image: the title
-     and a cloth colour identify a book, so the title gets the block's full width. */
+     and a linen colour identify a book, so the title gets the block's full width. */
   --grid-columns: 3;
   --grid-gap: var(--space-3);
 
@@ -235,27 +261,28 @@
   --grid-max-width: 1500px;
   --grid-padding: clamp(8px, 1vw, 20px);
 
-  /* Each book is bound in one of ten cloths, chosen from its id (`coverTone`): colour survives in
+  /* Each book is bound in one of ten linens, chosen from its id (`coverTone`): colour survives in
      peripheral vision where the title does not, so a book can be found by colour first. */
-  --book-cover-1: var(--color-cloth-green);
-  --book-cover-2: var(--color-cloth-navy);
-  --book-cover-3: var(--color-cloth-oxblood);
-  --book-cover-4: var(--color-cloth-plum);
-  --book-cover-5: var(--color-cloth-umber);
-  --book-cover-6: var(--color-cloth-teal);
-  --book-cover-7: var(--color-cloth-magenta);
-  --book-cover-8: var(--color-cloth-olive);
-  --book-cover-9: var(--color-cloth-indigo);
-  --book-cover-10: var(--color-cloth-rust);
-  --book-block-fg: var(--color-bg);
+  --book-cover-1: var(--color-linen-sage);
+  --book-cover-2: var(--color-linen-mist);
+  --book-cover-3: var(--color-linen-clay);
+  --book-cover-4: var(--color-linen-plum);
+  --book-cover-5: var(--color-linen-sand);
+  --book-cover-6: var(--color-linen-teal);
+  --book-cover-7: var(--color-linen-ochre);
+  --book-cover-8: var(--color-linen-olive);
+  --book-cover-9: var(--color-linen-lavender);
+  --book-cover-10: var(--color-linen-slate);
+  --book-block-fg: var(--color-fg);
 
-  /* Pointing at a block darkens its cloth, which only raises the text contrast; nothing moves */
-  --book-block-hover-darken: 30%;
+  /* Pointing at a block deepens its linen with a little ink, the text staying at 7,6:1 or more;
+     nothing moves */
+  --book-block-hover-darken: 10%;
   --book-block-padding: var(--space-3);
   --book-block-min-height: calc(var(--button-min-height) * 2);
 
-  /* The book in progress is the only light, rose block among the cloths, so it reads as "resume
-     here" from across the room */
+  /* The book in progress is the only rose block, the most saturated among the linens, so it reads
+     as "resume here" from across the room */
   --book-block-current-bg: var(--color-marker);
 
   /* The rose block deepens too, on the same rose ramp, and keeps its ink text at 8,3:1 */
@@ -264,7 +291,7 @@
   /* Ink text on the rose plate */
   --book-block-current-fg: var(--color-ink-900);
 
-  /* A finished book loses its cloth: pale surface, ink text (13,5:1), put back on the shelf */
+  /* A finished book loses its linen: pale surface, ink text (10,2:1), put back on the shelf */
   --book-block-finished-bg: var(--color-surface-raised);
   --book-block-finished-bg-hover: var(--color-surface-raised-strong);
   --book-block-finished-fg: var(--color-fg);
@@ -272,6 +299,9 @@
   /* Blocks are containers, so their text is sized against the column, never the viewport. The
      factor is capped so a wide column does not cost a row of the grid. */
   --card-title-size: clamp(var(--text-floor), 8cqi, var(--text-body));
+
+  /* State icon (closed book, open book, tick), a little larger than the title it sits beside. */
+  --card-icon-size: calc(var(--card-title-size) * 1.3);
 
   /* Author on a lower step than the title: the block is read title first, and the two lines must
      not compete at the same size once a narrow column caps both on `cqi`. */

@@ -1,14 +1,18 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
+import { LucideBook, LucideBookOpen, LucideCircleCheck } from '@lucide/angular';
+
 /**
- * One book in the grid: a cover-coloured block carrying its title, its author and, when there is
- * one, its state. No cover image: title, author and colour identify the book on their own.
+ * One book in the grid: a cover-coloured block carrying its title, its author, an icon of its state
+ * (closed book, open book, tick) and, when there is one, its state in words. No cover image: title,
+ * author and colour identify the book on their own.
  */
 @Component({
   selector: 'app-book-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './book-card.html',
   styleUrl: './book-card.scss',
+  imports: [LucideBook, LucideBookOpen, LucideCircleCheck],
 })
 export class BookCard {
   /**

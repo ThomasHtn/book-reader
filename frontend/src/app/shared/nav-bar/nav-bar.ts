@@ -4,8 +4,8 @@ import { CONTEXTS, LABELS } from './nav-bar.constants';
 import { NavBarDirection } from './nav-bar.model';
 
 /**
- * "Mes livres", "Précédent" or "Suivant" bar, sitting in the footer. It is rendered only when there is
- * somewhere to go, so it carries no disabled state: its caller drops it from the DOM instead.
+ * "Précédent" or "Suivant" bar in the footer, or "Mes livres" in the reader's head line. It is rendered
+ * only when there is somewhere to go, so it carries no disabled state: its caller drops it from the DOM instead.
  */
 @Component({
   selector: 'app-nav-bar',

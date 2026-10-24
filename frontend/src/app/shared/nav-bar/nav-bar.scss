@@ -2,7 +2,7 @@
 
 @use 'tools' as *;
 
-/* No box of its own, so the footer row lays out the bar itself. */
+/* No box of its own, so the row around it lays out the bar itself. */
 :host {
   display: contents;
 }
@@ -25,14 +25,19 @@
   }
 }
 
-/* "Mes livres" takes its label's width, unless the book fits one page and it is the only command. */
+/* "Mes livres" sits in the reader's head line: its label's width, a button's height, no plate at
+   rest so the head stays quiet. Pulled out by its padding so the arrow lines up with the text. */
 .nav-bar--exit {
   flex: 0 1 auto;
-}
+  min-height: var(--button-min-height);
+  margin-inline-start: calc(-1 * var(--space-2));
+  background: none;
+  color: var(--color-fg);
 
-/* Alone in the row, "Mes livres" takes it all. */
-:host(:only-child) .nav-bar--exit {
-  flex: 1;
+  /* Phones keep a narrower padding, hence a narrower pull. */
+  @include phone {
+    margin-inline-start: calc(-1 * var(--space-1));
+  }
 }
 
 /* Chevron drawn as a stroke in the text colour. */
@@ -51,13 +56,20 @@
   }
 }
 
+/* The back arrow stays on phones: the head line has room for it. */
+.nav-bar__arrow--back {
+  @include phone {
+    display: block;
+  }
+}
+
 /* Label kept on one line. */
 .nav-bar__label {
   font-size: var(--nav-bar-label-size);
   white-space: nowrap;
 }
 
-/* Hover lifts the plate one tone. */
+/* Hover lifts the plate one tone; on "Mes livres" it brings the plate up. */
 .nav-bar:hover {
   background: var(--nav-bar-bg-hover);
 }

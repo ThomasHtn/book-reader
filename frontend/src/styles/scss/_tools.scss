@@ -10,6 +10,15 @@
 }
 
 /**
+ * Wide landscape screens, where the reader shows two facing pages like an open book.
+ */
+@mixin spread {
+  @media (width >= 1100px) and (orientation: landscape) {
+    @content;
+  }
+}
+
+/**
  * Backoffice from Tailwind's `sm:` width, where rows and forms gain a second column.
  */
 @mixin from-sm {

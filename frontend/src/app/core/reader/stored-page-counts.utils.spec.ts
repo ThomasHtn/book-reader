@@ -1,8 +1,8 @@
 import { layoutKey, parsePageCounts, serializePageCounts } from './stored-page-counts.utils';
 
 describe('layoutKey', () => {
-  it('names a layout by viewport size and font tier', () => {
-    expect(layoutKey(800, 600, 100)).toBe('800x600:100');
+  it('names a layout by typography version, viewport size and font tier', () => {
+    expect(layoutKey(800, 600, 32)).toBe('v2:800x600:32');
   });
 });
 

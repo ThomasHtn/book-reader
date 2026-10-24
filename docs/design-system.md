@@ -1,6 +1,6 @@
 # Design system de la liseuse
 
-Version 3.2, 23 septembre 2026. Complète `docs/specification.md`. Source de vérité des valeurs :
+Version 4.0, 24 octobre 2026. Complète `docs/specification.md`. Source de vérité des valeurs :
 `docs/design-system/tokens.css`, à copier tel quel dans `frontend/src/styles/tokens.css`. Aperçu en
 taille réelle : `docs/design-system/preview.html` (ancres `#reading`, `#list`, `#status`, `#admin`).
 
@@ -12,21 +12,24 @@ taille réelle : `docs/design-system/preview.html` (ancres `#reading`, `#list`, 
 | Attributs sur `<html>` | `data-tier` (48, 72, 100 ou 140) | `data-density="admin"` |
 | Échelle | géante, proportionnelle à la largeur d'écran | conventionnelle, mobile first |
 | Contraste | 7:1 (AAA) | 4,5:1 (AA) |
-| Forme | aucun filet, arrondi de 12 px, aucune ombre, aucun mouvement | arrondis 8 et 14 px, une ombre de repos et une de menu, transitions 120 ms |
-| Police | Luciole 700 (texte lu, titres de livres) et 400 (habillage) | Atkinson Hyperlegible Next 400 et 700 ; Luciole 700 pour les titres de vue et de livre |
-| Schéma de couleurs | fixe (noir sur blanc, surfaces beige) | système (`prefers-color-scheme`) |
+| Forme | aucun filet hors le pli de la double page, arrondi de 12 px, aucune ombre, aucun mouvement | arrondis 8 et 14 px, une ombre de repos et une de menu, transitions 120 ms |
+| Police | Luciole 400 (texte lu, habillage) et 700 (titres de chapitre et de livre) | Atkinson Hyperlegible Next 400 et 700 ; Luciole 700 pour les titres de vue et de livre |
+| Schéma de couleurs | fixe (encre brune sur papier crème) | système (`prefers-color-scheme`) |
 
-Commun : palette (neutres chauds, rose pour le seul repère "en cours", dix toiles sombres pour les livres), tokens en trois couches,
+Commun : palette (neutres chauds, rose pour le seul repère "en cours", dix lins pastel pour les livres), tokens en trois couches,
 aucune bibliothèque de composants.
 
 ## 2. Principes de la liseuse
 
 1. Une seule manière d'interagir : deux barres, un bouton, une liste de boutons.
-2. Le contraste avant la taille : 7:1 pour tout texte, 3:1 pour tout contour interactif.
-3. Rien ne bouge, rien ne décore : ni transition, ni filet, ni ombre, ni icône seule, ni image. Un
-   aplat sombre dessine chaque cible, un arrondi unique les adoucit.
-4. La périphérie sert à trouver, le centre sert à lire.
-5. Une seule taille de référence, rendue à l'échelle de l'écran.
+2. Le contraste avant la taille : 7:1 pour tout texte, 3:1 pour tout contour interactif, sauf les
+   commandes ton sur ton, que leur libellé désigne (décision du 24 octobre 2026).
+3. Une page de livre, pas une affiche : texte en graisse normale, une quarantaine de caractères par
+   ligne, deux pages côte à côte sur grand écran.
+4. Rien ne bouge, rien ne décore : ni transition, ni ombre, ni icône seule, ni image. Un aplat dessine
+   chaque cible, un arrondi unique les adoucit.
+5. La périphérie sert à trouver, le centre sert à lire.
+6. Une seule taille de référence, rendue à l'échelle de l'écran.
 
 ## 3. Tokens
 
@@ -37,22 +40,26 @@ en dur dans un composant.
 
 Décisions de couleur :
 
-- un seul thème, noir sur blanc cassé (`#f4efe6`) ;
-- aucun filet : un fond beige ne se détache du papier que de 1,2:1, donc toute cible est un aplat
-  sombre qui se pose seul sur la page ;
-- commandes en aplat encre (`#141414`) à libellé crème (16,1:1) ; survol un ton plus clair
-  (`#333333`, 12,1:1) ; pressé en surface beige à texte encre (10,8:1) ;
-- chaque livre est relié dans une des dix toiles réparties sur le cercle des teintes (bordeaux
-  `#7a2233`, rouille `#803014`, terre d'ombre `#5a3a1a`, olive `#4a4a14`, vert `#1f4d3d`, sarcelle
-  `#16535a`, marine `#223a63`, indigo `#3a3079`, prune `#553059`, magenta `#7a1f5c`), texte crème.
+- un seul thème, encre brun très foncé (`#2b251d`) sur papier crème (`#efe6d3`), 12,2:1 : le noir
+  pur sur blanc cassé éblouissait davantage ;
+- commandes ton sur ton : aplat crème à peine plus foncé que la page (`#d6cdbb`, l'encre mêlée à
+  13 %) à libellé encre (9,6:1) ; survol un ton plus foncé (`#c8bfaf`, 8,3:1) ; pressé en aplat encre
+  à libellé crème (12,2:1). L'aplat ne se détache de la page que de 1,3:1 : c'est voulu, pour que les
+  commandes n'attirent plus l'œil hors du texte, et le libellé suffit à les trouver ;
+- chaque livre est relié dans un des dix lins pastel répartis sur le cercle des teintes (sauge
+  `#bfd3b4`, brume `#b9cfe3`, argile `#ecbfa8`, prune `#dcbfdf`, sable `#e6cf9f`, sarcelle `#b3dcd5`,
+  ocre `#f0c98a`, olive `#d4d79f`, lavande `#cfc5e8`, ardoise `#c6ccd8`), texte encre, de 9,1 à
+  10,2:1. Ils remplacent depuis le 24 octobre 2026 dix toiles sombres jugées trop violentes ; comme
+  les commandes, ils ne se détachent de la page que de 1,2 à 1,35:1, et c'est leur teinte qui les
+  désigne.
   Les couleurs ne portent aucun sens : la DMLA garde la couleur en vision périphérique, un livre se
   retrouve à sa couleur. Chacun garde la teinte tirée de son identifiant (`coverTone`), sauf si son
   voisin de gauche ou celui du dessus la porte déjà : il prend alors la suivante libre
-  (`assignCoverTones`), si bien que deux voisins n'ont jamais la même toile ;
-  au survol la toile fonce de 30 % vers l'encre, ce qui ne fait que monter le contraste ;
-- le rose `#ffa6c1` ne sert qu'au livre en cours, avec texte encre (10,1:1) : seul bloc clair et
-  coloré parmi les toiles, il se repère sans la lire ; un livre terminé perd sa toile et passe en
-  beige pâle à texte encre (13,5:1) ;
+  (`assignCoverTones`), si bien que deux voisins n'ont jamais le même lin ;
+  au survol le lin fonce de 10 % vers l'encre, le texte restant à 7,6:1 ou plus ;
+- le rose `#ffa6c1` ne sert qu'au livre en cours, avec texte encre (10,1:1) : teinte la plus
+  saturée parmi les lins, il se repère sans la lire ; un livre terminé perd son lin et passe en
+  crème pâle à texte encre (10,2:1) ;
 - les étiquettes "En cours" et "Terminé" sont des pastilles encre à texte crème, posées seulement sur
   ces deux blocs clairs.
 
@@ -60,11 +67,12 @@ Contrastes mesurés, liseuse (cible 7:1) :
 
 | Paire | Contraste |
 |---|---|
-| texte sur fond | 16,1 |
-| texte atténué sur fond | 7,7 |
-| libellé sur commande / survolée / pressée | 16,1 / 12,1 / 10,8 |
-| texte crème sur toile (dix toiles) | de 7,6 (sarcelle) à 9,9 (marine) |
-| toile ou commande sur fond (cible 3:1, sans filet) | 7,6 à 16,1 |
+| texte sur fond | 12,2 |
+| texte atténué sur fond (titre courant, numéros) | 8,3 |
+| libellé sur commande / survolée / pressée | 9,6 / 8,3 / 12,2 |
+| texte encre sur lin (dix lins) | de 9,1 (prune) à 10,2 (sarcelle) ; 7,6 à 8,6 au survol |
+| lin sur fond (dérogation, voir section 2) | 1,2 à 1,35 |
+| commande sur fond (dérogation, voir section 2) | 1,3 |
 | titre sur bloc en cours, au repos / survolé | 10,1 / 8,3 |
 | titre sur bloc terminé, au repos / survolé | 13,5 / 10,8 |
 
@@ -77,8 +85,11 @@ Backoffice (cible 4,5:1) : texte sur fond 16,1 clair et 17,0 sombre ; texte d'ac
   et l'application). Pas d'italique : le format interne n'en a pas.
 - **Atkinson Hyperlegible Next** 400 et 700, auto-hébergée, pour le backoffice et en repli de la
   liseuse. Repli final Arial, `system-ui`.
-- Liseuse : texte lu et titres de livres en 700 ; commandes, auteurs, étiquettes, titre de l'écran
-  et indicateur en 400. Espacement 0,01 em, interligne 1,4 (titres 1,15). Backoffice : interligne
+- Liseuse : texte lu en 400, comme les commandes, auteurs, étiquettes, titre courant et numéros ;
+  titres de chapitre et de livre en 700. Espacement 0,01 em, interligne 1,55 (titres 1,2).
+  Paragraphes sans blanc entre eux, ouverts par un alinéa de 1,5 em, sauf en tête de chapitre,
+  après un titre ou la page de titre. Titres de chapitre centrés, 1,5 x corps, 0,4 em au-dessus et
+  1 em en dessous. Backoffice : interligne
   1,5, échelle fixe 13, 14, 16, 18, 22, 28 px.
 
 **Paliers** : un palier est la taille en pixels sur tout écran d'au moins 1280 px CSS, ce qui absorbe
@@ -90,31 +101,33 @@ la mise à l'échelle Windows (1536 px CSS à 125 %). En dessous, proportionnel 
 
 | Palier | 1280 px et plus | 1024 px | 768 px | 400 px |
 |---|---|---|---|---|
-| 48 | 48 | 38 | 29 | 20 |
-| 72 | 72 | 58 | 43 | 23 |
-| 100 | 100 | 80 | 60 | 31 |
-| 140 | 140 | 112 | 84 | 44 |
+| 28 | 28 | 22 | 20 | 20 |
+| 32 | 32 | 26 | 20 | 20 |
+| 36 | 36 | 29 | 22 | 20 |
+| 40 | 40 | 32 | 24 | 20 |
 
-Dérivés : titre 1,15 x corps ; commandes 0,55 x corps entre 20 et 72 px ; métadonnées 0,5 x corps
-entre 16 et 64 px. Capacité en caractères par ligne sur 1920 x 1080 : à recalculer au calibrage,
-la largeur de lecture utile a changé avec le passage des barres latérales au pied de page (section 5).
+Dérivés : titre 1,5 x corps ; commandes 0,85 x corps entre 20 et 72 px ; métadonnées 0,6 x corps
+entre 16 et 64 px ; titre courant et numéros 0,6 x corps entre 16 et 32 px. Au palier 32 sur
+1920 x 1080, en double page : une cinquantaine de caractères par ligne.
 
 ## 5. Mise en page
 
-Liseuse, à toute largeur : aucun en-tête, seulement une ligne de tête, sans fond ni filet, portant le
-titre de l'écran à gauche et l'indicateur de page à droite, tous deux petits. Elle est calée sur la
-largeur du contenu qu'elle surmonte, sans quoi le titre flotterait loin de ce qu'il nomme. L'écran de
-lecture n'y met pas de titre : le livre se nomme lui-même sur sa page de titre. Le contenu prend tout
-le reste, et le pied ne porte que des commandes.
-En lecture, trois commandes, "Mes livres" à la largeur de son libellé puis "Précédent" et "Suivant"
-qui se partagent le reste ; sur "Mes livres", deux moitiés égales. Texte et grille de livres centrés
-sur 1 500 px maximum.
+Liseuse, à toute largeur : aucun en-tête, seulement une ligne de tête, sans fond ni filet, calée sur
+la largeur du contenu qu'elle surmonte. Sur "Mes livres", elle porte le titre de l'écran à gauche et
+l'indicateur à droite ; en lecture, le titre courant (titre du livre à gauche, auteur à droite), et
+les numéros de page passent sous le texte. Le contenu prend tout le reste, et le pied ne porte que
+des commandes. En lecture, à partir de 1 100 px CSS en paysage, deux pages côte à côte séparées par
+une gouttière `clamp(48px, 5vw, 120px)` au milieu de laquelle court le pli, un trait crème de 2 px
+(`--fold-color`), seul filet de la liseuse ; une page seule en dessous.
+En lecture, "Mes livres" en tête à gauche, et au pied "Précédent" et "Suivant" en deux moitiés calées
+sur les pages, l'écart sur le pli ; sur "Mes livres", les mêmes deux moitiés, une barre seule gardant la sienne. Texte centré sur 1 880 px maximum,
+grille de livres sur 1 500 px.
 
-Marges de lecture `clamp(16px, 2.5vw, 48px)`, marges de la grille `clamp(8px, 1vw, 20px)` : les blocs
+Marges de lecture `clamp(16px, 4vw, 80px)` (environ 100 px de chaque côté sur 1920 px), marges de la grille `clamp(8px, 1vw, 20px)` : les blocs
 sont le contenu de cet écran, donc ils prennent la place que les marges laissent. Curseur agrandi seulement dans la liseuse, sur
 `pointer: fine` à partir de 1100 px, taille constante sur toute la page pour ne pas
 perdre le pointeur : flèche sur la page et son texte, main sur tout ce qui se
-presse, blocs comme barres, même noir cerné de blanc et même 64 px, `pointer` en repli. Jamais dans le backoffice, qui s'adresse à une personne
+presse, blocs comme barres, même noir cerné de blanc et même 48 px, `pointer` en repli. Jamais dans le backoffice, qui s'adresse à une personne
 voyante : la règle est gardée par `:root:not([data-density='admin'])`. Espacement base 8 px. Aucun filet : commandes et blocs sont
 des aplats arrondis à 12 px (`--radius-reader`) ; les barres du pied sont séparées par 8 px de papier
 et le pied garde 8 px au-dessus, `--grid-padding` sur les côtés et en bas. Les blocs de la grille sont
@@ -142,16 +155,18 @@ anti-rebond : cahier des charges 5.1. Aucun geste tactile requis.
 
 | Composant | Spécification |
 |---|---|
-| Pied | pied de l'écran, commandes seules : une rangée en flex. Les barres se partagent la place (`flex: 1`), "Mes livres" prend celle de son libellé, ou toute la largeur s'il reste seul. Une barre qui ne mène nulle part n'est pas rendue, et sur "Mes livres" le pied disparaît entièrement quand tout tient sur une page. Sous 480 px, les barres perdent leur chevron et leur marge interne pour garder les trois libellés sur une rangée ; l'écran ne dépasse jamais la fenêtre |
+| Pied | pied de l'écran, commandes seules. En lecture (`reader__commands`) : une grille de deux moitiés aux marges du texte, écart `--spread-gap` en double page (sur le pli) et 8 px sinon, "Précédent" toujours à gauche et "Suivant" toujours à droite, chacune de la largeur de sa page, une moitié restant vide quand sa barre n'est pas rendue. Sur "Mes livres" (`library__commands`) : la même grille de deux moitiés, aux marges de la grille de livres et séparées par sa gouttière de 24 px. Une barre qui ne mène nulle part n'est pas rendue, et sur "Mes livres" le pied disparaît entièrement quand tout tient sur une page. Sous 480 px, les barres perdent leur chevron et leur marge interne pour garder les trois libellés sur une rangée ; l'écran ne dépasse jamais la fenêtre |
 | Ligne de tête `page-head` | première rangée de l'écran ; rangée alignée à droite, centrée sur `--reading-max-width` ou, avec `page-head--wide`, sur `--grid-max-width`. Le titre s'y pousse à gauche tout seul, donc l'indicateur reste à droite quand il n'y a pas de titre |
 | Titre `page-head__title` | `--page-title-size` (entre 20 et 35 px, calé sur le palier 100 sans en dépendre : c'est du décor, pas du texte de lecture). Sur "Mes livres" seulement |
-| Indicateur `page-head__indicator` | `--indicator-size` (un quart du corps, entre 16 et 32 px), texte atténué, chiffres tabulaires, `aria-live="polite"`, aucun filet. Porte "Page 12 sur 840" en lecture, "Titres 1 à 6 sur 7" sur la liste. Volontairement discret : c'est un état, jamais une commande |
-| Barre `nav-bar` | hauteur minimale `1,4 x --button-min-height` ; chevron SVG (1,2 x `--text-control`, trait 12) puis libellé en `--nav-bar-label-size` sur une ligne, en 400 ; chevron à trait 10 et bouts arrondis. Aplat encre sans filet, arrondi 12 px, libellé crème ; survol un ton plus clair, pressé en beige à texte encre. Aucun état désactivé : sur la première ou la dernière page, la barre inutile est retirée du DOM et celle qui reste occupe la place libérée |
-| Sortie `nav-bar--exit` | "Mes livres" en lecture : une `nav-bar` sans chevron, large de son libellé plus `--button-padding-x` |
-| Bouton `status-screen__retry` | "Réessayer" : hauteur `max(56px, 2 x --text-control)`, même aplat, arrondi, graisse et états que la barre |
-| Surface `reading` | 1 500 px max centrée, `overflow: hidden`, `column-gap: 0`, marges par `padding` ; corps `--text-body`, aligné à gauche, `white-space: pre-line`, `hyphens: auto`, `overflow-wrap: anywhere`, `user-select: none` ; titres `--text-heading`, `text-wrap: balance`, `break-after: avoid` ; auteur et "Fin du livre" en `--text-meta` atténué |
-| Grille `library__grid` | trois colonnes égales, gouttière 24 px, 1 500 px de large au maximum, calée en haut. La ligne de tête partage ses marges latérales, sans quoi le titre cesse de surmonter le premier bloc. `grid-auto-rows: 1fr` : sur une grille de hauteur indéfinie, toutes les rangées prennent la hauteur de la plus grande, donc tous les blocs font la même taille quelle que soit la longueur de leur titre. Paginée par rangées entières : une rangée n'est jamais coupée, et une rangée plus haute que l'écran occupe sa propre page. Les blocs des autres pages gardent leur boîte, pour que la mesure reste valable, mais passent en `visibility: hidden` |
-| Bloc `book-card` | le livre entier tient dans un aplat de toile (`data-tone` de 1 à 10, attribué par `assignCoverTones`, absent sur les blocs en cours et terminés) : titre en `--card-title-size` et en 700, auteur en `--card-author-size` et en 400 puis, s'il y a lieu, l'étiquette d'état, groupés en haut à gauche. Ni couverture ni filet. Texte crème sur la toile, retrait interne de 24 px, arrondi 12 px, hauteur minimale `2 x --button-min-height`, alignés à gauche. Conteneur de requête (`container-type: inline-size`), donc son texte se mesure sur la colonne et jamais sur la fenêtre ; le titre est plafonné à `8cqi` pour qu'une colonne large ne coûte pas une rangée de la grille, l'auteur à `6cqi` pour que les deux lignes ne se retrouvent jamais à la même taille sur une colonne étroite. En cours : bloc rose à texte encre, seul bloc clair et coloré. Terminé : bloc beige pâle à texte encre, sans toile. Survol : la toile fonce de 30 % vers l'encre (`color-mix`), rose 400 pour le bloc en cours, beige soutenu pour le bloc terminé ; rien ne bouge. Pressé : beige soutenu à texte encre, comme les commandes |
+| Indicateur `page-head__indicator` | `--indicator-size` (0,6 x corps, entre 16 et 32 px), texte atténué, chiffres tabulaires, `aria-live="polite"`, aucun filet. Porte "Titres 1 à 6 sur 7" sur la liste. Volontairement discret : c'est un état, jamais une commande |
+| Titre courant `reader__head` | en lecture, à la place de `page-head` : titre du livre (le `h1` de l'écran) en encre et en 700, puis l'auteur en texte atténué et en 400, 32 px plus loin, tous deux à droite, séparé du texte par `--reader-head-gap` (48 px) pour ne jamais se lire comme sa première ligne, en `--indicator-size` atténué et en 400, chacun sur une ligne, coupé par des points de suspension plutôt que replié |
+| Numéros `reader__folios` | sous le texte, une grille aux colonnes et à la gouttière des pages : un numéro centré sous chaque page, le total sous la dernière ("15", "16 sur 840" ; "17 sur 840" seul quand la page de droite est blanche). Même taille et même teinte que le titre courant, chiffres tabulaires, cachés au lecteur d'écran, qui reçoit "Pages 15 et 16 sur 840" par une phrase `aria-live` |
+| Barre `nav-bar` | hauteur minimale `1,4 x --button-min-height` ; chevron SVG (1,2 x `--text-control`, trait 12) puis libellé en `--nav-bar-label-size` sur une ligne, en 400 ; chevron à trait 10 et bouts arrondis. Aplat ton sur ton sans filet, arrondi 12 px, libellé encre ; survol un ton plus foncé, pressé en aplat encre à libellé crème. Aucun état désactivé : sur la première ou la dernière page, la barre inutile est retirée du DOM et celle qui reste occupe la place libérée |
+| Sortie `nav-bar--exit` | "Mes livres" en lecture, en tête à gauche : une `nav-bar` sans aplat au repos, flèche de retour (hampe et pointe, distincte du chevron de "Précédent") puis libellé encre, haute de `--button-min-height`, tirée à gauche de sa marge interne pour que la flèche s'aligne sur le texte ; l'aplat ton sur ton n'apparaît qu'au survol, pressé en encre comme les barres |
+| Bouton `status-screen__retry` | "Réessayer" : hauteur `max(56px, 2 x --text-control)`, même aplat ton sur ton, arrondi, graisse et états que la barre |
+| Surface `reading` | 1 880 px max centrée, `overflow: hidden`, `column-count` à `--pages-per-view` (1, ou 2 à partir de 1 100 px CSS en paysage), gouttière `--spread-gap` en double page et pli de 2 px en son milieu, marges latérales par `padding` ; corps `--text-body` en 400, aligné à gauche, `white-space: pre-line`, `hyphens: auto`, `overflow-wrap: anywhere`, `user-select: none` ; paragraphes sans blanc, alinéa `--indent-paragraph` sauf en tête de chapitre, après un titre ou la page de titre ; titres `--text-heading` en 700, centrés, `--heading-space-before` en `padding` (gardé en haut de colonne) et `--heading-space-after` en marge, `text-wrap: balance`, `break-after: avoid` ; auteur et "Fin du livre" en `--text-meta` atténué et centrés |
+| Grille `library__grid` | trois colonnes égales, trois rangées par page au plus, gouttière 24 px, 1 500 px de large au maximum, calée en haut. La ligne de tête partage ses marges latérales, sans quoi le titre cesse de surmonter le premier bloc. `grid-auto-rows: 1fr` : sur une grille de hauteur indéfinie, toutes les rangées prennent la hauteur de la plus grande, donc tous les blocs font la même taille quelle que soit la longueur de leur titre. Paginée par rangées entières : une rangée n'est jamais coupée, et une rangée plus haute que l'écran occupe sa propre page. Les blocs des autres pages gardent leur boîte, pour que la mesure reste valable, mais passent en `visibility: hidden` |
+| Bloc `book-card` | le livre entier tient dans un aplat de lin (`data-tone` de 1 à 10, attribué par `assignCoverTones`, absent sur les blocs en cours et terminés) : titre en `--card-title-size` et en 700, auteur en `--card-author-size` et en 400 puis, s'il y a lieu, l'étiquette d'état, groupés en haut à gauche ; dans le coin supérieur droit, une icône Lucide de l'état (`--card-icon-size`, 1,3 x le titre, décorative) : livre fermé, livre ouvert pour le livre en cours, coche pour un livre terminé, masquée sur téléphone faute de place. Ni couverture ni filet. Texte encre sur le lin, retrait interne de 24 px, arrondi 12 px, hauteur minimale `2 x --button-min-height`, alignés à gauche. Conteneur de requête (`container-type: inline-size`), donc son texte se mesure sur la colonne et jamais sur la fenêtre ; le titre est plafonné à `8cqi` pour qu'une colonne large ne coûte pas une rangée de la grille, l'auteur à `6cqi` pour que les deux lignes ne se retrouvent jamais à la même taille sur une colonne étroite. En cours : bloc rose à texte encre, seul bloc clair et coloré. Terminé : bloc crème pâle à texte encre, sans lin. Survol : le lin fonce de 10 % vers l'encre (`color-mix`), rose 400 pour le bloc en cours, beige soutenu pour le bloc terminé ; rien ne bouge. Pressé : beige soutenu à texte encre, comme les commandes |
 | Étiquette `book-card__tag` | `--card-meta-size`, pastille encre à texte crème, arrondi 6 px, jamais en capitales ; n'apparaît que sur les blocs clairs (en cours, terminé). "En cours" et "Terminé" : la couleur seule ne suffit jamais à porter l'état |
 | Aperçu `a-preview` (backoffice) | rendu réel du palier, réduit à la boîte : la boîte est un conteneur et le texte est dimensionné en `cqi`, sinon il se mesure sur la fenêtre entière et déborde |
 | Écran d'état `status-screen` | une phrase centrée en `--text-body`, 24 caractères par ligne maximum, un bouton |
@@ -160,7 +175,7 @@ anti-rebond : cahier des charges 5.1. Aucun geste tactile requis.
 ## 8. Composants du backoffice
 
 Un établi pour l'aidant : fond ardoise froid (`#eff0f2`), rail de navigation en toile marine
-(`#223a63`, la toile du même nom côté liseuse), commandes en bleu tampon (`#2e45b8`, l'encre des
+(`#223a63`, la toile sombre que portaient les livres jusqu'au 24 octobre 2026), commandes en bleu tampon (`#2e45b8`, l'encre des
 tampons de bibliothèque). Le rose `#ffa6c1` garde son seul sens, "vous êtes ici" : il marque la
 section courante comme il marque le livre en cours. Les titres de vue et de livre sont en Luciole
 700, pour qu'une ligne de la Bibliothèque se lise comme l'étagère de la lectrice. Variante sombre
@@ -189,7 +204,7 @@ ou plus, tout contour d'interaction à 3:1.
 
 ## 9. Interdits
 
-Liseuse : valeur en dur, `transition`, `animation`, capitales, icône sans libellé, filet ou bordure,
+Liseuse : valeur en dur, `transition`, `animation`, capitales, icône sans libellé, filet ou bordure (hors le pli de la double page),
 autre arrondi que `--radius-reader` et `--radius-tag`, `box-shadow` hors anneau de focus, contenu au survol, geste obligatoire, tout élément autre que le
 texte dans la surface de lecture. Backoffice : valeur en dur, couleur d'état comme accent, cible sous
 44 px, contenu utile au survol.

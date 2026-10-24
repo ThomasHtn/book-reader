@@ -13,7 +13,7 @@
   height: var(--cursor-size);
 }
 
-/* Same images as the native 64 px cursors. */
+/* Same images as the native 48 px cursors. */
 :host-context([data-cursor='arrow']) .large-cursor {
   display: block;
   background: var(--cursor-arrow-image);

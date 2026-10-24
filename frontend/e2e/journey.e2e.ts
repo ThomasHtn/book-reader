@@ -17,9 +17,9 @@ const COMMAND_GAP_MS = 450;
 const POLL_MS = 12_000;
 
 /**
- * The page indicator, "Page 12 sur 840".
+ * The page indicator, "Page 12 sur 840", or "Pages 12 et 13 sur 840" on facing pages.
  */
-const PROGRESS_PATTERN = /^Page \d+ sur \d+$/;
+const PROGRESS_PATTERN = /^Pages? \d+( et \d+)? sur \d+$/;
 
 /**
  * Search result served in place of the real OPDS catalogue; its activation is intercepted too.
@@ -39,7 +39,7 @@ test.describe.configure({ mode: 'serial' });
  * site is never contacted: its search is intercepted, and its activation uploads the same EPUB instead.
  */
 test('reader journey', async ({ page }) => {
-  const readerIndicator = page.locator('.page-head__indicator');
+  const readerIndicator = page.locator('.reader [aria-live]');
   const prevBar = page.locator('button.nav-bar--prev');
   const nextBar = page.locator('button.nav-bar--next');
 
@@ -98,27 +98,31 @@ test('reader journey', async ({ page }) => {
     await expectAccessible(page);
 
     await page.getByRole('link', { name: 'Réglages' }).click();
-    await expect(page.getByRole('button', { name: '100' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: '32' })).toHaveAttribute('aria-pressed', 'true');
     await expectAccessible(page);
   });
 
   // Reader URL of Le Horla, captured on opening and reused by the later steps.
   let horlaUrl = '';
 
-  await test.step('opens a book and reads ten pages', async () => {
+  await test.step('opens a book and turns five times', async () => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/livres$/);
     await page.locator('button.book-card', { hasText: 'Le Horla' }).click();
     await expect(page).toHaveURL(/\/lire\//);
     horlaUrl = new URL(page.url()).pathname;
-    await expect(readerIndicator).toHaveText(/^Page 1 sur \d+$/);
+    await expect(readerIndicator).toHaveText(/^Pages? 1( et 2)? sur \d+$/);
     await expect(prevBar).toHaveCount(0);
 
-    for (let turn = 0; turn < 10; turn++) {
+    // Five turns only: at tier 32 on facing pages the whole book is about twenty pages.
+    for (let turn = 0; turn < 5; turn++) {
       await page.keyboard.press(turn % 2 === 0 ? 'ArrowRight' : 'Space');
       await page.waitForTimeout(COMMAND_GAP_MS);
     }
-    await expect(readerIndicator).toHaveText(/^Page 11 sur \d+$/);
+    // Each turn shows the next two facing pages, or one after a chapter ending on a blank right page.
+    await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
+    const [, reached] = /(\d+)/.exec((await readerIndicator.textContent())!)!;
+    expect(Number(reached)).toBeGreaterThanOrEqual(6);
     await expectAccessible(page);
   });
 
@@ -156,11 +160,11 @@ test('reader journey', async ({ page }) => {
     const indicatorBefore = await readerIndicator.textContent();
     const saved = await page.request.put('/api/admin/settings', {
       headers: { 'X-Admin-Key': E2E_ADMIN_KEY },
-      data: { fontTier: 140 },
+      data: { fontTier: 40 },
     });
     expect(saved.ok()).toBe(true);
 
-    await expect(page.locator('html')).toHaveAttribute('data-tier', '140', { timeout: POLL_MS });
+    await expect(page.locator('html')).toHaveAttribute('data-tier', '40', { timeout: POLL_MS });
     // Bigger text means more pages: the numbers change, the position in the text does not.
     await expect(readerIndicator).not.toHaveText(indicatorBefore!, { timeout: POLL_MS });
     await expect(readerIndicator).toHaveText(PROGRESS_PATTERN);
@@ -197,7 +201,7 @@ test('reader journey', async ({ page }) => {
     }
     await expect(nextBar).toHaveCount(0);
     await expect(page.getByText('Fin du livre')).toBeInViewport();
-    const [, last, total] = /^Page (\d+) sur (\d+)$/.exec((await readerIndicator.textContent())!)!;
+    const [, last, total] = /(\d+) sur (\d+)$/.exec((await readerIndicator.textContent())!)!;
     expect(last).toBe(total);
     expect((await storedProgress(page, horlaUrl)).finished).toBe(true);
 

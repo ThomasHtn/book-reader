@@ -229,6 +229,21 @@ describe('Library', () => {
     expect(document.activeElement).toBe(cards()[6]);
   });
 
+  it('keeps "Suivant" in the right half and "Précédent" in the left one, even alone', async () => {
+    const { fixture } = await renderSevenBooks(() => 100);
+    const halves = () =>
+      Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('footer > div'));
+
+    expect(halves()[0].children.length).toBe(0);
+    expect(halves()[1].querySelector('.nav-bar--next')).not.toBeNull();
+
+    // Seven titles at six per page: the second page is the last, "Précédent" stays on the left.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', cancelable: true }));
+    await fixture.whenStable();
+    expect(halves()[0].querySelector('.nav-bar--prev')).not.toBeNull();
+    expect(halves()[1].children.length).toBe(0);
+  });
+
   it('names each bar by its visible label first, so voice control finds it', async () => {
     const { fixture } = await renderSevenBooks(() => 100);
     const bar = () => (fixture.nativeElement as HTMLElement).querySelector('button.nav-bar');

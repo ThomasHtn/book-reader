@@ -84,7 +84,7 @@ test('README screenshots', async ({ page }) => {
 
   await page.request.put('/api/admin/settings', {
     headers: { 'X-Admin-Key': E2E_ADMIN_KEY },
-    data: { fontTier: 100 },
+    data: { fontTier: 32 },
   });
   for (const viewport of VIEWPORTS) {
     await page.setViewportSize(viewport.size);
@@ -118,7 +118,7 @@ test('README screenshots', async ({ page }) => {
   await page.screenshot({ path: `${OUTPUT}/admin-bibliotheque-${phone.name}.png` });
 
   await page.goto('/admin/reglages');
-  await expect(page.getByRole('button', { name: '100' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: '32' })).toHaveAttribute('aria-pressed', 'true');
   await page.screenshot({ path: `${OUTPUT}/admin-reglages-${phone.name}.png` });
 });
 
@@ -129,7 +129,7 @@ async function openAt(page: Page, bookId: string, blockIndex: number): Promise<v
   await page.goto('/livres');
   await seedProgress(page, bookId, blockIndex);
   await page.goto(`/lire/${bookId}`);
-  await expect(page.locator('.page-head__indicator')).toHaveText(/^Page \d+ sur \d+$/);
+  await expect(page.locator('.reader [aria-live]')).toHaveText(/^Pages? \d+( et \d+)? sur \d+$/);
   const viewport = page.viewportSize()!;
   await page.mouse.move(viewport.width / 2, viewport.height / 2);
 }

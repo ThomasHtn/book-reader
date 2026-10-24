@@ -55,9 +55,12 @@ class FakeLayout implements ChapterLayout {
   public renders = 0;
 
   /**
-   * Takes the pages the title page fills on the first chapter.
+   * Takes the pages the title page fills on the first chapter and the pages shown side by side.
    */
-  constructor(private readonly titlePagePages = 0) {}
+  constructor(
+    private readonly titlePagePages = 0,
+    private readonly perView = 1,
+  ) {}
 
   /**
    * One page per block, plus the title page's on the first chapter.
@@ -93,10 +96,18 @@ class FakeLayout implements ChapterLayout {
   }
 
   /**
-   * One line per block, one line per page, so estimates match one page per block.
+   * One line per block and one block per page: a 24 px page holds a 15.5 px line or a 24 px
+   * heading, never two blocks, so estimates match one page per block.
    */
   public geometry(): PageGeometry {
-    return { width: 1000, height: 14, fontSize: 10, charWidth: () => 1 };
+    return { width: 1000, height: 24, fontSize: 10, charWidth: () => 1 };
+  }
+
+  /**
+   * Pages side by side, as given to the constructor.
+   */
+  public pagesPerView(): number {
+    return this.perView;
   }
 
   /**
@@ -108,9 +119,9 @@ class FakeLayout implements ChapterLayout {
 }
 
 /**
- * Layout key in jsdom at tier 100: no layout, so no size.
+ * Layout key in jsdom at tier 32: no layout, so no size.
  */
-const JSDOM_LAYOUT = '0x0:100';
+const JSDOM_LAYOUT = 'v2:0x0:32';
 
 describe('Reader', () => {
   /**
@@ -143,6 +154,11 @@ describe('Reader', () => {
    */
   let titlePagePages: number;
 
+  /**
+   * Pages side by side in layouts created from now on.
+   */
+  let perView: number;
+
   beforeEach(() => {
     vi.useFakeTimers();
     stubResizeObserver();
@@ -150,6 +166,7 @@ describe('Reader', () => {
     store = new FakeProgressStore();
     layouts = [];
     titlePagePages = 0;
+    perView = 1;
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -160,7 +177,7 @@ describe('Reader', () => {
         {
           provide: CHAPTER_LAYOUT_FACTORY,
           useValue: () => {
-            const layout = new FakeLayout(titlePagePages);
+            const layout = new FakeLayout(titlePagePages, perView);
             layouts.push(layout);
             return layout;
           },
@@ -209,14 +226,20 @@ describe('Reader', () => {
     const prev = () => element.querySelector<HTMLButtonElement>('button.nav-bar--prev');
     const next = () => element.querySelector<HTMLButtonElement>('button.nav-bar--next');
     const indicator = () => element.querySelector('[aria-live]')?.textContent?.trim();
-    return { fixture, element, prev, next, indicator };
+    const folios = () =>
+      Array.from(element.querySelectorAll('.reader__folios span'), (span) =>
+        span.textContent?.trim(),
+      );
+    return { fixture, element, prev, next, indicator, folios };
   }
 
   it('opens a never read book at its first page, with the title page before the text', async () => {
-    const { prev, next, indicator, fixture } = await open();
+    const { prev, next, indicator, folios, element } = await open();
 
     expect(store.last).toBe('b1');
-    expect(fixture.nativeElement.querySelector('h1.sr-only')?.textContent?.trim()).toBe('Le Horla');
+    // Running head: title as the page heading, author beside it.
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Le Horla');
+    expect(element.querySelector('.reader__head')?.textContent).toContain('Guy de Maupassant');
     expect(visible().content).toEqual({
       blocks: BOOK.blocks.slice(0, 3),
       firstBlock: 0,
@@ -228,6 +251,60 @@ describe('Reader', () => {
     expect(next()).not.toBeNull();
     // Chapter II is estimated with the end mark the fake layout leaves out: 3 + 3.
     expect(indicator()).toBe('Page 1 sur 6');
+    expect(folios()).toEqual(['1 sur 6']);
+  });
+
+  it('keeps each page turn in its own half, under its page, when the other is gone', async () => {
+    const { element, fixture, next } = await open();
+    const halves = () => Array.from(element.querySelectorAll('footer > div'));
+
+    expect(element.querySelector('header .nav-bar--exit')).not.toBeNull();
+    expect(halves()[0].children.length).toBe(0);
+    expect(halves()[1].querySelector('.nav-bar--next')).not.toBeNull();
+
+    next()!.click();
+    await flush(fixture);
+    expect(halves()[0].querySelector('.nav-bar--prev')).not.toBeNull();
+  });
+
+  it('shows two facing pages on a wide screen and turns both at once', async () => {
+    perView = 2;
+    const { fixture, prev, next, indicator, folios } = await open();
+
+    expect(visible().shownPage).toBe(0);
+    expect(indicator()).toBe('Pages 1 et 2 sur 6');
+    expect(folios()).toEqual(['1', '2 sur 6']);
+
+    next()!.click();
+    await flush(fixture);
+    // Chapter I has three pages: its last view shows page 3 with a blank right page.
+    expect(visible().shownPage).toBe(2);
+    expect(indicator()).toBe('Page 3 sur 6');
+    expect(folios()).toEqual(['3 sur 6']);
+    expect(store.saves.at(-1)?.position).toEqual({ blockIndex: 2, charOffset: 0 });
+
+    vi.advanceTimersByTime(400);
+    next()!.click();
+    await flush(fixture);
+    // Chapter II measured at two pages, both shown: the end of the book.
+    expect(visible().content?.firstBlock).toBe(3);
+    expect(indicator()).toBe('Pages 4 et 5 sur 5');
+    expect(next()).toBeNull();
+    expect(store.saves.at(-1)?.finished).toBe(true);
+
+    vi.advanceTimersByTime(400);
+    prev()!.click();
+    await flush(fixture);
+    expect(visible().content?.firstBlock).toBe(0);
+    expect(visible().shownPage).toBe(2);
+  });
+
+  it('resumes a position on a right page at the view holding it', async () => {
+    perView = 2;
+    store.progress.set('b1', { blockIndex: 1, charOffset: 0, finished: false, updatedAt: 't' });
+    await open();
+
+    expect(visible().shownPage).toBe(0);
   });
 
   it('opens on the title page when it fills a page of its own, until the text is reached', async () => {
@@ -286,7 +363,7 @@ describe('Reader', () => {
   });
 
   it('replaces estimates with the counts measured on the way, and keeps them', async () => {
-    data.settings.set({ fontTier: 100 });
+    data.settings.set({ fontTier: 32 });
     const { fixture, next, indicator } = await open();
     expect(store.pageCounts.get('b1')).toEqual({ layout: JSDOM_LAYOUT, counts: [3, undefined] });
 
@@ -303,7 +380,7 @@ describe('Reader', () => {
   it('numbers pages from the counts measured in an earlier session', async () => {
     store.progress.set('b1', { blockIndex: 4, charOffset: 0, finished: false, updatedAt: 't' });
     store.pageCounts.set('b1', { layout: JSDOM_LAYOUT, counts: [7, undefined] });
-    data.settings.set({ fontTier: 100 });
+    data.settings.set({ fontTier: 32 });
     const { indicator } = await open();
 
     expect(indicator()).toBe('Page 9 sur 9');
@@ -430,14 +507,14 @@ describe('Reader', () => {
     const { fixture } = await open();
     const renders = visible().renders;
 
-    data.settings.set({ fontTier: 140 });
+    data.settings.set({ fontTier: 40 });
     await flush(fixture);
 
     expect(visible().renders).toBe(renders + 1);
     expect(visible().shownPage).toBe(1);
   });
 
-  it('opens "Mes livres" from the footer', async () => {
+  it('opens "Mes livres" from the head line', async () => {
     const { element } = await open();
 
     element.querySelector<HTMLButtonElement>('.nav-bar--exit')!.click();

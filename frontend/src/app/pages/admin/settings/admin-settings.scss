@@ -9,7 +9,7 @@
 /* Real reader rendering of the chosen tier, scaled down to the screen. The reader sizes its text
    against the viewport (tier px at 1280px wide); here the paper is the viewport, hence `cqi`. */
 .a-preview {
-  --preview-tier: 100;
+  --preview-tier: 32;
 }
 
 /* Bezel around the paper, so the preview reads as her screen. */
@@ -27,13 +27,13 @@
 .a-preview__paper {
   container-type: inline-size;
 
-  /* Without overflow clipping, a long line at tier 140 grows the paper instead of being cut. */
+  /* Without overflow clipping, a long line at tier 40 grows the paper instead of being cut. */
   aspect-ratio: 16 / 9;
   padding: 6cqi 7cqi;
   box-sizing: border-box;
   border-radius: 4px;
-  background: var(--color-paper-50);
-  color: var(--color-ink-900);
+  background: var(--color-bg);
+  color: var(--color-fg);
 }
 
 /* `cqi` on the container itself would resolve against its ancestor, so the text sits in a child. */

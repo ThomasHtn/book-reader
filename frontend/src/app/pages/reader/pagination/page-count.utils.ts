@@ -6,27 +6,37 @@ import { BookText, Chapter, PageGeometry } from './pagination.model';
 /**
  * Body line height ratio, as `--leading-body` in tokens.css.
  */
-const LEADING_BODY = 1.4;
+const LEADING_BODY = 1.55;
 
 /**
  * Heading size relative to the body, as `--text-heading` in tokens.css.
  */
-const HEADING_SCALE = 1.15;
+const HEADING_SCALE = 1.5;
 
 /**
  * Heading line height ratio, as `--leading-tight` in tokens.css.
  */
-const LEADING_TIGHT = 1.15;
+const LEADING_TIGHT = 1.2;
 
 /**
- * Gap after a block in ems of its own size, as `--gap-paragraph` in tokens.css.
+ * Room above a heading in ems of the heading, as `--heading-space-before` in tokens.css.
  */
-const GAP_EM = 0.6;
+const HEADING_BEFORE_EM = 0.4;
+
+/**
+ * Room below a heading or the author line in ems of their size, as `--heading-space-after`.
+ */
+const HEADING_AFTER_EM = 1;
+
+/**
+ * First line indent of a paragraph that follows another one, as `--indent-paragraph` in tokens.css.
+ */
+const INDENT_EM = 1.5;
 
 /**
  * Author and end mark size relative to the body, as `--text-meta` in tokens.css (its clamp ignored).
  */
-const META_SCALE = 0.5;
+const META_SCALE = 0.6;
 
 /**
  * Lines kept at least at the bottom of a column before a break, as Blink does (spec 5.2).
@@ -84,14 +94,22 @@ export function estimatePageCounts(
     // The title page sits before the first chapter, as `DomChapterLayout` renders it.
     if (index === 0) {
       columns.heading(lines.count(book.title, HEADING_SCALE), heading, body);
-      columns.place(lines.count(book.author, META_SCALE), meta * LEADING_BODY, meta * GAP_EM);
+      columns.place(
+        lines.count(book.author, META_SCALE),
+        meta * LEADING_BODY,
+        meta * HEADING_AFTER_EM,
+      );
     }
+    // Only a paragraph following another one is indented, as in reading.css.
+    let indent = 0;
     for (let block = chapter.firstBlock; block < chapter.firstBlock + chapter.blockCount; block++) {
       const { kind, text } = book.blocks[block];
       if (kind === 'heading') {
         columns.heading(lines.count(text, HEADING_SCALE), heading, body);
+        indent = 0;
       } else {
-        columns.place(lines.count(text, 1), body * LEADING_BODY, body * GAP_EM);
+        columns.place(lines.count(text, 1, indent), body * LEADING_BODY, 0);
+        indent = body * INDENT_EM;
       }
     }
     if (index === chapters.length - 1) {
@@ -138,25 +156,30 @@ class LineBreaker {
   constructor(private readonly geometry: PageGeometry) {}
 
   /**
-   * Returns the line count of a block whose font is `scale` times the body font.
+   * Returns the line count of a block whose font is `scale` times the body font, its first line
+   * starting `indent` pixels in.
    */
-  public count(text: string, scale: number): number {
+  public count(text: string, scale: number, indent = 0): number {
     // A larger font fits fewer characters: scale the column down instead of every advance up.
     const width = this.geometry.width / scale;
     const space = this.widthOf(' ');
     const hyphen = this.widthOf('-');
     let lines = 1;
-    let x = 0;
+    let x = indent / scale;
+    // Whether no word sits on the line yet, so the next one needs no space before it.
+    let lineStart = true;
     let wordWidth = 0;
     let wordLength = 0;
     const endWord = () => {
       if (wordLength === 0) {
         return;
       }
-      const needed = x > 0 ? x + space + wordWidth : wordWidth;
+      const atStart = lineStart;
+      lineStart = false;
+      const needed = atStart ? x + wordWidth : x + space + wordWidth;
       if (needed <= width) {
         x = needed;
-      } else if (x > 0 && wordLength >= HYPHEN_MIN_WORD) {
+      } else if (!atStart && wordLength >= HYPHEN_MIN_WORD) {
         // A long word splits when three letters at least fit the line, keeping three for the next one.
         const perChar = wordWidth / wordLength;
         const head = Math.min(
@@ -167,7 +190,7 @@ class LineBreaker {
         x = head >= HYPHEN_MIN_SIDE ? perChar * (wordLength - head) : wordWidth;
       } else if (wordWidth > width) {
         // `overflow-wrap: anywhere` cuts a word wider than the column.
-        lines += Math.ceil(wordWidth / width) - (x > 0 ? 0 : 1);
+        lines += Math.ceil(wordWidth / width) - (atStart ? 1 : 0);
         x = wordWidth % width;
       } else {
         lines++;
@@ -183,6 +206,7 @@ class LineBreaker {
         endWord();
         lines++;
         x = 0;
+        lineStart = true;
       } else {
         wordWidth += this.widthOf(char);
         wordLength++;
@@ -225,15 +249,20 @@ class ColumnFiller {
   constructor(private readonly height: number) {}
 
   /**
-   * Places a heading, moved to the next column when the lines after it would not follow.
+   * Places a heading with the room around it, moved to the next column when the lines after it
+   * would not follow.
    */
   public heading(lines: number, size: number, body: number): void {
     const lineHeight = size * LEADING_TIGHT;
-    const needed = lines * lineHeight + size * GAP_EM + ORPHANS * body * LEADING_BODY;
+    const before = size * HEADING_BEFORE_EM;
+    const after = size * HEADING_AFTER_EM;
+    const needed = before + lines * lineHeight + after + ORPHANS * body * LEADING_BODY;
     if (this.y > 0 && this.y + needed > this.height + EPSILON_PX) {
       this.newColumn();
     }
-    this.place(lines, lineHeight, size * GAP_EM);
+    // Padding, unlike a margin, is kept at the top of a column.
+    this.y += before;
+    this.place(lines, lineHeight, after);
   }
 
   /**

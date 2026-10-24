@@ -4,38 +4,64 @@
 } @else {
   <!-- Laid out but hidden until the first page is placed; no context menu on the reader (spec 5.1). -->
   <div
-    class="grid h-full grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto]"
+    class="reader grid h-full grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto_auto]"
     [style.visibility]="location() ? null : 'hidden'"
     (contextmenu)="$event.preventDefault()"
   >
-    <!-- Page indicator alone at the top right, announced politely on each turn (spec 5.1). -->
-    <app-page-head [indicator]="indicator()" />
+    <!-- Head line: "Mes livres" on the left, title and author on the right, small and muted (spec 5.1). -->
+    <header
+      class="reader__head flex w-full max-w-(--reading-max-width) items-center justify-between justify-self-center gap-(--space-3) px-(--reading-padding)"
+    >
+      <app-nav-bar direction="exit" (activate)="openLibrary()" />
+      <!-- Running head, cut short rather than wrapped. -->
+      <div class="flex min-w-0 items-baseline gap-(--space-4)">
+        <h1 class="reader__head-text reader__title">{{ title() }}</h1>
+        <p class="reader__head-text reader__author">{{ author() }}</p>
+      </div>
+    </header>
     <main class="grid min-h-0 grid-rows-[minmax(0,1fr)]">
-      <!-- Title for screen readers; the title page shows it on screen. -->
-      <h1 class="sr-only">{{ title() }}</h1>
       <!-- Reading surface: focusable by script only, to take the focus back after a click (spec 5.1). -->
       <section
-        class="reader__page reading relative min-h-0 w-full max-w-(--reading-max-width) justify-self-center overflow-hidden p-(--reading-padding)"
+        class="reader__page reading relative min-h-0 w-full max-w-(--reading-max-width) justify-self-center overflow-hidden px-(--reading-padding)"
         lang="fr"
         aria-label="Texte du livre"
         tabindex="-1"
         #text
       >
-        <!-- One page window; DomChapterLayout fills and translates the columns inside it (spec 5.2). -->
-        <div class="h-full overflow-hidden" #viewport>
+        <!-- One view of one or two pages; DomChapterLayout fills and translates the columns (spec 5.2). -->
+        <div class="reader__viewport relative h-full overflow-hidden" #viewport>
           <div class="reader__columns h-full" #columns></div>
         </div>
       </section>
     </main>
-    <!-- The three commands; a bar with nowhere to go is removed and the other takes its room (spec 5.1). -->
-    <footer>
-      <div class="flex gap-(--nav-row-gap) p-(--nav-row-padding)">
-        <app-nav-bar direction="exit" (activate)="openLibrary()" />
-        <!-- No "Précédent" on the first page of the book. -->
+    <!-- Page numbers under each page, the total under the last one; screen readers get the sentence below. -->
+    <div
+      class="reader__folios grid w-full max-w-(--reading-max-width) justify-self-center px-(--reading-padding)"
+      aria-hidden="true"
+    >
+      @if (folios(); as shown) {
+        @if (shown.right === null) {
+          <span>{{ shown.left }} sur {{ shown.total }}</span>
+        } @else {
+          <span>{{ shown.left }}</span>
+          <span>{{ shown.right }} sur {{ shown.total }}</span>
+        }
+      }
+    </div>
+    <!-- Page indicator for screen readers, announced politely on each turn (spec 5.1). -->
+    <p class="sr-only" aria-live="polite">{{ indicator() }}</p>
+    <!-- Page turns under the pages they turn, parted on the fold; an absent one leaves its half empty (spec 5.1). -->
+    <footer
+      class="reader__commands grid w-full max-w-(--reading-max-width) justify-self-center px-(--reading-padding)"
+    >
+      <!-- Under the left page; no "Précédent" on the first page of the book. -->
+      <div class="flex">
         @if (!isFirst()) {
           <app-nav-bar direction="previous" (activate)="onBar('previous')" />
         }
-        <!-- No "Suivant" on the last page of the book. -->
+      </div>
+      <!-- Under the right page; no "Suivant" on the last page of the book. -->
+      <div class="flex">
         @if (!isLast()) {
           <app-nav-bar direction="next" (activate)="onBar('next')" />
         }

@@ -22,7 +22,7 @@ public class ReaderSettings {
     /**
      * Font tiers the reader supports, in pixels on a screen of at least 1280 CSS pixels.
      */
-    public static final Set<Integer> FONT_TIERS = Set.of(48, 72, 100, 140);
+    public static final Set<Integer> FONT_TIERS = Set.of(28, 32, 36, 40);
 
     /**
      * Always {@link #SINGLETON_ID}, enforced by a check constraint.

@@ -58,3 +58,10 @@
   height: var(--space-3);
   fill: currentcolor;
 }
+
+/* Two halves like the reader's footer: "Précédent" always on the left, "Suivant" always on the right. */
+.library__commands {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--grid-gap);
+  padding-block: var(--space-1) var(--grid-padding);
+}

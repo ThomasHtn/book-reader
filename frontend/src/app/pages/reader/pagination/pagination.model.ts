@@ -59,7 +59,8 @@ export interface BookText {
 }
 
 /**
- * A page of the book: a column of one chapter.
+ * A page of the book: a column of one chapter. Two pages side by side share a view, the left one
+ * standing for it.
  */
 export interface PageLocation {
   /**
@@ -153,6 +154,11 @@ export interface ChapterLayout {
    * Returns the page size and body font metrics that page count estimates run on.
    */
   geometry(): PageGeometry;
+
+  /**
+   * Returns how many pages the rendered chapter shows side by side: two on a wide screen, else one.
+   */
+  pagesPerView(): number;
 }
 
 /**

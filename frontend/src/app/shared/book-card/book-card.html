@@ -1,12 +1,20 @@
 <!-- The whole block is one button; data-tone picks its cloth colour in book-card.scss. -->
 <button
   type="button"
-  class="book-card @container grid w-full content-start gap-(--card-gap)"
+  class="book-card @container relative grid w-full content-start gap-(--card-gap)"
   [class.book-card--current]="current()"
   [class.book-card--finished]="finished()"
   [attr.data-tone]="tone()"
   (click)="activate.emit()"
 >
+  <!-- State icon in the top corner, decorative: the tag below says the state in words. -->
+  @if (current()) {
+    <svg class="book-card__icon absolute" aria-hidden="true" lucideBookOpen></svg>
+  } @else if (finished()) {
+    <svg class="book-card__icon absolute" aria-hidden="true" lucideCircleCheck></svg>
+  } @else {
+    <svg class="book-card__icon absolute" aria-hidden="true" lucideBook></svg>
+  }
   <span class="book-card__title">{{ title() }}</span>
   <span class="book-card__author">{{ author() }}</span>
   <!-- States are spelled out, never shown by colour alone (spec 5.4). -->

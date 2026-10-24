@@ -3,7 +3,13 @@ import { FontTier } from '@core/http/api.model';
 import { MeasuredCounts } from './reader.model';
 
 /**
- * Names the layout page counts were measured under: viewport size and font tier.
+ * Version of the reading typography, raised whenever reading.css changes how much a page holds, so
+ * counts measured under an older style are forgotten.
+ */
+const TYPOGRAPHY_VERSION = 2;
+
+/**
+ * Names the layout page counts were measured under: typography, viewport size and font tier.
  *
  * @param width - Viewport width in CSS pixels.
  * @param height - Viewport height in CSS pixels.
@@ -11,7 +17,7 @@ import { MeasuredCounts } from './reader.model';
  * @returns Key stored next to the counts.
  */
 export function layoutKey(width: number, height: number, tier: FontTier | undefined): string {
-  return `${width}x${height}:${tier}`;
+  return `v${TYPOGRAPHY_VERSION}:${width}x${height}:${tier}`;
 }
 
 /**

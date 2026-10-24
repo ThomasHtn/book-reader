@@ -53,10 +53,14 @@
         </div>
       }
     </main>
-    <!-- Footer only when the titles span more than one page (spec 5.1). -->
+    <!-- Footer only when the titles span more than one page; two halves as in the reader, an absent bar
+         leaving its half empty (spec 5.4). -->
     @if (pages() > 1) {
-      <footer>
-        <div class="flex gap-(--nav-row-gap) p-(--nav-row-padding)">
+      <footer
+        class="library__commands grid w-full max-w-(--grid-max-width) justify-self-center px-(--grid-padding)"
+      >
+        <!-- Left half: "Précédent" from the second page on. -->
+        <div class="flex">
           @if (page() > 0) {
             <app-nav-bar
               direction="previous"
@@ -64,6 +68,9 @@
               (activate)="onBar('previous')"
             />
           }
+        </div>
+        <!-- Right half: "Suivant" up to the last page. -->
+        <div class="flex">
           @if (page() < pages() - 1) {
             <app-nav-bar direction="next" context="titres suivants" (activate)="onBar('next')" />
           }

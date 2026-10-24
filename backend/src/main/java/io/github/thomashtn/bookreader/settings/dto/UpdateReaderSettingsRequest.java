@@ -13,7 +13,7 @@ import jakarta.validation.constraints.NotNull;
  */
 @Schema(description = "Reader display settings to apply.")
 public record UpdateReaderSettingsRequest(
-    @NotNull @Schema(example = "100", allowableValues = {"48", "72", "100", "140"}) Integer fontTier
+    @NotNull @Schema(example = "32", allowableValues = {"28", "32", "36", "40"}) Integer fontTier
 ) {
 
     /**
@@ -22,7 +22,7 @@ public record UpdateReaderSettingsRequest(
      * @return {@code true} when the tier is absent or supported
      */
     @JsonIgnore
-    @AssertTrue(message = "must be 48, 72, 100 or 140")
+    @AssertTrue(message = "must be 28, 32, 36 or 40")
     public boolean isSupportedFontTier() {
         return fontTier == null || ReaderSettings.FONT_TIERS.contains(fontTier);
     }

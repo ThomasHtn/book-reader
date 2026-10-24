@@ -1,4 +1,4 @@
-/* One book, one cloth-coloured block: title, then author and state, nothing else. */
+/* One book, one linen-coloured block: title, then author and state, with an icon of that state. */
 
 @use 'tools' as *;
 
@@ -7,7 +7,7 @@
   display: contents;
 }
 
-/* Cloth plate with cream text; the block is a query container, so its text sizes against the column. */
+/* Linen plate with ink text; the block is a query container, so its text sizes against the column. */
 .book-card {
   --book-cover: var(--book-cover-1);
 
@@ -72,9 +72,29 @@
   --book-cover: var(--book-cover-10);
 }
 
-/* Only the title is bold: it is what she reads, the rest only confirms it. */
+/* State icon in the top corner, in the text colour. */
+.book-card__icon {
+  top: var(--space-3);
+  right: var(--space-3);
+  width: var(--card-icon-size);
+  height: var(--card-icon-size);
+
+  /* A third of a phone has no room for it beside the title: the tag still says the state. */
+  @include phone {
+    display: none;
+  }
+}
+
+/* Only the title is bold: it is what she reads, the rest only confirms it. It keeps clear of the icon. */
 .book-card__title {
+  padding-right: calc(var(--card-icon-size) + var(--space-2));
   font-size: var(--card-title-size);
+
+  /* No icon on phones, so no room kept for it. */
+  @include phone {
+    padding-right: 0;
+  }
+
   font-weight: var(--weight-heading);
   overflow-wrap: anywhere;
 }
@@ -85,13 +105,9 @@
   overflow-wrap: anywhere;
 }
 
-/* Pointing at a block darkens its cloth: no movement, nothing revealed. */
+/* Pointing at a block deepens its linen: no movement, nothing revealed. */
 .book-card:hover {
-  background: color-mix(
-    in srgb,
-    var(--book-cover),
-    var(--color-ink-900) var(--book-block-hover-darken)
-  );
+  background: color-mix(in srgb, var(--book-cover), var(--color-fg) var(--book-block-hover-darken));
 }
 
 /* Book in progress: rose block, tagged "En cours" (spec 5.4). */

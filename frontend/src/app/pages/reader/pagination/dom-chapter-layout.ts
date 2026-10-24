@@ -6,14 +6,24 @@ import { EDGE_TOLERANCE_PX, END_MARK } from './pagination.constants';
 import { ChapterContent, ChapterLayout, PageGeometry } from './pagination.model';
 
 /**
- * Lays a chapter out in CSS columns exactly as wide as the viewport and locates text with `Range`,
- * the only DOM API used for positions (specification 5.3). The page arithmetic itself is pure.
+ * Lays a chapter out in CSS columns, one or two of them filling the viewport, and locates text with
+ * `Range`, the only DOM API used for positions (specification 5.3). The page arithmetic itself is pure.
  */
 export class DomChapterLayout implements ChapterLayout {
   /**
-   * Page width in CSS pixels, read from the viewport at render; never zero, as it divides offsets.
+   * Page width in CSS pixels, read from the viewport at render.
    */
   private columnWidth = 1;
+
+  /**
+   * Distance from one page to the next, page width plus gap; never zero, as it divides offsets.
+   */
+  private pitch = 1;
+
+  /**
+   * Pages shown side by side, set by the stylesheet as `--pages-per-view`.
+   */
+  private perView = 1;
 
   /**
    * Book index of the rendered chapter's first block.
@@ -52,19 +62,26 @@ export class DomChapterLayout implements ChapterLayout {
       nodes.push(element(document, 'p', END_MARK, 'end'));
     }
     this.firstBlock = content.firstBlock;
-    // Columns exactly as wide as the viewport, gap 0: one column is one page (spec 5.2).
-    this.columnWidth = Math.max(1, this.viewport.clientWidth);
-    this.columns.style.setProperty('--column-width', `${this.columnWidth}px`);
+    // The stylesheet sets one or two columns per viewport and the gap between them (spec 5.2).
+    const style = getComputedStyle(this.columns);
+    const gap = parseFloat(style.columnGap) || 0;
+    this.perView = Math.max(1, parseInt(style.getPropertyValue('--pages-per-view'), 10) || 1);
+    this.columnWidth = Math.max(
+      1,
+      (this.viewport.clientWidth - gap * (this.perView - 1)) / this.perView,
+    );
+    this.pitch = this.columnWidth + gap;
     this.columns.style.transform = '';
     this.columns.replaceChildren(...nodes);
-    return pageCount(this.columns.scrollWidth, this.columnWidth);
+    // The last column has no gap after it.
+    return pageCount(this.columns.scrollWidth + gap, this.pitch);
   }
 
   /**
-   * Translates the columns by whole page widths; nothing ever scrolls.
+   * Translates the columns by whole pages; nothing ever scrolls.
    */
   public show(page: number): void {
-    this.columns.style.transform = `translateX(${-page * this.columnWidth}px)`;
+    this.columns.style.transform = `translateX(${-page * this.pitch}px)`;
   }
 
   /**
@@ -76,14 +93,14 @@ export class DomChapterLayout implements ChapterLayout {
     if (!block) {
       return 0;
     }
-    return pageAt(characterLeft(block, position.charOffset) - this.origin(), this.columnWidth);
+    return pageAt(characterLeft(block, position.charOffset) - this.origin(), this.pitch);
   }
 
   /**
    * First character shown on a page: binary search over blocks, then over characters (spec 5.3).
    */
   public positionOfPage(page: number): TextPosition {
-    const pageLeft = this.origin() + page * this.columnWidth;
+    const pageLeft = this.origin() + page * this.pitch;
     const blocks = this.blockElements;
     // Blocks are in reading order, so their right edges grow: find the first reaching into the page.
     const index = lowerBound(
@@ -127,6 +144,13 @@ export class DomChapterLayout implements ChapterLayout {
       // Without a canvas, an average Luciole advance keeps the estimate in range.
       charWidth: (char) => context?.measureText(char).width ?? fontSize * 0.55,
     };
+  }
+
+  /**
+   * Pages side by side, as read at the last render.
+   */
+  public pagesPerView(): number {
+    return this.perView;
   }
 
   /**

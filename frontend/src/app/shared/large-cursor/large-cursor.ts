@@ -9,24 +9,24 @@ import {
 } from '@angular/core';
 
 /**
- * Where the CSS shows the 64px cursors (styles/base.css); the system cursor stays everywhere else.
+ * Where the CSS shows the 48px cursors (styles/base.css); the system cursor stays everywhere else.
  */
 const LARGE_CURSOR_MEDIA = '(pointer: fine) and (min-width: 1100px)';
 
 /**
  * Side of both cursor images, in CSS pixels.
  */
-const CURSOR_SIZE = 64;
+const CURSOR_SIZE = 48;
 
 /**
  * Hotspots of `--cursor-large` and `--cursor-large-pointer` in tokens.css.
  */
-const HOTSPOTS = { arrow: { x: 6, y: 4 }, hand: { x: 22, y: 4 } } as const;
+const HOTSPOTS = { arrow: { x: 5, y: 3 }, hand: { x: 17, y: 3 } } as const;
 
 /**
  * Chrome drops a custom cursor over 32px whenever its image would cross the window edge, and the
  * footer commands sit on the bottom edge. There, this hides the system cursor and draws the same
- * image at the pointer; everywhere else the native 64px cursor is left alone.
+ * image at the pointer; everywhere else the native 48px cursor is left alone.
  */
 @Component({
   selector: 'app-large-cursor',

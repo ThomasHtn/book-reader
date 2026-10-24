@@ -37,10 +37,10 @@ export class AdminSettings {
   protected readonly current = httpResource<ReaderSettings>(() => API_ENDPOINTS.settings);
 
   /**
-   * Tier being chosen, reset to the server's; the template hides the 100 fallback so it is never saved.
+   * Tier being chosen, reset to the server's; the template hides the 32 fallback so it is never saved.
    */
   protected readonly tier = linkedSignal<FontTier>(() =>
-    this.current.hasValue() ? this.current.value().fontTier : 100,
+    this.current.hasValue() ? this.current.value().fontTier : 32,
   );
 
   /**

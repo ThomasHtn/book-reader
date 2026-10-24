@@ -1,13 +1,99 @@
-/* Reading screen: the paged surface; the book text inside it is styled globally (styles/reading.css). */
+/* Reading screen: running head, the paged surface and its page numbers; the book text inside it is
+   styled globally (styles/reading.css). */
+
+@use 'tools' as *;
+
+/* One page per view; DomChapterLayout reads `--pages-per-view` to page the columns (spec 5.2). */
+.reader {
+  --pages-per-view: 1;
+  --page-gap: 0;
+  --command-gap: var(--nav-row-gap);
+
+  /* Two facing pages on a wide landscape screen, like an open book. */
+  @include spread {
+    --pages-per-view: 2;
+    --page-gap: var(--spread-gap);
+    --command-gap: var(--spread-gap);
+  }
+}
+
+/* Running head and page numbers: small, muted, regular, never a command. */
+.reader__head,
+.reader__folios {
+  color: var(--color-fg-muted);
+  font-size: var(--indicator-size);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-tight);
+}
+
+/* Head line above the text, set well apart from it. */
+.reader__head {
+  padding-block: var(--space-3) var(--reader-head-gap);
+}
+
+/* Title and author on one line each, cut short rather than wrapped. */
+.reader__head-text {
+  min-width: 0;
+  margin: 0;
+  font: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One number centred under each page, tabular so it keeps its width as pages turn. */
+.reader__folios {
+  grid-template-columns: repeat(var(--pages-per-view), minmax(0, 1fr));
+  column-gap: var(--page-gap);
+  padding-block: var(--reader-folio-gap) var(--space-1);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The book title reads first: in ink and bold, as book titles are; the author stays muted. */
+.reader__title {
+  color: var(--color-fg);
+  font-weight: var(--weight-heading);
+}
+
+/* On a phone the title alone fits beside "Mes livres". */
+.reader__author {
+  @include phone {
+    display: none;
+  }
+}
+
+/* Two halves, the gap between them on the fold: each page turn sits under its own page. */
+.reader__commands {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--command-gap);
+  padding-block: var(--space-1) var(--grid-padding);
+}
 
 /* Focused by script only, after a click, so Space keeps turning pages: no ring on it. */
 .reader__page:focus {
   outline: none;
 }
 
-/* One column per page, `--column-width` being the viewport width set by DomChapterLayout (spec 5.2). */
+/* Fold between two facing pages, in the middle of the gap. */
+.reader__viewport::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  width: var(--fold-width);
+  translate: -50% 0;
+  background: var(--fold-color);
+  display: none;
+
+  @include spread {
+    display: block;
+  }
+}
+
+/* One column per page, the gap between facing pages kept clear (spec 5.2). */
 .reader__columns {
-  column-width: var(--column-width);
-  column-gap: 0;
+  column-count: var(--pages-per-view);
+  column-gap: var(--page-gap);
   column-fill: auto;
 }

@@ -12,25 +12,42 @@
   user-select: none;
 }
 
-/* Paragraph gap. */
+/* Paragraphs follow each other without a gap, each opening on an indent, as in a printed book. */
 .reading p {
-  margin: 0 0 var(--gap-paragraph);
+  margin: 0;
+  text-indent: var(--indent-paragraph);
 }
 
-/* Title page and chapter headings, never left alone at the bottom of a column (spec 5.2). */
+/* No indent at the top of a chapter, after a heading or the title page, nor on the title page itself. */
+.reading p:first-child,
+.reading :is(h2, .author) + p,
+.reading :is(.book-title, .author, .end) {
+  text-indent: 0;
+}
+
+/* Title page and chapter headings, centred and set apart, never left alone at the bottom of a
+   column (spec 5.2). Padding rather than margin, as a column keeps it at its top. */
 .reading .book-title,
 .reading h2 {
-  margin: 0 0 var(--gap-paragraph);
+  margin: 0 0 var(--heading-space-after);
+  padding-top: var(--heading-space-before);
   font-size: var(--text-heading);
   font-weight: var(--weight-heading);
   line-height: var(--leading-tight);
+  text-align: center;
   text-wrap: balance;
   break-after: avoid;
 }
 
-/* Author on the title page and "Fin du livre", muted and smaller. */
+/* Author on the title page and "Fin du livre", muted, smaller and centred. */
 .reading .author,
 .reading .end {
   color: var(--color-fg-muted);
   font-size: var(--text-meta);
+  text-align: center;
+}
+
+/* The author line keeps the title page apart from the text. */
+.reading .author {
+  margin-bottom: var(--heading-space-after);
 }

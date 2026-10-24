@@ -1,4 +1,4 @@
-import { nextLocation, pageAt, pageCount, previousLocation } from './page-math.utils';
+import { nextLocation, pageAt, pageCount, previousLocation, viewStart } from './page-math.utils';
 
 describe('pageAt', () => {
   it('returns the column holding a horizontal offset from the start of the chapter', () => {
@@ -15,6 +15,12 @@ describe('pageAt', () => {
   it('never returns a negative page', () => {
     expect(pageAt(-3, 1224)).toBe(0);
   });
+
+  it('counts the gap between two facing pages with the page before it', () => {
+    // Pages of 780 px parted by a 120 px gap: page 1 starts at 900.
+    expect(pageAt(850, 900)).toBe(0);
+    expect(pageAt(900, 900)).toBe(1);
+  });
 });
 
 describe('pageCount', () => {
@@ -22,6 +28,22 @@ describe('pageCount', () => {
     expect(pageCount(12 * 1224, 1224)).toBe(12);
     expect(pageCount(12 * 1224 + 0.5, 1224)).toBe(12);
     expect(pageCount(0, 1224)).toBe(1);
+  });
+
+  it('counts facing pages once the last gap is added back', () => {
+    // Three pages of 780 px and two gaps of 120 px, plus the missing third gap.
+    expect(pageCount(3 * 780 + 2 * 120 + 120, 900)).toBe(3);
+  });
+});
+
+describe('viewStart', () => {
+  it('returns the page itself when one page is shown at a time', () => {
+    expect(viewStart(5, 1)).toBe(5);
+  });
+
+  it('returns the left page of a pair of facing pages', () => {
+    expect(viewStart(4, 2)).toBe(4);
+    expect(viewStart(5, 2)).toBe(4);
   });
 });
 
@@ -37,6 +59,16 @@ describe('nextLocation', () => {
   it('stays put on the last page of the book', () => {
     expect(nextLocation({ chapter: 2, page: 4 }, 5, 3)).toBeNull();
   });
+
+  it('moves past both facing pages at once', () => {
+    expect(nextLocation({ chapter: 1, page: 2 }, 5, 3, 2)).toEqual({ chapter: 1, page: 4 });
+  });
+
+  it('opens the next chapter when the facing pages show its last page', () => {
+    // Pages 4 and 5 of a six-page chapter, or page 4 alone with an empty right page.
+    expect(nextLocation({ chapter: 1, page: 4 }, 6, 3, 2)).toEqual({ chapter: 2, page: 0 });
+    expect(nextLocation({ chapter: 1, page: 4 }, 5, 3, 2)).toEqual({ chapter: 2, page: 0 });
+  });
 });
 
 describe('previousLocation', () => {
@@ -50,5 +82,9 @@ describe('previousLocation', () => {
 
   it('stays put on the first page of the book', () => {
     expect(previousLocation({ chapter: 0, page: 0 })).toBeNull();
+  });
+
+  it('moves back past both facing pages at once', () => {
+    expect(previousLocation({ chapter: 1, page: 4 }, 2)).toEqual({ chapter: 1, page: 2 });
   });
 });

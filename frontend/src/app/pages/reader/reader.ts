@@ -27,7 +27,6 @@ import { ReaderData } from '@core/reader/reader-data';
 import { startPosition, withReadMark } from '@core/reader/reading-progress.utils';
 import { layoutKey } from '@core/reader/stored-page-counts.utils';
 import { NavBar } from '@shared/nav-bar/nav-bar';
-import { PageHead } from '@shared/page-head/page-head';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
 import {
@@ -37,7 +36,7 @@ import {
   splitIntoChapters,
 } from './pagination/chapters.utils';
 import { bookPageNumber, bookPageTotal, estimatePageCounts } from './pagination/page-count.utils';
-import { nextLocation, previousLocation } from './pagination/page-math.utils';
+import { nextLocation, previousLocation, viewStart } from './pagination/page-math.utils';
 import { CHAPTER_LAYOUT_FACTORY } from './pagination/pagination.constants';
 import {
   Chapter,
@@ -65,14 +64,35 @@ interface OpenedBook {
 }
 
 /**
- * Route `/lire/:id`: three commands only, all in the footer (Mes livres, Précédent, Suivant); the
- * text owns everything above them. The current chapter is laid out in columns; other chapters are
- * never laid out for "Page 12 sur 840": their counts are remembered once shown, estimated until then.
+ * Page numbers under the view: the left page's, and the right page's when two pages face each other.
+ */
+interface Folios {
+  /**
+   * Number of the left page, or of the only page, in the whole book.
+   */
+  readonly left: number;
+
+  /**
+   * Number of the right page, `null` when one page is shown or the right page is blank.
+   */
+  readonly right: number | null;
+
+  /**
+   * Page count of the whole book.
+   */
+  readonly total: number;
+}
+
+/**
+ * Route `/lire/:id`: three commands only, all in the footer (Mes livres, Précédent, Suivant); a
+ * running head and the page numbers frame the text. The current chapter is laid out in columns, two
+ * facing pages on a wide screen; other chapters are never laid out for "Page 12 sur 840": their
+ * counts are remembered once shown, estimated until then.
  */
 @Component({
   selector: 'app-reader',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavBar, PageHead, StatusScreen],
+  imports: [NavBar, StatusScreen],
   host: { '(document:keydown)': 'onKeydown($event)' },
   templateUrl: './reader.html',
   styleUrl: './reader.scss',
@@ -134,9 +154,16 @@ export class Reader {
   private readonly gate = new CommandGate();
 
   /**
-   * Title for the visually hidden `h1`; the title page shows it to the eye.
+   * Book title, on the left of the running head.
    */
   protected readonly title = computed(() => (this.book.hasValue() ? this.book.value().title : ''));
+
+  /**
+   * Author, on the right of the running head.
+   */
+  protected readonly author = computed(() =>
+    this.book.hasValue() ? this.book.value().author : '',
+  );
 
   /**
    * Shown page, `null` until the first layout, which keeps the screen hidden meanwhile.
@@ -147,6 +174,11 @@ export class Reader {
    * Page count of the chapter laid out now.
    */
   private readonly chapterPages = signal(0);
+
+  /**
+   * Pages shown side by side, as the layout found them at its last render.
+   */
+  private readonly perView = signal(1);
 
   /**
    * Page count of every chapter, measured or estimated.
@@ -200,20 +232,38 @@ export class Reader {
   protected readonly isLast = computed(() => {
     const location = this.location();
     const chapterCount = this.opened?.chapters.length ?? 0;
-    return !location || nextLocation(location, this.chapterPages(), chapterCount) === null;
+    return (
+      !location ||
+      nextLocation(location, this.chapterPages(), chapterCount, this.perView()) === null
+    );
   });
 
   /**
-   * "Page 12 sur 840" over the whole book, announced politely on each turn (spec 5.1).
+   * Numbers of the pages shown, over the whole book; `null` until the first layout.
    */
-  protected readonly indicator = computed(() => {
+  protected readonly folios = computed<Folios | null>(() => {
     const location = this.location();
     const counts = this.pageCounts();
     if (!location || counts.length === 0) {
+      return null;
+    }
+    const left = bookPageNumber(counts, location.chapter, location.page);
+    // A chapter with an odd page count leaves the right page of its last view blank.
+    const hasRight = this.perView() > 1 && location.page + 1 < this.chapterPages();
+    return { left, right: hasRight ? left + 1 : null, total: bookPageTotal(counts) };
+  });
+
+  /**
+   * "Page 12 sur 840", or "Pages 12 et 13 sur 840" on facing pages, announced on each turn (spec 5.1).
+   */
+  protected readonly indicator = computed(() => {
+    const folios = this.folios();
+    if (!folios) {
       return '';
     }
-    const number = bookPageNumber(counts, location.chapter, location.page);
-    return `Page ${number} sur ${bookPageTotal(counts)}`;
+    return folios.right === null
+      ? `Page ${folios.left} sur ${folios.total}`
+      : `Pages ${folios.left} et ${folios.right} sur ${folios.total}`;
   });
 
   /**
@@ -327,8 +377,8 @@ export class Reader {
     }
     const target =
       command === 'next'
-        ? nextLocation(location, this.chapterPages(), opened.chapters.length)
-        : previousLocation(location);
+        ? nextLocation(location, this.chapterPages(), opened.chapters.length, this.perView())
+        : previousLocation(location, this.perView());
     if (target) {
       this.goTo(opened, target);
       this.save(opened);
@@ -336,13 +386,15 @@ export class Reader {
   }
 
   /**
-   * Shows a target page, laying its chapter out first when it changes, which resolves `last`.
+   * Shows a target page, laying its chapter out first when it changes, which resolves `last` to the
+   * left page of the chapter's last view.
    */
   private goTo(opened: OpenedBook, target: PendingLocation): void {
     if (target.chapter !== this.location()?.chapter) {
       this.renderChapter(opened, target.chapter);
     }
-    const page = target.page === 'last' ? this.chapterPages() - 1 : target.page;
+    const page =
+      target.page === 'last' ? viewStart(this.chapterPages() - 1, this.perView()) : target.page;
     opened.layout.show(page);
     this.location.set({ chapter: target.chapter, page });
     this.position = opened.layout.positionOfPage(page);
@@ -364,7 +416,7 @@ export class Reader {
     // A chapter's start is its first page, or a fresh book would skip a title page filling a page alone.
     const page = isChapterStart(chapters[chapter], position)
       ? 0
-      : Math.min(layout.pageOf(position), this.chapterPages() - 1);
+      : viewStart(Math.min(layout.pageOf(position), this.chapterPages() - 1), this.perView());
     layout.show(page);
     this.location.set({ chapter, page });
     this.position = position;
@@ -376,6 +428,7 @@ export class Reader {
   private renderChapter({ content, chapters, layout }: OpenedBook, chapter: number): void {
     const pages = layout.render(chapterContent(content, chapters, chapter));
     this.chapterPages.set(pages);
+    this.perView.set(layout.pagesPerView());
     this.pageCounts.update((counts) =>
       counts.map((count, index) => (index === chapter ? pages : count)),
     );

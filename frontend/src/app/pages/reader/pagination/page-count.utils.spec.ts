@@ -9,7 +9,7 @@ import { Chapter, PageGeometry } from './pagination.model';
 const paragraph = (text: string): Block => ({ kind: 'paragraph', text });
 
 /**
- * Ten characters per line; body lines are 14 px high with a 6 px paragraph gap.
+ * Ten characters per line; body lines are 15.5 px high, paragraphs indented 15 px, with no gap.
  */
 const geometry = (height: number): PageGeometry => ({
   width: 100,
@@ -42,29 +42,38 @@ describe('estimatePageCounts', () => {
     expect(estimatePageCounts(book, chapters, [7, undefined], geometry(100))).toEqual([7, 1]);
   });
 
-  it('gives each short paragraph a whole line and its gap', () => {
-    // Three one-line paragraphs fill 60 px; the fourth opens a second page.
+  it('gives each short paragraph a whole line, with no gap between paragraphs', () => {
+    // Four one-line paragraphs fill 62 px; the fifth opens a second page.
     expect(
       middleChapterPages(
         Array.from({ length: 6 }, () => paragraph('oui')),
-        60,
+        62,
       ),
     ).toBe(2);
   });
 
   it('breaks lines between words and splits a paragraph across pages', () => {
-    // Two four-letter words per line: ten lines, four per 60 px page.
-    expect(middleChapterPages([paragraph(Array(20).fill('abcd').join(' '))], 60)).toBe(3);
+    // Two four-letter words per line: ten lines, four per 62 px page.
+    expect(middleChapterPages([paragraph(Array(20).fill('abcd').join(' '))], 62)).toBe(3);
   });
 
   it('hyphenates a long word that does not fit at the end of a line', () => {
-    // "ab abcdef-" then "ghi ab": two lines, which fit on one 30 px page.
-    expect(middleChapterPages([paragraph('ab abcdefghi ab')], 30)).toBe(1);
+    // "ab abcdef-" then "ghi ab": two lines, which fit on one 31 px page.
+    expect(middleChapterPages([paragraph('ab abcdefghi ab')], 31)).toBe(1);
+  });
+
+  it('indents a paragraph that follows another one, never the first of a chapter', () => {
+    // "abcd abcd" fills 90 px of 100: one line unindented, two once indented 15 px. Five lines in all
+    // need two 46.5 px pages, where three unindented lines would fit on one.
+    const paragraphs = Array.from({ length: 3 }, () => paragraph('abcd abcd'));
+
+    expect(middleChapterPages(paragraphs, 46.5)).toBe(2);
   });
 
   it('never leaves a single line at the foot of a page', () => {
-    // One line would fit under the first paragraph, but a line alone is pushed to the next page.
-    expect(middleChapterPages([paragraph('oui'), paragraph('abcd abcd abcd abcd')], 40)).toBe(2);
+    // The indented paragraph runs to three lines; one would fit under "oui", but a line alone is
+    // pushed on, and the three lines then split two and one.
+    expect(middleChapterPages([paragraph('oui'), paragraph('abcd abcd abcd abcd')], 31)).toBe(3);
   });
 });
 

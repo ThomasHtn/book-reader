@@ -20,7 +20,7 @@ describe('AdminSettings', () => {
   });
 
   /**
-   * Creates the page with the server at tier 100 and returns a tier button lookup.
+   * Creates the page with the server at tier 32 and returns a tier button lookup.
    */
   async function render() {
     const fixture = TestBed.createComponent(AdminSettings);
@@ -33,7 +33,7 @@ describe('AdminSettings', () => {
       fixture.detectChanges();
     };
     await settle();
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 32 });
     await settle();
     const element = fixture.nativeElement as HTMLElement;
     /**
@@ -57,7 +57,7 @@ describe('AdminSettings', () => {
       'Chargement des réglages',
     );
     expect(element.querySelector('[role="group"]')).toBeNull();
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 32 });
   });
 
   it('explains settings that cannot be read and reloads them on demand', async () => {
@@ -76,16 +76,16 @@ describe('AdminSettings', () => {
     expect(element.querySelector('[role="group"]')).toBeNull();
     element.querySelector<HTMLButtonElement>('.a-empty button')!.click();
     await settle();
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 72 });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 28 });
     await settle();
-    expect(element.querySelector('[aria-pressed="true"]')?.textContent?.trim()).toBe('72');
+    expect(element.querySelector('[aria-pressed="true"]')?.textContent?.trim()).toBe('28');
   });
 
   it('shows the current tier as the pressed option', async () => {
     const { element, option } = await render();
 
-    expect(option('100').getAttribute('aria-pressed')).toBe('true');
-    expect(option('48').getAttribute('aria-pressed')).toBe('false');
+    expect(option('32').getAttribute('aria-pressed')).toBe('true');
+    expect(option('36').getAttribute('aria-pressed')).toBe('false');
     expect(element.querySelectorAll('[role="group"][aria-labelledby]')).toHaveLength(1);
   });
 
@@ -103,17 +103,17 @@ describe('AdminSettings', () => {
   it('previews the choice with its real size on her screen', async () => {
     const { element, settle, option } = await render();
 
-    option('140').click();
+    option('40').click();
     await settle();
 
     const preview = element.querySelector<HTMLElement>('.a-preview')!;
-    expect(preview.style.getPropertyValue('--preview-tier')).toBe('140');
-    expect(preview.textContent).toContain('Sur son écran, ce texte fait 140 px.');
+    expect(preview.style.getPropertyValue('--preview-tier')).toBe('40');
+    expect(preview.textContent).toContain('Sur son écran, ce texte fait 40 px.');
   });
 
   it('saves the settings, which the reader applies within ten seconds', async () => {
     const { element, settle, option } = await render();
-    option('72').click();
+    option('28').click();
     await settle();
 
     const save = [...element.querySelectorAll<HTMLButtonElement>('button')].find(
@@ -124,8 +124,8 @@ describe('AdminSettings', () => {
     expect(save.disabled).toBe(true);
     const request = http.expectOne(API_ENDPOINTS.admin.settings);
     expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({ fontTier: 72 });
-    request.flush({ fontTier: 72 });
+    expect(request.request.body).toEqual({ fontTier: 28 });
+    request.flush({ fontTier: 28 });
     await settle();
 
     expect(element.textContent).toContain(

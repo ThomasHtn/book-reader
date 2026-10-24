@@ -58,32 +58,32 @@ describe('ReaderData', () => {
 
   it('loads books and settings, then applies the tier to the document', async () => {
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 140 });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 40 });
     await settle();
 
     expect(data.books()).toEqual(BOOKS);
     expect(data.unreachable()).toBe(false);
-    expect(document.documentElement.dataset['tier']).toBe('140');
+    expect(document.documentElement.dataset['tier']).toBe('40');
   });
 
   it('polls both resources every ten seconds', async () => {
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 32 });
     await settle();
 
     vi.advanceTimersByTime(POLL_INTERVAL_MS);
     TestBed.tick();
 
     http.expectOne(API_ENDPOINTS.books).flush([]);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 72 });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 28 });
     await settle();
     expect(data.books()).toEqual([]);
-    expect(document.documentElement.dataset['tier']).toBe('72');
+    expect(document.documentElement.dataset['tier']).toBe('28');
   });
 
   it('keeps the last valid response when a poll fails', async () => {
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 32 });
     await settle();
 
     vi.advanceTimersByTime(POLL_INTERVAL_MS);
@@ -94,7 +94,7 @@ describe('ReaderData', () => {
 
     expect(data.books()).toEqual(BOOKS);
     expect(data.unreachable()).toBe(false);
-    expect(document.documentElement.dataset['tier']).toBe('100');
+    expect(document.documentElement.dataset['tier']).toBe('32');
   });
 
   it('reports the server unreachable while the book list has never loaded, and retries', async () => {
@@ -108,7 +108,7 @@ describe('ReaderData', () => {
     data.retry();
     TestBed.tick();
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
-    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 100 });
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 32 });
     await settle();
     expect(data.unreachable()).toBe(false);
   });
