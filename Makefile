@@ -48,7 +48,9 @@ verify: ## Every CI gate: format, lint, tests, coverage, SpotBugs, architecture,
 	cd backend && ./mvnw --batch-mode --no-transfer-progress clean verify
 
 e2e: ## Reader journey against http://localhost:8000 (`make reset up` first: it needs an empty library)
-	cd frontend && npm run e2e
+	@# The images run with backend/.env when it exists, so the journey must sign in with its key.
+	key="$$(grep -m1 '^ADMIN_API_KEY=' backend/.env 2>/dev/null | cut -d= -f2- || true)"; \
+	cd frontend && E2E_ADMIN_KEY="$${E2E_ADMIN_KEY:-$${key:-book-reader-demo-admin-key-0123456789}}" npm run e2e
 
 ##@ Images
 

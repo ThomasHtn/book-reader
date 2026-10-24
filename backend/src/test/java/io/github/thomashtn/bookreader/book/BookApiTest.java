@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -194,6 +195,28 @@ class BookApiTest extends PostgreSqlIntegrationTest {
             .andExpect(status().isUnprocessableContent())
             .andExpect(jsonPath("$.code").value("EPUB_INVALID"));
         mockMvc.perform(get("/api/books")).andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    @DisplayName("Answers 415 to an upload sent as JSON instead of a multipart form")
+    void refusesNonMultipartUpload() throws Exception {
+        mockMvc.perform(post("/api/admin/books/upload")
+                .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+            .andExpect(status().isUnsupportedMediaType())
+            .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"));
+    }
+
+    @Test
+    @DisplayName("Answers 400 to a multipart upload whose body is not a multipart form")
+    void refusesBrokenMultipartUpload() throws Exception {
+        mockMvc.perform(post("/api/admin/books/upload")
+                .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
+                .contentType("multipart/form-data; boundary=missing")
+                .content("not a multipart body"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"));
     }
 
     @Test

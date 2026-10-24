@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -92,6 +93,15 @@ class GlobalExceptionHandlerTest {
             handler.handleMethodNotSupported(new HttpRequestMethodNotSupportedException("DELETE"), request);
 
         assertError(response, HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED");
+    }
+
+    @Test
+    @DisplayName("Renders an unsupported body type as 415")
+    void rendersMediaTypeNotSupported() {
+        ResponseEntity<ApiErrorResponse> response = handler.handleMediaTypeNotSupported(
+            new HttpMediaTypeNotSupportedException("Content-Type is not supported"), request);
+
+        assertError(response, HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE");
     }
 
     @Test

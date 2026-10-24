@@ -10,6 +10,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -197,6 +198,21 @@ public class GlobalExceptionHandler {
     ) {
         String detail = "The " + request.getMethod() + " method is not supported by this resource.";
         return problems.of(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", detail, request);
+    }
+
+    /**
+     * Handles a body type the route does not read, such as JSON sent to the EPUB upload.
+     *
+     * @param exception exception raised for an unsupported content type
+     * @param request   current HTTP request
+     * @return 415 response
+     */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    ResponseEntity<ApiErrorResponse> handleMediaTypeNotSupported(
+        HttpMediaTypeNotSupportedException exception, HttpServletRequest request
+    ) {
+        String detail = "The request body type is not supported by this resource.";
+        return problems.of(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE", detail, request);
     }
 
     /**

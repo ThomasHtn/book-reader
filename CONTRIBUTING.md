@@ -37,8 +37,8 @@ make e2e
 ```
 
 The browser tests replay the reader journey of specification section 12, with axe-core on every screen.
-They start from an empty library, hence the `reset`. With a `backend/.env` of your own, pass its key:
-`E2E_ADMIN_KEY=<your key> make e2e`.
+They start from an empty library, hence the `reset`. The images read your `backend/.env` when it
+exists, and `make e2e` signs in with its key.
 
 Done:
 
