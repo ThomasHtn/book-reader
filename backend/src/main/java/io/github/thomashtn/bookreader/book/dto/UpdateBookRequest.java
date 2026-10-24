@@ -1,6 +1,6 @@
 package io.github.thomashtn.bookreader.book.dto;
 
-import io.github.thomashtn.bookreader.conversion.model.ConvertedBook;
+import io.github.thomashtn.bookreader.shared.model.MetadataLimits;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -17,10 +17,10 @@ import jakarta.validation.constraints.Size;
 public record UpdateBookRequest(
     // Not @NotBlank: null means "unchanged" in a PATCH, only a present but blank value is refused.
     @Pattern(regexp = UpdateBookRequest.NOT_BLANK, message = "must not be blank")
-    @Size(max = ConvertedBook.MAX_METADATA_LENGTH)
+    @Size(max = MetadataLimits.MAX_LENGTH)
     String title,
     @Pattern(regexp = UpdateBookRequest.NOT_BLANK, message = "must not be blank")
-    @Size(max = ConvertedBook.MAX_METADATA_LENGTH)
+    @Size(max = MetadataLimits.MAX_LENGTH)
     String author,
     Boolean active,
     Boolean finished

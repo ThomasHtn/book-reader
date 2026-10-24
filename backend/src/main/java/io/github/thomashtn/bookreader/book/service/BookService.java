@@ -4,7 +4,6 @@ import io.github.thomashtn.bookreader.book.dto.AdminBookResponse;
 import io.github.thomashtn.bookreader.book.dto.BookContentResponse;
 import io.github.thomashtn.bookreader.book.dto.BookSummaryResponse;
 import io.github.thomashtn.bookreader.book.dto.UpdateBookRequest;
-import io.github.thomashtn.bookreader.conversion.model.ConvertedBook;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +57,7 @@ public interface BookService {
     void deleteBook(UUID id);
 
     /**
-     * Converts an uploaded EPUB and activates it immediately.
+     * Converts an uploaded EPUB, already read, and saves it as an active book.
      *
      * @param epub archive bytes
      * @return imported book
@@ -83,12 +82,13 @@ public interface BookService {
     Optional<AdminBookResponse> reactivateCatalogueBook(String sourceId);
 
     /**
-     * Saves a converted catalogue book, active.
+     * Converts a catalogue EPUB, already downloaded, and saves it as an active book.
      *
-     * @param converted converted EPUB
-     * @param sourceId  catalogue entry identifier
+     * @param epub     archive bytes
+     * @param sourceId catalogue entry identifier
      * @return imported book
-     * @throws org.springframework.dao.DataIntegrityViolationException when the entry was imported concurrently
+     * @throws io.github.thomashtn.bookreader.conversion.EpubRejectedException when the EPUB is unusable
+     * @throws BookAlreadyImportedException                                     when the entry was imported meanwhile
      */
-    AdminBookResponse saveCatalogueBook(ConvertedBook converted, String sourceId);
+    AdminBookResponse importCatalogueEpub(byte[] epub, String sourceId);
 }

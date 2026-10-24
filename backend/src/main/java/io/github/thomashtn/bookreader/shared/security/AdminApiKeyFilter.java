@@ -148,7 +148,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Checks the lockout first, so a locked-out address cannot keep guessing, then the key.
+     * Checks the key, then the lockout: only wrong keys are counted, and a locked-out address gets 429 either way.
      *
      * @param request     current HTTP request
      * @param response    current HTTP response
@@ -164,33 +164,30 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String remoteAddress = request.getRemoteAddr();
-
-        if (rateLimiter.isLockedOut(remoteAddress)) {
-            writeProblemResponse(
-                request,
-                response,
-                HttpStatus.TOO_MANY_REQUESTS,
-                "ADMIN_KEY_RATE_LIMITED",
-                "Too many invalid administrator key attempts. Try again later."
-            );
-            return;
-        }
-
         String providedApiKey = request.getHeader(HEADER_NAME);
 
         if (providedApiKey == null) {
-            writeProblemResponse(
-                request,
-                response,
-                HttpStatus.UNAUTHORIZED,
-                "ADMIN_KEY_MISSING",
-                "The X-Admin-Key header is required."
-            );
+            // Nothing was guessed, so nothing is counted; a locked-out address still gets its 429.
+            if (rateLimiter.isLockedOut(remoteAddress)) {
+                writeRateLimited(request, response);
+            } else {
+                writeProblemResponse(
+                    request,
+                    response,
+                    HttpStatus.UNAUTHORIZED,
+                    "ADMIN_KEY_MISSING",
+                    "The X-Admin-Key header is required."
+                );
+            }
             return;
         }
 
         if (!matchesExpectedKey(providedApiKey)) {
-            rateLimiter.recordFailure(remoteAddress);
+            // Counted atomically: once the budget is spent, every guess gets the same 429.
+            if (!rateLimiter.recordFailure(remoteAddress)) {
+                writeRateLimited(request, response);
+                return;
+            }
             writeProblemResponse(
                 request,
                 response,
@@ -201,9 +198,32 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
             return;
         }
 
+        // A locked-out address is refused even with the right key, or the lockout would reveal it.
+        if (rateLimiter.isLockedOut(remoteAddress)) {
+            writeRateLimited(request, response);
+            return;
+        }
+
         rateLimiter.recordSuccess(remoteAddress);
         authenticateAsAdministrator();
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Answers 429 to a locked-out address.
+     *
+     * @param request  current HTTP request
+     * @param response current HTTP response
+     * @throws IOException when the response body cannot be written
+     */
+    private void writeRateLimited(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        writeProblemResponse(
+            request,
+            response,
+            HttpStatus.TOO_MANY_REQUESTS,
+            "ADMIN_KEY_RATE_LIMITED",
+            "Too many invalid administrator key attempts. Try again later."
+        );
     }
 
     /**

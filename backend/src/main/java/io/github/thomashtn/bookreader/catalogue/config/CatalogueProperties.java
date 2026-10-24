@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
  * @param baseUrl        site root, such as {@code https://www.ebooksgratuits.com/}
  * @param connectTimeout TCP connection timeout
  * @param readTimeout    longest wait between two reads of a response
+ * @param requestTimeout longest time for a whole call, retry included, however slowly the site answers
  * @param maxEpubSize    largest EPUB accepted, aligned with the upload limit
  */
 @Validated
@@ -21,6 +22,7 @@ public record CatalogueProperties(
     @NotNull URI baseUrl,
     @NotNull Duration connectTimeout,
     @NotNull Duration readTimeout,
+    @NotNull Duration requestTimeout,
     @NotNull DataSize maxEpubSize
 ) {
 }

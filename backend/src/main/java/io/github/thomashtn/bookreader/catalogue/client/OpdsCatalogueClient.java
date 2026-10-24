@@ -5,14 +5,17 @@ import io.github.thomashtn.bookreader.conversion.EpubRejectedException;
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException.Reason;
 import io.github.thomashtn.bookreader.shared.exception.ResourceNotFoundException;
 import io.netty.channel.ChannelOption;
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
@@ -22,10 +25,12 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.HttpClientRequest;
+import reactor.netty.http.client.HttpClientResponse;
 import reactor.util.retry.Retry;
 
 /**
- * HTTP client of the OPDS catalogue: short timeouts, one retry on transient failures.
+ * HTTP client of the OPDS catalogue: short timeouts, one retry on transient failures, redirects kept on its host.
  */
 @Component
 public class OpdsCatalogueClient {
@@ -55,17 +60,23 @@ public class OpdsCatalogueClient {
     private final WebClient webClient;
 
     /**
+     * Longest time for a whole call, so a site sending its answer drop by drop cannot hold a thread.
+     */
+    private final Duration requestTimeout;
+
+    /**
      * Creates the client.
      *
      * @param builder    Spring's WebClient builder, cloned so its defaults stay untouched
      * @param properties catalogue settings
      */
     public OpdsCatalogueClient(WebClient.Builder builder, CatalogueProperties properties) {
+        this.requestTimeout = properties.requestTimeout();
         HttpClient httpClient = HttpClient.create()
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(properties.connectTimeout().toMillis()))
             .responseTimeout(properties.readTimeout())
-            // The EPUB link redirects to a static file.
-            .followRedirect(true);
+            // The EPUB link redirects to a static file, on the catalogue host only.
+            .followRedirect((request, response) -> staysOnHost(request, response, properties.baseUrl().getHost()));
         this.webClient = builder.clone()
             .baseUrl(properties.baseUrl().toString())
             .defaultHeader(HttpHeaders.USER_AGENT, USER_AGENT)
@@ -101,7 +112,8 @@ public class OpdsCatalogueClient {
      *
      * @param query query as typed; accents are stripped before sending
      * @return entries offering an EPUB, first result page only
-     * @throws CatalogueUnavailableException when the site does not answer
+     * @throws CatalogueUnavailableException when the site does not answer or sends an oversized feed
+     * @throws CatalogueRefusedException     when the site redirects to another host
      */
     public List<OpdsEntry> search(String query) {
         String feed = withRetry(webClient.get()
@@ -110,7 +122,9 @@ public class OpdsCatalogueClient {
                 .queryParam("query", "{query}")
                 .build(CatalogueQuery.normalize(query)))
             .retrieve()
+            .onStatus(HttpStatusCode::is3xxRedirection, OpdsCatalogueClient::refuseRedirect)
             .bodyToMono(String.class))
+            .onErrorMap(OpdsCatalogueClient::isTooLarge, OpdsCatalogueClient::unavailable)
             .onErrorMap(OpdsCatalogueClient::isTransportFailure, OpdsCatalogueClient::unavailable)
             .block();
         return feed == null ? List.of() : OpdsFeedParser.parse(feed);
@@ -125,7 +139,7 @@ public class OpdsCatalogueClient {
      * @throws ResourceNotFoundException     when the site has no EPUB for this book (404 or 410)
      * @throws EpubRejectedException         when the file exceeds the size limit
      * @throws CatalogueRefusedException     when the site answers with a web page, 403 or 429, as when it bans
-     *                                       the address
+     *                                       the address, or redirects to another host
      */
     public byte[] downloadEpub(int bookNumber) {
         byte[] epub = withRetry(webClient.get()
@@ -154,6 +168,9 @@ public class OpdsCatalogueClient {
         if (response.statusCode().isError()) {
             return response.createError();
         }
+        if (response.statusCode().is3xxRedirection()) {
+            return refuseRedirect(response).flatMap(Mono::error);
+        }
         Optional<MediaType> contentType = response.headers().contentType();
         if (contentType.isPresent() && MediaType.TEXT_HTML.isCompatibleWith(contentType.get())) {
             return response.releaseBody().then(Mono.error(new CatalogueRefusedException(contentType.get().toString())));
@@ -162,16 +179,51 @@ public class OpdsCatalogueClient {
     }
 
     /**
+     * Tells whether a redirection stays on the catalogue host, the only place the application follows it to.
+     *
+     * @param request  request that was redirected
+     * @param response redirection answer
+     * @param host     catalogue host
+     * @return {@code true} when the {@code Location} header points at the catalogue host over http or https
+     */
+    private static boolean staysOnHost(HttpClientRequest request, HttpClientResponse response, String host) {
+        String location = response.responseHeaders().get(HttpHeaders.LOCATION);
+        if (location == null) {
+            return false;
+        }
+        try {
+            URI target = URI.create(request.resourceUrl()).resolve(location);
+            return ("http".equals(target.getScheme()) || "https".equals(target.getScheme()))
+                && host.equalsIgnoreCase(target.getHost());
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
+    /**
+     * Turns a redirection the client did not follow into a refusal.
+     *
+     * @param response redirection answer
+     * @return the refusal, to be raised by the caller
+     */
+    private static Mono<CatalogueRefusedException> refuseRedirect(ClientResponse response) {
+        String location = response.headers().asHttpHeaders().getFirst(HttpHeaders.LOCATION);
+        return response.releaseBody().thenReturn(new CatalogueRefusedException("Redirected away to " + location));
+    }
+
+    /**
      * Retries a call once after a transient failure, then rethrows the original error rather than Reactor's.
+     * The whole call, retry included, is bound by the request timeout.
      *
      * @param call HTTP call
      * @param <T>  body type
-     * @return call with its retry policy
+     * @return call with its retry policy and timeout
      */
-    private static <T> Mono<T> withRetry(Mono<T> call) {
+    private <T> Mono<T> withRetry(Mono<T> call) {
         return call.retryWhen(Retry.fixedDelay(1, RETRY_DELAY)
-            .filter(OpdsCatalogueClient::isTransient)
-            .onRetryExhaustedThrow((spec, signal) -> signal.failure()));
+                .filter(OpdsCatalogueClient::isTransient)
+                .onRetryExhaustedThrow((spec, signal) -> signal.failure()))
+            .timeout(requestTimeout);
     }
 
     /**
@@ -239,10 +291,11 @@ public class OpdsCatalogueClient {
      * Tells whether a failure comes from the HTTP exchange itself rather than from this application.
      *
      * @param error failure of a call
-     * @return {@code true} for a connection failure or an error status
+     * @return {@code true} for a connection failure, an error status or the request timeout
      */
     private static boolean isTransportFailure(Throwable error) {
-        return error instanceof WebClientRequestException || error instanceof WebClientResponseException;
+        return error instanceof WebClientRequestException || error instanceof WebClientResponseException
+            || error instanceof TimeoutException;
     }
 
     /**

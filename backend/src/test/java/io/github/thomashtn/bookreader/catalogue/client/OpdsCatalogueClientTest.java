@@ -118,6 +118,50 @@ class OpdsCatalogueClientTest {
     }
 
     @Test
+    @DisplayName("Refuses a redirection to another host")
+    void refusesRedirectToOtherHost() {
+        String otherHost = "http://127.0.0.1:" + server.getPort() + "/epub/evil.epub";
+        server.enqueue(new MockResponse.Builder().code(302).addHeader("Location", otherHost).build());
+
+        assertThatThrownBy(() -> client.downloadEpub(726)).isInstanceOf(CatalogueRefusedException.class);
+        assertThat(server.getRequestCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Refuses a redirection of the search to another host")
+    void refusesSearchRedirectToOtherHost() {
+        String otherHost = "http://127.0.0.1:" + server.getPort() + "/opds/feed.php";
+        server.enqueue(new MockResponse.Builder().code(302).addHeader("Location", otherHost).build());
+
+        assertThatThrownBy(() -> client.search("hugo")).isInstanceOf(CatalogueRefusedException.class);
+        assertThat(server.getRequestCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Follows an absolute redirection that stays on the catalogue host")
+    void followsRedirectOnSameHost() {
+        byte[] epub = {80, 75, 3, 4};
+        String sameHost = server.url("/epub/hugo.epub").toString();
+        server.enqueue(new MockResponse.Builder().code(301).addHeader("Location", sameHost).build());
+        server.enqueue(new MockResponse.Builder().body(new Buffer().write(epub)).build());
+
+        assertThat(client.downloadEpub(726)).isEqualTo(epub);
+    }
+
+    @Test
+    @DisplayName("Reports the catalogue unavailable when it drips its answer past the overall timeout")
+    void reportsSlowDrip() {
+        for (int attempt = 0; attempt < 2; attempt++) {
+            server.enqueue(new MockResponse.Builder()
+                .body(new Buffer().write(new byte[4_000]))
+                .throttleBody(100, 100, TimeUnit.MILLISECONDS)
+                .build());
+        }
+
+        assertThatThrownBy(() -> client.downloadEpub(726)).isInstanceOf(CatalogueUnavailableException.class);
+    }
+
+    @Test
     @DisplayName("Reports a refused download when the site answers with its HTML warning page instead of the EPUB")
     void reportsRefusedDownload() {
         server.enqueue(new MockResponse.Builder()
@@ -176,7 +220,7 @@ class OpdsCatalogueClientTest {
     }
 
     /**
-     * Creates a client with half-second timeouts.
+     * Creates a client with half-second timeouts and a one-second overall limit.
      *
      * @param baseUrl     site root
      * @param maxEpubSize largest EPUB accepted
@@ -184,7 +228,8 @@ class OpdsCatalogueClientTest {
      */
     private static OpdsCatalogueClient clientFor(URI baseUrl, DataSize maxEpubSize) {
         CatalogueProperties properties =
-            new CatalogueProperties(baseUrl, Duration.ofMillis(500), Duration.ofMillis(500), maxEpubSize);
+            new CatalogueProperties(baseUrl, Duration.ofMillis(500), Duration.ofMillis(500),
+                Duration.ofSeconds(1), maxEpubSize);
         return new OpdsCatalogueClient(WebClient.builder(), properties);
     }
 

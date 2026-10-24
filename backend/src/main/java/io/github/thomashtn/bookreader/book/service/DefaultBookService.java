@@ -8,7 +8,6 @@ import io.github.thomashtn.bookreader.book.entity.Book;
 import io.github.thomashtn.bookreader.book.repository.BookRepository;
 import io.github.thomashtn.bookreader.book.repository.CatalogueBookState;
 import io.github.thomashtn.bookreader.conversion.EpubConverter;
-import io.github.thomashtn.bookreader.conversion.model.ConvertedBook;
 import io.github.thomashtn.bookreader.shared.exception.ResourceNotFoundException;
 import java.time.Clock;
 import java.util.Collection;
@@ -17,14 +16,22 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Default {@link BookService}: reads run in read-only transactions, the upload converts outside any.
+ * Default {@link BookService}: reads run in read-only transactions. An import receives the EPUB already read
+ * or downloaded outside any transaction, converts it in memory, then persists it in one short transaction.
  */
 @Service
 public class DefaultBookService implements BookService {
+
+    /**
+     * Name PostgreSQL gives the unique constraint on {@code book.source_id} (migration V2).
+     */
+    private static final String SOURCE_ID_CONSTRAINT = "book_source_id_key";
 
     /**
      * Caller-facing message of every unknown book.
@@ -37,7 +44,7 @@ public class DefaultBookService implements BookService {
     private final BookRepository repository;
 
     /**
-     * Converter turning an uploaded EPUB into blocks.
+     * Converter turning an EPUB into blocks.
      */
     private final EpubConverter converter;
 
@@ -141,7 +148,7 @@ public class DefaultBookService implements BookService {
     }
 
     /**
-     * Converts outside any transaction, then persists in the repository's own short transaction.
+     * Converts the uploaded EPUB in memory, then persists it.
      *
      * @param epub archive bytes
      * @return imported book, active
@@ -149,8 +156,7 @@ public class DefaultBookService implements BookService {
      */
     @Override
     public AdminBookResponse importUpload(byte[] epub) {
-        ConvertedBook converted = converter.convert(epub);
-        return AdminBookResponse.from(repository.save(Book.fromUpload(converted, clock.instant())));
+        return persist(Book.fromUpload(converter.convert(epub), clock.instant()));
     }
 
     /**
@@ -182,14 +188,50 @@ public class DefaultBookService implements BookService {
     }
 
     /**
-     * Persists in the repository's own short transaction, so a concurrent import fails right here.
+     * Converts the downloaded EPUB in memory, then persists it; a concurrent import of the same entry fails
+     * right here, on the unique source identifier.
      *
-     * @param converted converted EPUB
-     * @param sourceId  catalogue entry identifier
+     * @param epub     archive bytes
+     * @param sourceId catalogue entry identifier
      * @return imported book, active
+     * @throws BookAlreadyImportedException when the entry is already in the library
      */
     @Override
-    public AdminBookResponse saveCatalogueBook(ConvertedBook converted, String sourceId) {
-        return AdminBookResponse.from(repository.save(Book.fromCatalogue(converted, sourceId, clock.instant())));
+    public AdminBookResponse importCatalogueEpub(byte[] epub, String sourceId) {
+        Book book = Book.fromCatalogue(converter.convert(epub), sourceId, clock.instant());
+        try {
+            return persist(book);
+        } catch (DataIntegrityViolationException exception) {
+            if (violatesSourceIdUniqueness(exception)) {
+                throw new BookAlreadyImportedException(sourceId, exception);
+            }
+            throw exception;
+        }
+    }
+
+    /**
+     * Persists a book in the repository's own short transaction.
+     *
+     * @param book new book
+     * @return imported book
+     */
+    private AdminBookResponse persist(Book book) {
+        return AdminBookResponse.from(repository.save(book));
+    }
+
+    /**
+     * Tells whether an integrity violation is the unique constraint on the catalogue source identifier.
+     *
+     * @param exception violation raised while saving
+     * @return {@code false} for any other violation, which must not be mistaken for a duplicate
+     */
+    private static boolean violatesSourceIdUniqueness(DataIntegrityViolationException exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException violation
+                && SOURCE_ID_CONSTRAINT.equals(violation.getConstraintName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

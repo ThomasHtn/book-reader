@@ -5,11 +5,27 @@ package io.github.thomashtn.bookreader.conversion;
  *
  * @param maxEntryBytes largest decompressed size of one archive entry
  * @param maxTotalBytes largest decompressed size of the whole archive
+ * @param maxEntries    largest number of entries in the archive
  */
-public record EpubLimits(long maxEntryBytes, long maxTotalBytes) {
+public record EpubLimits(long maxEntryBytes, long maxTotalBytes, int maxEntries) {
 
     /**
-     * Production limits: 20 MB per file, 100 MB decompressed (specification section 7.4).
+     * How many times the EPUB size limit the decompressed archive may reach (specification section 7.4).
      */
-    public static final EpubLimits DEFAULT = new EpubLimits(20L * 1024 * 1024, 100L * 1024 * 1024);
+    private static final long TOTAL_SIZE_FACTOR = 5;
+
+    /**
+     * Most entries an archive may hold, far above any real EPUB.
+     */
+    private static final int MAX_ENTRIES = 10_000;
+
+    /**
+     * Derives every guard from the one configured EPUB size limit, so the limits have a single source.
+     *
+     * @param maxEpubBytes largest EPUB accepted, also the largest decompressed file
+     * @return limits for the converter
+     */
+    public static EpubLimits forMaxEpubSize(long maxEpubBytes) {
+        return new EpubLimits(maxEpubBytes, maxEpubBytes * TOTAL_SIZE_FACTOR, MAX_ENTRIES);
+    }
 }

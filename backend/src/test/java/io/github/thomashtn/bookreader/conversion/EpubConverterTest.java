@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.thomashtn.bookreader.conversion.EpubRejectedException.Reason;
 import io.github.thomashtn.bookreader.conversion.model.ConvertedBook;
+import io.github.thomashtn.bookreader.shared.model.MetadataLimits;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -26,7 +27,7 @@ class EpubConverterTest {
     /**
      * Converter under test, with the production limits.
      */
-    private final EpubConverter converter = new EpubConverter(EpubLimits.DEFAULT);
+    private final EpubConverter converter = new EpubConverter(EpubLimits.forMaxEpubSize(20L * 1024 * 1024));
 
     /**
      * EPUB 2 with an NCX whose entries target anchors inside documents.
@@ -58,8 +59,8 @@ class EpubConverterTest {
 
             ConvertedBook longBook = converter.convert(EpubFixtures.zip(entries));
 
-            assertThat(longBook.title()).isEqualTo("T".repeat(ConvertedBook.MAX_METADATA_LENGTH));
-            assertThat(longBook.author()).isEqualTo("A".repeat(ConvertedBook.MAX_METADATA_LENGTH));
+            assertThat(longBook.title()).isEqualTo("T".repeat(MetadataLimits.MAX_LENGTH));
+            assertThat(longBook.author()).isEqualTo("A".repeat(MetadataLimits.MAX_LENGTH));
         }
 
         @Test
@@ -216,7 +217,7 @@ class EpubConverterTest {
         @Test
         @DisplayName("Rejects a single entry above the per-file limit")
         void rejectsLargeEntry() {
-            EpubConverter strict = new EpubConverter(new EpubLimits(1_000, 1_000_000));
+            EpubConverter strict = new EpubConverter(new EpubLimits(1_000, 1_000_000, 100));
             Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
             entries.put("Ops/images/big.jpg", new byte[1_001]);
 
@@ -228,7 +229,7 @@ class EpubConverterTest {
         @Test
         @DisplayName("Rejects an archive above the total decompressed limit")
         void rejectsLargeArchive() {
-            EpubConverter strict = new EpubConverter(new EpubLimits(1_000_000, 5_000));
+            EpubConverter strict = new EpubConverter(new EpubLimits(1_000_000, 5_000, 100));
             Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
             for (int index = 0; index < 6; index++) {
                 entries.put("Ops/images/part" + index + ".jpg", new byte[1_000]);
@@ -237,6 +238,47 @@ class EpubConverterTest {
             assertThatThrownBy(() -> strict.convert(EpubFixtures.zip(entries)))
                 .isInstanceOfSatisfying(EpubRejectedException.class,
                     exception -> assertThat(exception.reason()).isEqualTo(Reason.TOO_LARGE));
+        }
+
+        @Test
+        @DisplayName("Rejects an archive with more entries than the limit")
+        void rejectsTooManyEntries() {
+            EpubConverter strict = new EpubConverter(new EpubLimits(1_000_000, 1_000_000, 10));
+            Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
+            for (int index = 0; index < 10; index++) {
+                entries.put("Ops/images/part" + index + ".jpg", new byte[1]);
+            }
+
+            assertThatThrownBy(() -> strict.convert(EpubFixtures.zip(entries)))
+                .isInstanceOfSatisfying(EpubRejectedException.class,
+                    exception -> assertThat(exception.reason()).isEqualTo(Reason.TOO_LARGE));
+        }
+
+        @Test
+        @DisplayName("Rejects a content document nested far deeper than real XHTML instead of overflowing the stack")
+        void rejectsDeeplyNestedContent() {
+            Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
+            entries.put("Ops/002.html", nested("div", 50_000));
+
+            assertRejected(EpubFixtures.zip(entries), Reason.INVALID);
+        }
+
+        @Test
+        @DisplayName("Rejects a table of contents nested far deeper than real XML")
+        void rejectsDeeplyNestedTableOfContents() {
+            Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
+            entries.put("Ops/toc.ncx", nested("navPoint", 50_000));
+
+            assertRejected(EpubFixtures.zip(entries), Reason.INVALID);
+        }
+
+        @Test
+        @DisplayName("Accepts the nesting of a real document")
+        void acceptsModerateNesting() {
+            Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
+            entries.put("Ops/002.html", nested("div", 50));
+
+            assertThat(converter.convert(EpubFixtures.zip(entries)).blocks()).isNotEmpty();
         }
 
         /**
@@ -250,6 +292,20 @@ class EpubConverterTest {
                 .isInstanceOfSatisfying(EpubRejectedException.class,
                     exception -> assertThat(exception.reason()).isEqualTo(reason));
         }
+    }
+
+    /**
+     * Builds an XHTML document whose body nests one element inside another, with a paragraph at the bottom.
+     *
+     * @param tag   element repeated
+     * @param depth number of nested elements
+     * @return document bytes
+     */
+    private static byte[] nested(String tag, int depth) {
+        String xhtml = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><body>"
+            + ("<" + tag + ">").repeat(depth) + "<p>Deep text.</p>" + ("</" + tag + ">").repeat(depth)
+            + "</body></html>";
+        return xhtml.getBytes(StandardCharsets.UTF_8);
     }
 
     /**

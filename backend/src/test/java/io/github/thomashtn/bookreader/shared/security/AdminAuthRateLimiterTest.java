@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -118,6 +119,29 @@ class AdminAuthRateLimiterTest {
         rateLimiter.recordFailure(REMOTE_ADDRESS);
 
         assertThat(rateLimiter.trackedAddressCount()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Refuses and stops counting once the address is locked out")
+    void shouldRefuseAttemptsWhileLockedOut() {
+        AdminAuthRateLimiter rateLimiter = createRateLimiter(2);
+
+        assertThat(rateLimiter.recordFailure(REMOTE_ADDRESS)).isTrue();
+        assertThat(rateLimiter.recordFailure(REMOTE_ADDRESS)).isTrue();
+        assertThat(rateLimiter.recordFailure(REMOTE_ADDRESS)).isFalse();
+        assertThat(rateLimiter.recordFailure(REMOTE_ADDRESS)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Lets exactly the budget through when many requests arrive at once")
+    void shouldNotLetParallelAttemptsExceedTheBudget() {
+        AdminAuthRateLimiter rateLimiter = createRateLimiter(5);
+
+        long allowed = IntStream.range(0, 200).parallel()
+            .filter(attempt -> rateLimiter.recordFailure(REMOTE_ADDRESS))
+            .count();
+
+        assertThat(allowed).isEqualTo(5);
     }
 
     /**

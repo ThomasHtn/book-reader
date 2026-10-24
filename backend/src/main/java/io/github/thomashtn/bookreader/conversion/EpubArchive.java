@@ -32,14 +32,18 @@ final class EpubArchive {
      * @param epub   archive bytes
      * @param limits decompression guards
      * @return entry contents keyed by archive path
-     * @throws EpubRejectedException when the archive is invalid, unsafe or too large
+     * @throws EpubRejectedException when the archive is invalid, unsafe, too large or has too many entries
      */
     static Map<String, byte[]> read(byte[] epub, EpubLimits limits) {
         Map<String, byte[]> entries = new HashMap<>();
         long total = 0;
+        int count = 0;
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(epub))) {
             ZipEntry entry;
             while ((entry = zip.getNextEntry()) != null) {
+                if (++count > limits.maxEntries()) {
+                    throw new EpubRejectedException(Reason.TOO_LARGE, "Archive holds too many entries");
+                }
                 String name = entry.getName();
                 if (escapesRoot(name)) {
                     throw new EpubRejectedException(Reason.INVALID, "Unsafe entry path: " + name);

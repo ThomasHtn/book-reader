@@ -5,6 +5,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Locks out, in memory, a remote address that sent too many wrong administrator keys.
@@ -40,7 +41,7 @@ public class AdminAuthRateLimiter {
     private final Clock clock;
 
     /**
-     * Tracked failure windows, keyed by remote address.
+     * Tracked attempt windows, keyed by remote address.
      */
     private final ConcurrentHashMap<String, AttemptWindow> windowsByRemoteAddress =
         new ConcurrentHashMap<>();
@@ -58,44 +59,47 @@ public class AdminAuthRateLimiter {
     }
 
     /**
-     * Determines whether a remote address is currently locked out.
+     * Determines whether a remote address is currently locked out, without counting anything.
      *
      * @param remoteAddress caller's remote address
-     * @return {@code true} when the address has crossed the failure budget within the current window
+     * @return {@code true} when the address has used its whole failure budget within the current window
      */
     public boolean isLockedOut(String remoteAddress) {
         AttemptWindow window = windowsByRemoteAddress.get(remoteAddress);
-
-        if (window == null) {
-            return false;
-        }
-
-        if (window.isExpired(clock, lockoutDuration)) {
-            windowsByRemoteAddress.remove(remoteAddress, window);
-            return false;
-        }
-
-        return window.failureCount() >= maxFailures;
+        return window != null && !window.isExpired(clock.instant()) && window.attempts() >= maxFailures;
     }
 
     /**
-     * Records an invalid-key attempt from a remote address.
+     * Counts a wrong key unless the address is already locked out, in one atomic step, so parallel wrong
+     * keys cannot all slip under the budget. Valid keys are never counted, however many arrive at once.
      *
      * @param remoteAddress caller's remote address
+     * @return {@code false} when the address was already locked out, in which case nothing is counted
      */
-    public void recordFailure(String remoteAddress) {
+    public boolean recordFailure(String remoteAddress) {
         sweepExpiredWindows();
 
-        windowsByRemoteAddress.compute(
-            remoteAddress,
-            (key, existing) -> existing == null || existing.isExpired(clock, lockoutDuration)
-                ? new AttemptWindow(1, clock.instant())
-                : existing.increment(clock.instant(), maxFailures)
-        );
+        AtomicBoolean allowed = new AtomicBoolean();
+        windowsByRemoteAddress.compute(remoteAddress, (key, window) -> {
+            Instant now = clock.instant();
+            if (window == null || window.isExpired(now)) {
+                allowed.set(true);
+                return new AttemptWindow(1, now.plus(lockoutDuration));
+            }
+            if (window.attempts() >= maxFailures) {
+                return window;
+            }
+            allowed.set(true);
+            int attempts = window.attempts() + 1;
+            // The attempt that reaches the budget restarts the window, so the lockout lasts its whole duration.
+            Instant expiresAt = attempts == maxFailures ? now.plus(lockoutDuration) : window.expiresAt();
+            return new AttemptWindow(attempts, expiresAt);
+        });
+        return allowed.get();
     }
 
     /**
-     * Clears any tracked failures for a remote address, following a valid-key request.
+     * Clears any tracked attempts for a remote address, following a valid-key request.
      *
      * @param remoteAddress caller's remote address
      */
@@ -129,40 +133,26 @@ public class AdminAuthRateLimiter {
             return;
         }
 
-        windowsByRemoteAddress.values()
-            .removeIf(window -> window.isExpired(clock, lockoutDuration));
+        Instant now = clock.instant();
+        windowsByRemoteAddress.values().removeIf(window -> window.isExpired(now));
     }
 
     /**
-     * Failure count accumulated by a remote address since its first recent failure.
+     * Attempts counted for a remote address in the current window.
      *
-     * @param failureCount   number of invalid-key attempts recorded in this window
-     * @param firstFailureAt instant the window started at
+     * @param attempts  number of wrong keys counted, until a valid key clears them
+     * @param expiresAt instant after which the window no longer applies, and the lockout ends
      */
-    private record AttemptWindow(int failureCount, Instant firstFailureAt) {
-
-        /**
-         * Returns a window with one additional failure; the failure that reaches the budget restarts the
-         * window, so the lockout lasts its whole duration from that moment.
-         *
-         * @param now    instant of this failure
-         * @param budget failure budget of an address
-         * @return incremented attempt window
-         */
-        AttemptWindow increment(Instant now, int budget) {
-            int count = failureCount + 1;
-            return new AttemptWindow(count, count == budget ? now : firstFailureAt);
-        }
+    private record AttemptWindow(int attempts, Instant expiresAt) {
 
         /**
          * Determines whether this window is old enough to no longer apply.
          *
-         * @param currentClock  application clock
-         * @param windowMaxAge  configured window duration
-         * @return {@code true} when the window started, or the lockout began, more than {@code windowMaxAge} ago
+         * @param now instant to compare with
+         * @return {@code true} when the window has ended
          */
-        boolean isExpired(Clock currentClock, Duration windowMaxAge) {
-            return currentClock.instant().isAfter(firstFailureAt.plus(windowMaxAge));
+        boolean isExpired(Instant now) {
+            return now.isAfter(expiresAt);
         }
     }
 }
