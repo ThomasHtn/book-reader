@@ -24,15 +24,17 @@ describe('pageAt', () => {
 });
 
 describe('pageCount', () => {
-  it('divides the content width by the column width, at least one page', () => {
+  it('counts the pages up to the one where the text ends, at least one', () => {
     expect(pageCount(12 * 1224, 1224)).toBe(12);
     expect(pageCount(12 * 1224 + 0.5, 1224)).toBe(12);
+    expect(pageCount(11 * 1224 + 30, 1224)).toBe(12);
     expect(pageCount(0, 1224)).toBe(1);
   });
 
-  it('counts facing pages once the last gap is added back', () => {
-    // Three pages of 780 px and two gaps of 120 px, plus the missing third gap.
-    expect(pageCount(3 * 780 + 2 * 120 + 120, 900)).toBe(3);
+  it('counts facing pages by where the text ends, never the blank page beside it', () => {
+    // Pages of 780 px parted by 120 px gaps: text ending on the third page, then on the first.
+    expect(pageCount(2 * 900 + 780, 900)).toBe(3);
+    expect(pageCount(500, 900)).toBe(1);
   });
 });
 

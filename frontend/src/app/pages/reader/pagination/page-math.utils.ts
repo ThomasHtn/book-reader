@@ -12,14 +12,15 @@ export function pageAt(left: number, pitch: number): number {
 }
 
 /**
- * Returns the number of pages of a laid-out chapter.
+ * Returns the number of pages of a laid-out chapter, from where its text ends: the container's own
+ * width would count a blank right page when the chapter fills one page of two.
  *
- * @param scrollWidth - Width of the multi-column content, plus one gap for the last page.
+ * @param contentRight - Right edge of the chapter's last line, measured from the start of the chapter.
  * @param pitch - Distance from one page to the next: page width plus the gap between pages.
  * @returns Page count, at least one.
  */
-export function pageCount(scrollWidth: number, pitch: number): number {
-  return Math.max(1, Math.round(scrollWidth / pitch));
+export function pageCount(contentRight: number, pitch: number): number {
+  return Math.max(1, Math.ceil((contentRight - EDGE_TOLERANCE_PX) / pitch));
 }
 
 /**

@@ -73,8 +73,7 @@ export class DomChapterLayout implements ChapterLayout {
     this.pitch = this.columnWidth + gap;
     this.columns.style.transform = '';
     this.columns.replaceChildren(...nodes);
-    // The last column has no gap after it.
-    return pageCount(this.columns.scrollWidth + gap, this.pitch);
+    return pageCount(contentRight(this.columns) - this.origin(), this.pitch);
   }
 
   /**
@@ -171,6 +170,18 @@ function element(document: Document, tag: string, text: string, className?: stri
     node.className = className;
   }
   return node;
+}
+
+/**
+ * Right edge of the last line of the columns: the end of the chapter's text, wherever its page falls.
+ */
+function contentRight(columns: HTMLElement): number {
+  const last = columns.lastElementChild;
+  if (!last) {
+    return 0;
+  }
+  const rects = last.getClientRects();
+  return rects.length > 0 ? rects[rects.length - 1].right : last.getBoundingClientRect().right;
 }
 
 /**

@@ -8,13 +8,10 @@
 
 /* === PRIMITIVES ========================================================= */
 :root {
-  /* Paper theme */
-  --color-paper-50: #f4efe6;
+  /* First paper theme, kept for the backoffice's brand mark and the status tag ink */
   --color-paper-100: #e3dccb;
   --color-paper-200: #cfc6b0;
   --color-ink-900: #141414;
-  --color-ink-700: #4a4a4a;
-  --color-ink-800: #333333;
 
   /* Cream theme: brown-black ink on cream paper, softer on the eyes than black on off-white
      (12,2:1); the lighter creams mix the ink into the paper at 10, 13 and 20 %. */
@@ -71,7 +68,6 @@
 
   /* Accent: dark text on rose, the pressed state inverts.
      Reserved for controls, so rose on screen always means "you can press this". */
-  --color-rose-200: #ffc2d6;
   --color-rose-300: #ffa6c1;
   --color-rose-400: #ff8ab0;
   --color-white: #ffffff;
@@ -153,7 +149,6 @@
   --color-control-fg-active: var(--color-bg);
   --color-focus-ring: var(--color-umber-900);
   --color-focus-gap: var(--color-cream-50);
-  --color-error: var(--color-rust-700);
 
   /* Body size = tier on any viewport of 1280px CSS or more (covers her PC at 100% and 125% Windows
      scaling), scaled down proportionally below, never under the floor. 40 -> 20px on a 400px phone. */
@@ -204,7 +199,6 @@
   --nav-bar-fg-active: var(--color-control-fg-active);
   /* Bars stand apart on a strip of page instead of sharing a rule */
   --nav-row-gap: var(--space-1);
-  --nav-row-padding: var(--space-1) var(--grid-padding) var(--grid-padding);
 
   /* Primary button ("Mes livres", "Réessayer") */
   --button-bg: var(--color-control-bg);
@@ -215,10 +209,7 @@
   --button-min-height: max(56px, calc(var(--text-control) * 2));
   --button-padding-x: clamp(16px, 2.5vw, 48px);
 
-  /* Reading surface */
-  --reading-bg: var(--color-bg);
-  --reading-fg: var(--color-fg);
-  /* Side margins of about 100 px on her screen: room around the pages without starving the text. */
+  /* Reading surface. Side margins of about 100 px on her screen: room around the pages without starving the text. */
   --reading-padding: clamp(16px, 4vw, 80px);
   --reading-max-width: 1880px;
   /* Two pages side by side on a wide screen, like an open book, parted by a fold line. */
@@ -333,7 +324,6 @@
   --admin-text-sm: 14px;
   --admin-text-base: 16px;
   --admin-text-lg: 18px;
-  --admin-text-xl: 22px;
   --admin-text-2xl: 30px;
   --admin-leading: 1.5;
   --admin-weight: 400;
