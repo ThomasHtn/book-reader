@@ -48,9 +48,10 @@ livres.
 4. Bouton "Mes livres" : la liste ; un clic sur un bloc ouvre le livre à sa dernière position.
 5. Fin de livre : la dernière page affiche "Fin du livre" sous le dernier paragraphe, le livre passe
    "terminé" mais reste en tête de liste tant qu'il est le dernier lu. Il n'est plus repris
-   automatiquement ; le rouvrir repart de la première page ; reculer depuis la dernière page retire
+   automatiquement ; le rouvrir repart de la première page mais il reste "terminé" tant qu'aucune page
+   n'est tournée (un clic par erreur ne change rien) ; reculer depuis la dernière page retire
    "terminé". Un livre marqué lu dans le backoffice après sa dernière lecture se comporte comme s'il
-   venait d'être terminé à la date de la marque ; une lecture postérieure à la marque l'emporte.
+   venait d'être terminé à la date de la marque ; une lecture postérieure à la marque (une page tournée) l'emporte.
 
 Aucun autre parcours n'existe côté lectrice.
 

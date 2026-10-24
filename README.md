@@ -126,7 +126,3 @@ Setting up the reader's PC (Chrome kiosk shortcut, automatic session) is describ
   [SIL Open Font License 1.1](frontend/public/fonts/atkinson-hyperlegible-next/OFL.txt).
 - Books: [Ebooks libres et gratuits](https://www.ebooksgratuits.com/) catalogue, public-domain texts
   typeset by its volunteers.
-
-## Licence
-
-Code under the [MIT](LICENSE) licence. Typefaces and books keep their own licences.

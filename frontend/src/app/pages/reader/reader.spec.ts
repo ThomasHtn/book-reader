@@ -350,6 +350,28 @@ describe('Reader', () => {
     expect(visible().shownPage).toBe(0);
   });
 
+  it('keeps a finished book finished when it is only opened, and starts a new reading on the first turn', async () => {
+    store.progress.set('b1', { blockIndex: 4, charOffset: 0, finished: true, updatedAt: 't' });
+    const { fixture, next } = await open();
+    expect(store.saves).toEqual([]);
+
+    next()!.click();
+    await flush(fixture);
+
+    expect(store.saves.at(-1)?.finished).toBe(false);
+  });
+
+  it('keeps the read mark of the backoffice when the book is only opened', async () => {
+    store.progress.set('b1', {
+      blockIndex: 4,
+      charOffset: 0,
+      finished: false,
+      updatedAt: '2026-09-17T10:00:00.000Z',
+    });
+    await open({ ...BOOK, finishedAt: '2026-09-18T10:00:00Z' });
+    expect(store.saves).toEqual([]);
+  });
+
   it('ignores a command within 400 ms of the previous one', async () => {
     const { fixture, next } = await open();
 

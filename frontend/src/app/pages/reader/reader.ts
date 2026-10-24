@@ -292,7 +292,8 @@ export class Reader {
   }
 
   /**
-   * Opens a book where it was left, once the fonts are ready so the first layout is the right one.
+   * Opens a book where it was left, once the fonts are ready so the first layout is the right one; a
+   * finished book reopens at its first page and only a page turn starts a new reading.
    */
   private async open(
     book: BookContent,
@@ -309,7 +310,10 @@ export class Reader {
     this.store.markOpened(book.id);
     const progress = withReadMark(this.store.progressOf(book.id), book.finishedAt);
     this.layoutAt(opened, startPosition(progress, book.blocks.length));
-    this.save(opened);
+    // A finished book stays finished until a page is turned: opening it by mistake changes nothing.
+    if (!progress?.finished) {
+      this.save(opened);
+    }
   }
 
   /**
