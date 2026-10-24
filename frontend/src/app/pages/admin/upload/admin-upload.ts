@@ -62,22 +62,26 @@ export class AdminUpload {
   protected readonly message = signal<AdminMessage | null>(null);
 
   /**
-   * Takes the files picked in the file dialog.
+   * Takes the files picked in the file dialog; ignored while a batch is sent, which owns the selection.
    */
   protected choose(event: Event): void {
+    if (this.sending()) {
+      return;
+    }
     const files = (event.target as HTMLInputElement).files;
     this.files.set(files ? Array.from(files) : []);
     this.message.set(null);
   }
 
   /**
-   * Takes the dropped files; preventing the default stops the browser from opening them.
+   * Takes the dropped files, except while a batch is sent; preventing the default stops the browser
+   * from opening them.
    */
   protected drop(event: DragEvent): void {
     event.preventDefault();
     this.dragging.set(false);
     const files = event.dataTransfer?.files;
-    if (files?.length) {
+    if (files?.length && !this.sending()) {
       this.files.set(Array.from(files));
       this.message.set(null);
     }

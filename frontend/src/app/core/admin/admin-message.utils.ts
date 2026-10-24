@@ -5,7 +5,7 @@ import { httpStatusOf } from '@core/http/http-status.utils';
 import { AdminMessage } from './admin.model';
 
 /**
- * French reason shown for each `code` of the backend `ApiErrorResponse`.
+ * French reason shown for each `code` of the backend `ApiErrorResponse` and of nginx's outage answer.
  */
 const REASONS: Readonly<Record<string, string>> = {
   EPUB_ENCRYPTED: 'le fichier est chiffré (DRM)',
@@ -16,6 +16,20 @@ const REASONS: Readonly<Record<string, string>> = {
   CATALOGUE_REFUSED: 'le catalogue refuse les téléchargements pour le moment, réessayez plus tard',
   RESOURCE_NOT_FOUND: 'introuvable',
   VALIDATION_FAILED: 'valeur invalide',
+  INVALID_ARGUMENT: 'valeur invalide',
+  MALFORMED_REQUEST: 'valeur invalide',
+  ADMIN_KEY_RATE_LIMITED: "trop d'essais, réessayez dans une minute",
+  // nginx answers this one itself while the backend is down.
+  UNAVAILABLE: 'serveur injoignable',
+};
+
+/**
+ * Reasons of the statuses nginx answers on its own, without an `ApiErrorResponse` body.
+ */
+const STATUS_REASONS: Readonly<Record<number, string>> = {
+  413: REASONS['EPUB_TOO_LARGE'],
+  502: 'serveur injoignable',
+  504: 'serveur injoignable',
 };
 
 /**
@@ -39,9 +53,10 @@ export function failureReason(error: unknown): string {
           } | null
         )?.code
       : undefined;
-  return typeof code === 'string' && code in REASONS
-    ? REASONS[code]
-    : 'erreur inattendue du serveur';
+  if (typeof code === 'string' && code in REASONS) {
+    return REASONS[code];
+  }
+  return STATUS_REASONS[httpStatusOf(error) ?? -1] ?? 'erreur inattendue du serveur';
 }
 
 /**

@@ -263,4 +263,27 @@ describe('AdminLibrary', () => {
 
     expect(element.textContent).toContain('Échec : serveur injoignable');
   });
+
+  it('keeps another row in edition and each busy row disabled while actions overlap', async () => {
+    const { element, settle, item, button } = await render();
+
+    button(item('LES FLEURS DU MAL'), 'Modifier').click();
+    await settle();
+    button(item('Le Horla'), 'Retirer').click();
+    await settle();
+    const withdraw = http.expectOne(API_ENDPOINTS.admin.book('b1'));
+    const form = () => element.querySelector<HTMLElement>('form')!;
+    button(form(), 'Enregistrer').click();
+    await settle();
+    const save = http.expectOne(API_ENDPOINTS.admin.book('b2'));
+
+    withdraw.flush({ ...BOOKS[0], active: false });
+    await settle();
+    expect(button(form(), 'Enregistrer').disabled).toBe(true);
+    expect(element.querySelector('form')).not.toBeNull();
+
+    save.flush(BOOKS[1]);
+    await settle();
+    expect(element.querySelector('form')).toBeNull();
+  });
 });

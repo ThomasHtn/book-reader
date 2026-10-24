@@ -98,7 +98,7 @@
                   <button
                     type="submit"
                     class="a-btn a-btn--primary a-btn--sm"
-                    [disabled]="busyId() === book.id"
+                    [disabled]="isBusy(book)"
                     [attr.aria-busy]="spinning(book, 'save') || null"
                   >
                     @if (spinning(book, 'save')) {
@@ -126,7 +126,7 @@
                   <button
                     type="button"
                     class="a-btn a-btn--danger a-btn--sm"
-                    [disabled]="busyId() === book.id"
+                    [disabled]="isBusy(book)"
                     [attr.aria-busy]="spinning(book, 'delete') || null"
                     (click)="remove(book)"
                   >
@@ -162,7 +162,7 @@
                   <button
                     type="button"
                     class="a-btn a-btn--secondary a-btn--sm"
-                    [disabled]="busyId() === book.id"
+                    [disabled]="isBusy(book)"
                     [attr.aria-busy]="spinning(book, 'active') || null"
                     (click)="setActive(book, !book.active)"
                   >
@@ -186,7 +186,7 @@
                   <button
                     type="button"
                     class="a-btn a-btn--secondary a-btn--sm"
-                    [disabled]="busyId() === book.id"
+                    [disabled]="isBusy(book)"
                     [attr.aria-busy]="spinning(book, 'finished') || null"
                     (click)="setFinished(book, !book.finishedAt)"
                   >

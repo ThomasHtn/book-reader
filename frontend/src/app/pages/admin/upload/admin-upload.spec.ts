@@ -145,4 +145,21 @@ describe('AdminUpload', () => {
     expect(element.textContent).toContain('Échec : le fichier dépasse 20 Mo');
     expect(send().disabled).toBe(false);
   });
+
+  it('keeps the batch being sent when files are picked meanwhile, and the picker off until it ends', async () => {
+    const { element, settle, send, choose } = await render();
+    await choose(new File(['PK'], 'horla.epub'));
+    send().click();
+    await settle();
+
+    expect(element.querySelector<HTMLInputElement>('input[type="file"]')!.disabled).toBe(true);
+    await choose(new File(['PK'], 'amour.epub'));
+    expect(element.textContent).toContain('horla.epub');
+    expect(element.textContent).not.toContain('amour.epub');
+
+    http.expectOne(API_ENDPOINTS.admin.upload).flush({ id: 'b1', title: 'Le Horla' });
+    await settle();
+    expect(element.querySelector<HTMLInputElement>('input[type="file"]')!.disabled).toBe(false);
+    http.verify();
+  });
 });

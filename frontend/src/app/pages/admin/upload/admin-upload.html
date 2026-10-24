@@ -23,6 +23,7 @@
       type="file"
       accept=".epub,application/epub+zip"
       multiple
+      [disabled]="sending()"
       (change)="choose($event)"
     />
   </div>

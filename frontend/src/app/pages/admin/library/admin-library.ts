@@ -95,14 +95,9 @@ export class AdminLibrary {
   });
 
   /**
-   * Book whose row waits for the server; all its buttons are disabled meanwhile.
+   * Action in flight on each row waiting for the server: its buttons are disabled, only that one spins.
    */
-  protected readonly busyId = signal<string | null>(null);
-
-  /**
-   * Action in flight on the busy row, so only its button spins.
-   */
-  private readonly busyAction = signal<RowAction | null>(null);
+  private readonly busy = signal<ReadonlyMap<string, RowAction>>(new Map());
 
   /**
    * Book whose row shows the title and author form, at most one at a time.
@@ -154,7 +149,14 @@ export class AdminLibrary {
    * Whether this button of this row is the one waiting for the server.
    */
   protected spinning(book: AdminBook, action: RowAction): boolean {
-    return this.busyId() === book.id && this.busyAction() === action;
+    return this.busy().get(book.id) === action;
+  }
+
+  /**
+   * Whether this row waits for the server, so none of its buttons can start a second action.
+   */
+  protected isBusy(book: AdminBook): boolean {
+    return this.busy().has(book.id);
   }
 
   /**
@@ -210,7 +212,7 @@ export class AdminLibrary {
   }
 
   /**
-   * Applies a patch to a book and closes its edit form.
+   * Applies a patch to a book and closes its edit form, leaving another row's form open.
    */
   private change(
     book: AdminBook,
@@ -223,7 +225,9 @@ export class AdminLibrary {
       action,
       async () => {
         await this.api.updateBook(book.id, patch);
-        this.editingId.set(null);
+        if (this.editingId() === book.id) {
+          this.editingId.set(null);
+        }
       },
       success,
     );
@@ -238,8 +242,7 @@ export class AdminLibrary {
     call: () => Promise<void>,
     success: string,
   ): Promise<void> {
-    this.busyId.set(book.id);
-    this.busyAction.set(action);
+    this.busy.update((rows) => new Map(rows).set(book.id, action));
     try {
       await call();
       this.message.set(successMessage(success));
@@ -247,6 +250,10 @@ export class AdminLibrary {
     } catch (error) {
       this.message.set(failureMessage(error));
     }
-    this.busyId.set(null);
+    this.busy.update((rows) => {
+      const next = new Map(rows);
+      next.delete(book.id);
+      return next;
+    });
   }
 }
