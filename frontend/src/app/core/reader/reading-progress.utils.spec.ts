@@ -1,13 +1,13 @@
 import { BookSummary } from '@core/http/api.model';
 
+import { ReadingProgress } from './reader.model';
 import {
   parseProgress,
-  ReadingProgress,
   resumableBookId,
   sortLibrary,
   startPosition,
   withReadMark,
-} from './reading-progress';
+} from './reading-progress.utils';
 
 /**
  * Builds an active book; only its dates matter to the ordering rules.

@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { httpStatusOf } from './http-status';
+import { httpStatusOf } from './http-status.utils';
 
 describe('httpStatusOf', () => {
   it('reads the status of an HTTP error, 0 when the server did not answer', () => {

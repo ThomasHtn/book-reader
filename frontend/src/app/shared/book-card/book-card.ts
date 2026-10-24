@@ -7,27 +7,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 @Component({
   selector: 'app-book-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <!-- The whole block is one button; data-tone picks its cloth colour in book-grid.css. -->
-    <button
-      type="button"
-      class="book-card"
-      [class.book-card--current]="current()"
-      [class.book-card--finished]="finished()"
-      [attr.data-tone]="tone()"
-      (click)="activate.emit()"
-    >
-      <span class="title">{{ title() }}</span>
-      <span class="author">{{ author() }}</span>
-      <!-- States are spelled out, never shown by colour alone (spec 5.4). -->
-      @if (current()) {
-        <span class="tag">En cours</span>
-      }
-      @if (finished()) {
-        <span class="tag">Terminé</span>
-      }
-    </button>
-  `,
+  templateUrl: './book-card.html',
 })
 export class BookCard {
   /**

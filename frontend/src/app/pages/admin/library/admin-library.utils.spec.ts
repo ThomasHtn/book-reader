@@ -1,6 +1,7 @@
 import { AdminBook } from '@core/admin/admin.model';
 
-import { bookMeta, fold, MATCHES } from './admin-library.utils';
+import { MATCHES } from './admin-library.constants';
+import { bookMeta, fold } from './admin-library.utils';
 
 /**
  * Catalogue book added just before midnight UTC, already the next day in Paris.

@@ -1,4 +1,4 @@
-import { layoutKey, parsePageCounts, serializePageCounts } from './stored-page-counts';
+import { layoutKey, parsePageCounts, serializePageCounts } from './stored-page-counts.utils';
 
 describe('layoutKey', () => {
   it('names a layout by viewport size and font tier', () => {

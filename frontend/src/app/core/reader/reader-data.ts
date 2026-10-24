@@ -13,10 +13,7 @@ import {
 import { BookSummary, ReaderSettings } from '@core/http/api.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
-/**
- * Refresh cadence of books and settings, also the retry cadence when the server is unreachable.
- */
-export const POLL_INTERVAL_MS = 10_000;
+import { POLL_INTERVAL_MS } from './reader.constants';
 
 /**
  * Books and display settings, polled every ten seconds so the always-on PC follows the backoffice.

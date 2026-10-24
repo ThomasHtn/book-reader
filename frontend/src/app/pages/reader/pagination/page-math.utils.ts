@@ -1,38 +1,5 @@
-/**
- * A page of the book: a column of one chapter.
- */
-export interface PageLocation {
-  /**
-   * Zero-based chapter index.
-   */
-  readonly chapter: number;
-
-  /**
-   * Zero-based page within the chapter.
-   */
-  readonly page: number;
-}
-
-/**
- * Target of a command, before the destination chapter is laid out: `last` is resolved once it is.
- */
-export interface PendingLocation {
-  /**
-   * Zero-based chapter index.
-   */
-  readonly chapter: number;
-
-  /**
-   * Zero-based page, or `last` while the chapter's page count is unknown.
-   */
-  readonly page: number | 'last';
-}
-
-/**
- * Tolerance for sub-pixel layout rounding at column edges.
- */
-export const EDGE_TOLERANCE_PX = 0.5;
-
+import { EDGE_TOLERANCE_PX } from './pagination.constants';
+import { PageLocation, PendingLocation } from './pagination.model';
 /**
  * Returns the page holding a horizontal offset measured from the start of the chapter.
  *

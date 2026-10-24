@@ -2,7 +2,8 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { AdminSession, SignInOutcome } from '@core/admin/admin-session';
+import { SignInOutcome } from '@core/admin/admin.model';
+import { AdminSession } from '@core/admin/admin-session';
 
 import { AdminShell } from './admin-shell';
 

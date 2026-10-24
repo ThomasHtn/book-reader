@@ -1,8 +1,8 @@
 import { signal } from '@angular/core';
 
 import { BookSummary, ReaderSettings } from '@core/http/api.model';
-import { ReadingProgress, TextPosition } from '@core/reader/reading-progress';
-import { MeasuredCounts } from '@core/reader/stored-page-counts';
+
+import { MeasuredCounts, ReadingProgress, TextPosition } from './reader.model';
 
 /**
  * Test double of ReaderData driven by writable signals, so a spec sets what the poll would bring.

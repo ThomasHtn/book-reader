@@ -1,6 +1,11 @@
-import { Block } from '@core/http/api.model';
+import { Block, BookContent } from '@core/http/api.model';
 
-import { chapterOfBlock, isChapterStart, splitIntoChapters } from './chapters';
+import {
+  chapterContent,
+  chapterOfBlock,
+  isChapterStart,
+  splitIntoChapters,
+} from './chapters.utils';
 
 /**
  * Builds a heading block.
@@ -89,5 +94,48 @@ describe('isChapterStart', () => {
     expect(isChapterStart(chapter, { blockIndex: 4, charOffset: 0 })).toBe(true);
     expect(isChapterStart(chapter, { blockIndex: 4, charOffset: 1 })).toBe(false);
     expect(isChapterStart(chapter, { blockIndex: 5, charOffset: 0 })).toBe(false);
+  });
+});
+
+/**
+ * Two chapters: a heading and its paragraph, then a lone heading.
+ */
+const BOOK: BookContent = {
+  id: 'b1',
+  title: 'Le Horla',
+  author: 'Guy de Maupassant',
+  blocks: [
+    { kind: 'heading', text: 'I' },
+    { kind: 'paragraph', text: 'a' },
+    { kind: 'heading', text: 'II' },
+  ],
+  finishedAt: null,
+};
+
+/**
+ * Chapters of BOOK.
+ */
+const CHAPTERS = [
+  { firstBlock: 0, blockCount: 2 },
+  { firstBlock: 2, blockCount: 1 },
+];
+
+describe('chapterContent', () => {
+  it('puts the title page before the first chapter', () => {
+    expect(chapterContent(BOOK, CHAPTERS, 0)).toEqual({
+      blocks: BOOK.blocks.slice(0, 2),
+      firstBlock: 0,
+      titlePage: { title: 'Le Horla', author: 'Guy de Maupassant' },
+      endOfBook: false,
+    });
+  });
+
+  it('puts the end mark after the last chapter', () => {
+    expect(chapterContent(BOOK, CHAPTERS, 1)).toEqual({
+      blocks: BOOK.blocks.slice(2),
+      firstBlock: 2,
+      titlePage: null,
+      endOfBook: true,
+    });
   });
 });

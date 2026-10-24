@@ -12,16 +12,17 @@ import {
 import { Router } from '@angular/router';
 
 import { CommandGate } from '@core/reader/command-gate';
-import { PageCommand, pageCommandOf } from '@core/reader/page-command';
+import { pageCommandOf } from '@core/reader/page-command.utils';
 import { ProgressStore } from '@core/reader/progress-store';
+import { PageCommand } from '@core/reader/reader.model';
 import { ReaderData } from '@core/reader/reader-data';
-import { sortLibrary } from '@core/reader/reading-progress';
+import { sortLibrary } from '@core/reader/reading-progress.utils';
 import { BookCard } from '@shared/book-card/book-card';
 import { NavBar } from '@shared/nav-bar/nav-bar';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
-import { assignCoverTones } from './cover-tone';
-import { paginateGrid, visibleRange } from './grid-math';
+import { assignCoverTones } from './cover-tone.utils';
+import { paginateGrid, visibleRange } from './grid.utils';
 
 /**
  * Two rows of the three-column grid, so a page never shows more than six titles.

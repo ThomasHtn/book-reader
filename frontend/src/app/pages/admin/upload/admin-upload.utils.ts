@@ -1,18 +1,7 @@
-import { AdminMessage, failureMessageFor, successMessage } from '@core/admin/admin-message';
+import { AdminMessage } from '@core/admin/admin.model';
+import { failureMessageFor, successMessage } from '@core/admin/admin-message.utils';
 
-/**
- * A file the server refused, with the reason shown to the caregiver.
- */
-export interface FailedUpload {
-  /**
-   * File name as chosen on the computer.
-   */
-  readonly name: string;
-  /**
-   * Reason in French, as worded by `failureReason`.
-   */
-  readonly reason: string;
-}
+import { FailedUpload } from './admin-upload.model';
 
 /**
  * Builds the summary line for a batch of uploads.

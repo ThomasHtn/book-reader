@@ -1,4 +1,4 @@
-import { pageCommandOf } from './page-command';
+import { pageCommandOf } from './page-command.utils';
 
 /**
  * Builds a key press, modifiers given through `init`.

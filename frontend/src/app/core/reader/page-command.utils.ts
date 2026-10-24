@@ -1,8 +1,4 @@
-/**
- * Page turn asked by a footer bar or a key.
- */
-export type PageCommand = 'previous' | 'next';
-
+import { PageCommand } from './reader.model';
 /**
  * Reads the page turn a key press asks for (specification 5.1 and 5.4): arrows on every screen,
  * Space only where it means "Suivant", since in the list it activates the focused block. Chords with

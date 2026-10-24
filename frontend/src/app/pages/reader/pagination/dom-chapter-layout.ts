@@ -1,9 +1,9 @@
-import { TextPosition } from '@core/reader/reading-progress';
+import { TextPosition } from '@core/reader/reader.model';
 
-import { ChapterContent, ChapterLayout } from './chapter-layout';
-import { lowerBound } from './lower-bound';
-import { END_MARK, PageGeometry } from './page-count';
-import { EDGE_TOLERANCE_PX, pageAt, pageCount } from './page-math';
+import { lowerBound } from './lower-bound.utils';
+import { pageAt, pageCount } from './page-math.utils';
+import { EDGE_TOLERANCE_PX, END_MARK } from './pagination.constants';
+import { ChapterContent, ChapterLayout, PageGeometry } from './pagination.model';
 
 /**
  * Lays a chapter out in CSS columns exactly as wide as the viewport and locates text with `Range`,

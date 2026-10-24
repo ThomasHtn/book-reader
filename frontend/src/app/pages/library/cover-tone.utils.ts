@@ -1,8 +1,4 @@
-/**
- * Number of cover colours, matching `--book-cover-1` to `--book-cover-10` in tokens.css.
- */
-export const COVER_TONES = 10;
-
+import { COVER_TONES } from './library.constants';
 /**
  * Cover colour of a book, from 1 to {@link COVER_TONES}. Derived from the id alone, so a book keeps
  * its colour whatever its place in the list: the reader can find it by colour before reading it.

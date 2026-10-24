@@ -1,21 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { httpStatusOf } from '@core/http/http-status';
+import { httpStatusOf } from '@core/http/http-status.utils';
 
-/**
- * Result line shown after a backoffice action.
- */
-export interface AdminMessage {
-  /**
-   * Picks the success or failure styling of the line.
-   */
-  readonly kind: 'success' | 'failure';
-
-  /**
-   * Full sentence in French.
-   */
-  readonly text: string;
-}
+import { AdminMessage } from './admin.model';
 
 /**
  * French reason shown for each `code` of the backend `ApiErrorResponse`.

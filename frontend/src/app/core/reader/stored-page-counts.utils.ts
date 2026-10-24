@@ -1,9 +1,6 @@
 import { FontTier } from '@core/http/api.model';
 
-/**
- * Page count of each chapter; `undefined` for a chapter not laid out yet under the current layout.
- */
-export type MeasuredCounts = readonly (number | undefined)[];
+import { MeasuredCounts } from './reader.model';
 
 /**
  * Names the layout page counts were measured under: viewport size and font tier.

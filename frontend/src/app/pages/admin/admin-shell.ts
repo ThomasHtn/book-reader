@@ -20,7 +20,8 @@ import {
   LucideUpload,
 } from '@lucide/angular';
 
-import { AdminSession, SignInOutcome } from '@core/admin/admin-session';
+import { SignInOutcome } from '@core/admin/admin.model';
+import { AdminSession } from '@core/admin/admin-session';
 
 /**
  * French message shown under the key field for each refused sign-in.

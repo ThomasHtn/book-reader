@@ -11,11 +11,11 @@ import {
   FakeReaderData,
   stubResizeObserver,
 } from '@core/reader/reader.fixtures';
+import { TextPosition } from '@core/reader/reader.model';
 import { ReaderData } from '@core/reader/reader-data';
-import { TextPosition } from '@core/reader/reading-progress';
 
-import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './pagination/chapter-layout';
-import { PageGeometry } from './pagination/page-count';
+import { CHAPTER_LAYOUT_FACTORY } from './pagination/pagination.constants';
+import { ChapterContent, ChapterLayout, PageGeometry } from './pagination/pagination.model';
 import { Reader } from './reader';
 
 /**

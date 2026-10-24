@@ -10,6 +10,6 @@ import { LargeCursor } from '@shared/large-cursor/large-cursor';
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, LargeCursor],
-  template: '<router-outlet /><app-large-cursor />',
+  templateUrl: './app.html',
 })
 export class App {}

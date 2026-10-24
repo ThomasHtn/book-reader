@@ -4,33 +4,17 @@ import { inject, Service, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
-import { httpStatusOf } from '@core/http/http-status';
+import { httpStatusOf } from '@core/http/http-status.utils';
 import { BROWSER_STORAGE, readItem, removeItem, writeItem } from '@core/storage/browser-storage';
 
-/**
- * Header carrying the administrator key.
- */
-export const ADMIN_KEY_HEADER = 'X-Admin-Key';
+import { ADMIN_KEY_HEADER } from './admin.constants';
+import { SignInOutcome } from './admin.model';
+import { isRefusedKey } from './admin.utils';
 
 /**
  * `localStorage` entry holding the key between visits.
  */
 const KEY_STORAGE_KEY = 'admin.key';
-
-/**
- * Tells whether the server refused the administrator key.
- *
- * @param status - HTTP status of a failed call.
- * @returns `true` for 401 and 403.
- */
-export function isRefusedKey(status: number | undefined): boolean {
-  return status === 401 || status === 403;
-}
-
-/**
- * Outcome of a sign-in attempt.
- */
-export type SignInOutcome = 'ok' | 'invalid' | 'locked' | 'unreachable';
 
 /**
  * Administrator key, typed once and remembered in the browser (specification section 9).

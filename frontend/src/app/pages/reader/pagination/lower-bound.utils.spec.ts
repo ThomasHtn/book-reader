@@ -1,4 +1,4 @@
-import { lowerBound } from './lower-bound';
+import { lowerBound } from './lower-bound.utils';
 
 describe('lowerBound', () => {
   /**

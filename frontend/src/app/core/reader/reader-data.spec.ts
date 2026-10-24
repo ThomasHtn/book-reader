@@ -5,7 +5,8 @@ import { TestBed } from '@angular/core/testing';
 import { BookSummary } from '@core/http/api.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
-import { POLL_INTERVAL_MS, ReaderData } from './reader-data';
+import { POLL_INTERVAL_MS } from './reader.constants';
+import { ReaderData } from './reader-data';
 
 /**
  * Book list the fake backend serves.

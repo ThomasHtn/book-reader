@@ -3,7 +3,9 @@ import { SwUpdate, VersionEvent } from '@angular/service-worker';
 
 import { Subject } from 'rxjs';
 
-import { APP_RELOAD, AppUpdater, IDLE_BEFORE_UPDATE_MS, isIdleLongEnough } from './app-updater';
+import { AppUpdater } from './app-updater';
+import { APP_RELOAD, IDLE_BEFORE_UPDATE_MS } from './app-updater.constants';
+import { isIdleLongEnough } from './app-updater.utils';
 
 describe('isIdleLongEnough', () => {
   it('waits ten minutes without any command', () => {

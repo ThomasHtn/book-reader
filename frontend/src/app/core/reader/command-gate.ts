@@ -1,8 +1,4 @@
-/**
- * Minimum delay between two accepted reader commands (specification 5.1).
- */
-export const COMMAND_INTERVAL_MS = 400;
-
+import { COMMAND_INTERVAL_MS } from './reader.constants';
 /**
  * Ignores commands arriving too fast and the automatic repetition of a held key.
  */

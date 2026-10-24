@@ -1,4 +1,4 @@
-import { nextLocation, pageAt, pageCount, previousLocation } from './page-math';
+import { nextLocation, pageAt, pageCount, previousLocation } from './page-math.utils';
 
 describe('pageAt', () => {
   it('returns the column holding a horizontal offset from the start of the chapter', () => {

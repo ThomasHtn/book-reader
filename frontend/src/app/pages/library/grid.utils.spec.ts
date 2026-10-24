@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { GridItem, paginateGrid, visibleRange } from './grid-math';
+import { paginateGrid, visibleRange } from './grid.utils';
+import { GridItem } from './library.model';
 
 /**
  * Builds `count` rows of `perRow` cards, each `height` tall, laid out from the top of the grid.

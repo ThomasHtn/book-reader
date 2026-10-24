@@ -1,25 +1,8 @@
-import { Block } from '@core/http/api.model';
-import { TextPosition } from '@core/reader/reading-progress';
+import { Block, BookContent } from '@core/http/api.model';
+import { TextPosition } from '@core/reader/reader.model';
 
-/**
- * Longest chapter laid out at once; a book without headings is cut between paragraphs past it.
- */
-export const MAX_CHAPTER_CHARS = 80_000;
-
-/**
- * A run of consecutive blocks laid out in its own multi-column container.
- */
-export interface Chapter {
-  /**
-   * Book index of its first block.
-   */
-  readonly firstBlock: number;
-
-  /**
-   * Number of blocks, at least one.
-   */
-  readonly blockCount: number;
-}
+import { MAX_CHAPTER_CHARS } from './pagination.constants';
+import { Chapter, ChapterContent } from './pagination.model';
 
 /**
  * Splits a book into chapters: one per heading, cut between paragraphs past `maxChars`.
@@ -75,4 +58,26 @@ export function chapterOfBlock(chapters: readonly Chapter[], blockIndex: number)
  */
 export function isChapterStart(chapter: Chapter, position: TextPosition): boolean {
   return position.blockIndex === chapter.firstBlock && position.charOffset === 0;
+}
+
+/**
+ * Cuts the content of one chapter out of a book.
+ *
+ * @param book - Book being read.
+ * @param chapters - Chapters of the book.
+ * @param index - Index of the chapter.
+ * @returns Its blocks, with the title page on the first chapter and the end mark on the last.
+ */
+export function chapterContent(
+  book: BookContent,
+  chapters: readonly Chapter[],
+  index: number,
+): ChapterContent {
+  const { firstBlock, blockCount } = chapters[index];
+  return {
+    blocks: book.blocks.slice(firstBlock, firstBlock + blockCount),
+    firstBlock,
+    titlePage: index === 0 ? { title: book.title, author: book.author } : null,
+    endOfBook: index === chapters.length - 1,
+  };
 }

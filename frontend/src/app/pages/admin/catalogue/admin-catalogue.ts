@@ -3,14 +3,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 
 import { LucideDownload, LucideLoaderCircle, LucideRotateCw, LucideSearch } from '@lucide/angular';
 
-import { CatalogueEntry, CatalogueEntryState } from '@core/admin/admin.model';
+import { AdminMessage, CatalogueEntry, CatalogueEntryState } from '@core/admin/admin.model';
 import { AdminApi } from '@core/admin/admin-api';
-import {
-  AdminMessage,
-  failureMessage,
-  failureReason,
-  successMessage,
-} from '@core/admin/admin-message';
+import { failureMessage, failureReason, successMessage } from '@core/admin/admin-message.utils';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
 /**

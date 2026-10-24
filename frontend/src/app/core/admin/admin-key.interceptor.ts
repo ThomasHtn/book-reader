@@ -3,9 +3,11 @@ import { inject } from '@angular/core';
 
 import { tap } from 'rxjs';
 
-import { httpStatusOf } from '@core/http/http-status';
+import { httpStatusOf } from '@core/http/http-status.utils';
 
-import { ADMIN_KEY_HEADER, AdminSession, isRefusedKey } from './admin-session';
+import { ADMIN_KEY_HEADER } from './admin.constants';
+import { isRefusedKey } from './admin.utils';
+import { AdminSession } from './admin-session';
 
 /**
  * URL prefix of the routes guarded by `X-Admin-Key`; public `GET /api/**` calls stay keyless.

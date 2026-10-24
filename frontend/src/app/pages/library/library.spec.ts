@@ -10,7 +10,7 @@ import {
 } from '@core/reader/reader.fixtures';
 import { ReaderData } from '@core/reader/reader-data';
 
-import { assignCoverTones } from './cover-tone';
+import { assignCoverTones } from './cover-tone.utils';
 import { Library } from './library';
 
 describe('Library', () => {

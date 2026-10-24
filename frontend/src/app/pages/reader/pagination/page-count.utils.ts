@@ -1,49 +1,7 @@
-import { Block } from '@core/http/api.model';
-import { MeasuredCounts } from '@core/reader/stored-page-counts';
+import { MeasuredCounts } from '@core/reader/reader.model';
 
-import { Chapter } from './chapters';
-
-/**
- * What a page holds, read once from the rendered chapter.
- */
-export interface PageGeometry {
-  /**
-   * Column width in CSS pixels.
-   */
-  readonly width: number;
-  /**
-   * Column height in CSS pixels.
-   */
-  readonly height: number;
-  /**
-   * Body font size in CSS pixels.
-   */
-  readonly fontSize: number;
-  /**
-   * Advance of one character of body text.
-   */
-  readonly charWidth: (char: string) => number;
-}
-
-/**
- * What `estimatePageCounts` lays out besides chapters: the title page and the end mark.
- */
-export interface BookText {
-  /**
-   * Title shown on the first chapter's title page.
-   */
-  readonly title: string;
-
-  /**
-   * Author line under the title.
-   */
-  readonly author: string;
-
-  /**
-   * Every block of the book; chapters index into it.
-   */
-  readonly blocks: readonly Block[];
-}
+import { END_MARK } from './pagination.constants';
+import { BookText, Chapter, PageGeometry } from './pagination.model';
 
 /**
  * Body line height ratio, as `--leading-body` in tokens.css.
@@ -69,11 +27,6 @@ const GAP_EM = 0.6;
  * Author and end mark size relative to the body, as `--text-meta` in tokens.css (its clamp ignored).
  */
 const META_SCALE = 0.5;
-
-/**
- * Line shown after the last block of a book, also laid out by the reader.
- */
-export const END_MARK = 'Fin du livre';
 
 /**
  * Lines kept at least at the bottom of a column before a break, as Blink does (spec 5.2).

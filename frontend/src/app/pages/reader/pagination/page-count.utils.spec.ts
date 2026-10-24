@@ -1,7 +1,7 @@
 import { Block } from '@core/http/api.model';
 
-import { Chapter } from './chapters';
-import { bookPageNumber, bookPageTotal, estimatePageCounts, PageGeometry } from './page-count';
+import { bookPageNumber, bookPageTotal, estimatePageCounts } from './page-count.utils';
+import { Chapter, PageGeometry } from './pagination.model';
 
 /**
  * Builds a paragraph block.

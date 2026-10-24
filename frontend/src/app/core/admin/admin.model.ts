@@ -112,3 +112,23 @@ export interface BookPatch {
    */
   readonly finished?: boolean;
 }
+
+/**
+ * Result line shown after a backoffice action.
+ */
+export interface AdminMessage {
+  /**
+   * Picks the success or failure styling of the line.
+   */
+  readonly kind: 'success' | 'failure';
+
+  /**
+   * Full sentence in French.
+   */
+  readonly text: string;
+}
+
+/**
+ * Outcome of a sign-in attempt.
+ */
+export type SignInOutcome = 'ok' | 'invalid' | 'locked' | 'unreachable';

@@ -1,3 +1,4 @@
+import { FONT_TIERS } from './api.constants';
 /**
  * Kind of a block of the internal book format.
  */
@@ -77,11 +78,6 @@ export interface BookContent {
    */
   readonly finishedAt: string | null;
 }
-
-/**
- * Font tiers in pixels, smallest first, as offered by the backoffice.
- */
-export const FONT_TIERS = [48, 72, 100, 140] as const;
 
 /**
  * Font tier in pixels, applied as `data-tier` on `<html>`.

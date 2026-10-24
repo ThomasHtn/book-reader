@@ -3,9 +3,11 @@ import { ChangeDetectionStrategy, Component, inject, linkedSignal, signal } from
 
 import { LucideLoaderCircle, LucideRotateCw, LucideSave } from '@lucide/angular';
 
+import { AdminMessage } from '@core/admin/admin.model';
 import { AdminApi } from '@core/admin/admin-api';
-import { AdminMessage, failureMessage, successMessage } from '@core/admin/admin-message';
-import { FONT_TIERS, FontTier, ReaderSettings } from '@core/http/api.model';
+import { failureMessage, successMessage } from '@core/admin/admin-message.utils';
+import { FONT_TIERS } from '@core/http/api.constants';
+import { FontTier, ReaderSettings } from '@core/http/api.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
 /**

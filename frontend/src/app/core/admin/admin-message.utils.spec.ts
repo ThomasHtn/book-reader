@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { failureMessage, failureMessageFor, failureReason } from './admin-message';
+import { failureMessage, failureMessageFor, failureReason } from './admin-message.utils';
 
 /**
  * Builds the error HttpClient raises for an `ApiErrorResponse` body.

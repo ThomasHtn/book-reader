@@ -15,13 +15,14 @@ import {
   LucideX,
 } from '@lucide/angular';
 
-import { AdminBook, BookPatch } from '@core/admin/admin.model';
+import { AdminBook, AdminMessage, BookPatch } from '@core/admin/admin.model';
 import { AdminApi } from '@core/admin/admin-api';
-import { AdminMessage, failureMessage, successMessage } from '@core/admin/admin-message';
+import { failureMessage, successMessage } from '@core/admin/admin-message.utils';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 
+import { MATCHES, STATE_FILTERS } from './admin-library.constants';
 import { RowAction, StateFilter } from './admin-library.model';
-import { bookMeta, fold, MATCHES, STATE_FILTERS } from './admin-library.utils';
+import { bookMeta, fold } from './admin-library.utils';
 
 /**
  * Every imported book, withdrawn ones included: withdraw, reactivate, mark as read, delete, edit.

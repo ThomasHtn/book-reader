@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 
 import { ProgressStore } from '@core/reader/progress-store';
 import { ReaderData } from '@core/reader/reader-data';
-import { resumableBookId } from '@core/reader/reading-progress';
+import { resumableBookId } from '@core/reader/reading-progress.utils';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
 /**

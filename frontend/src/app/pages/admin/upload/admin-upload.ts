@@ -2,10 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 
 import { LucideFileUp, LucideLoaderCircle, LucideUpload } from '@lucide/angular';
 
+import { AdminMessage } from '@core/admin/admin.model';
 import { AdminApi } from '@core/admin/admin-api';
-import { AdminMessage, failureReason } from '@core/admin/admin-message';
+import { failureReason } from '@core/admin/admin-message.utils';
 
-import { FailedUpload, uploadResultMessage } from './admin-upload.utils';
+import { FailedUpload } from './admin-upload.model';
+import { uploadResultMessage } from './admin-upload.utils';
 
 /**
  * Upload of one or more EPUB files: conversion and immediate activation, one request per file.

@@ -2,8 +2,9 @@ import { inject, Service } from '@angular/core';
 
 import { BROWSER_STORAGE, readItem, writeItem } from '@core/storage/browser-storage';
 
-import { parseProgress, ReadingProgress, TextPosition } from './reading-progress';
-import { MeasuredCounts, parsePageCounts, serializePageCounts } from './stored-page-counts';
+import { MeasuredCounts, ReadingProgress, TextPosition } from './reader.model';
+import { parseProgress } from './reading-progress.utils';
+import { parsePageCounts, serializePageCounts } from './stored-page-counts.utils';
 
 /**
  * Book `/` resumes (spec section 8).

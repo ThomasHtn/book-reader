@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { assignCoverTones, COVER_TONES, coverTone } from './cover-tone';
+import { assignCoverTones, coverTone } from './cover-tone.utils';
+import { COVER_TONES } from './library.constants';
 
 describe('coverTone', () => {
   it('gives the same book the same tone every time', () => {

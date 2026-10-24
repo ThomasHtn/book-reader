@@ -17,25 +17,33 @@ import { Router } from '@angular/router';
 
 import { BookContent } from '@core/http/api.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
-import { httpStatusOf } from '@core/http/http-status';
+import { httpStatusOf } from '@core/http/http-status.utils';
 import { CommandGate } from '@core/reader/command-gate';
-import { PageCommand, pageCommandOf } from '@core/reader/page-command';
+import { pageCommandOf } from '@core/reader/page-command.utils';
 import { ProgressStore } from '@core/reader/progress-store';
-import { POLL_INTERVAL_MS, ReaderData } from '@core/reader/reader-data';
-import { startPosition, TextPosition, withReadMark } from '@core/reader/reading-progress';
-import { layoutKey } from '@core/reader/stored-page-counts';
+import { POLL_INTERVAL_MS } from '@core/reader/reader.constants';
+import { PageCommand, TextPosition } from '@core/reader/reader.model';
+import { ReaderData } from '@core/reader/reader-data';
+import { startPosition, withReadMark } from '@core/reader/reading-progress.utils';
+import { layoutKey } from '@core/reader/stored-page-counts.utils';
 import { NavBar } from '@shared/nav-bar/nav-bar';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
-import { CHAPTER_LAYOUT_FACTORY, chapterContent, ChapterLayout } from './pagination/chapter-layout';
-import { Chapter, chapterOfBlock, isChapterStart, splitIntoChapters } from './pagination/chapters';
-import { bookPageNumber, bookPageTotal, estimatePageCounts } from './pagination/page-count';
 import {
-  nextLocation,
+  chapterContent,
+  chapterOfBlock,
+  isChapterStart,
+  splitIntoChapters,
+} from './pagination/chapters.utils';
+import { bookPageNumber, bookPageTotal, estimatePageCounts } from './pagination/page-count.utils';
+import { nextLocation, previousLocation } from './pagination/page-math.utils';
+import { CHAPTER_LAYOUT_FACTORY } from './pagination/pagination.constants';
+import {
+  Chapter,
+  ChapterLayout,
   PageLocation,
   PendingLocation,
-  previousLocation,
-} from './pagination/page-math';
+} from './pagination/pagination.model';
 
 /**
  * A book once opened: its content, cut into chapters, and the layout showing one of them.
