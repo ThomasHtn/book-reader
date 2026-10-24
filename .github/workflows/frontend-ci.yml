@@ -1,29 +1,25 @@
 name: Frontend CI
 
+# Pushes to main run it through deliver.yml, which builds the images once both suites pass.
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
-
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'
 
   workflow_dispatch:
 
+  workflow_call:
+
 permissions:
   contents: read
 
-# Superseded pull-request runs are cancelled; runs on shared branches are always
-# allowed to finish so every merged commit keeps a conclusive build status.
+# Superseded pull-request runs are cancelled. Fixed group name: inside deliver.yml, github.workflow is
+# the caller's name, and sharing its group would deadlock the call.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: frontend-ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
@@ -38,12 +34,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        # Nothing pushes back: no token left on disk for later steps.
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        # Same Node as local development: engines.node in package.json.
         with:
-          node-version: '22'
+          node-version-file: frontend/package.json
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -56,17 +56,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Fails below the coverage floors of angular.json.
       - name: Test
-        run: npm test -- --watch=false
+        run: npm run test:ci
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: frontend-coverage-report
+          path: frontend/coverage/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Build
         run: npm run build
-
-      - name: Upload build artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: book-reader-frontend
-          path: frontend/dist/
-          if-no-files-found: error
-          retention-days: 14

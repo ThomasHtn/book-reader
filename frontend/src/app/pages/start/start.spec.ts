@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
 import { ProgressStore } from '@core/reader/progress-store';
+import { book, FakeProgressStore, FakeReaderData } from '@core/reader/reader.fixtures';
 import { ReaderData } from '@core/reader/reader-data';
 
-import { book, FakeProgressStore, FakeReaderData } from '../../testing/reader-fakes';
 import { Start } from './start';
 
 describe('Start', () => {

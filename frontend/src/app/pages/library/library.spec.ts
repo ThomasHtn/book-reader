@@ -2,14 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
 import { ProgressStore } from '@core/reader/progress-store';
-import { ReaderData } from '@core/reader/reader-data';
-
 import {
   book,
   FakeProgressStore,
   FakeReaderData,
   stubResizeObserver,
-} from '../../testing/reader-fakes';
+} from '@core/reader/reader.fixtures';
+import { ReaderData } from '@core/reader/reader-data';
+
 import { assignCoverTones } from './cover-tone';
 import { Library } from './library';
 

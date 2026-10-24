@@ -1,54 +1,36 @@
 import { defineConfig, devices } from '@playwright/test';
 
-import { E2E_ADMIN_KEY } from './e2e/support/env';
-
 /**
- * On CI the dev server is never reused and an HTML report is kept.
+ * On CI an HTML report is kept and a stray `test.only` fails the run.
  */
 const ci = !!process.env['CI'];
 
 /**
- * End-to-end journey of specification section 12. Needs the backend jar built (`./mvnw package`) and an
- * empty PostgreSQL 17 database, E2E_DB_URL (default: localhost:55432/book_reader, book_reader/book_reader).
+ * End-to-end journey of specification section 12, against the whole app from its images: `make reset`,
+ * `make up`, then `npm run e2e`, or the delivery workflow. The journey starts from an empty library.
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: 'e2e',
+  testMatch: '**/*.e2e.ts',
+  // One serial journey: each step builds on the library the previous one left.
   fullyParallel: false,
   workers: 1,
+  forbidOnly: ci,
   retries: 0,
   timeout: 240_000,
   expect: { timeout: 15_000 },
   reporter: ci ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: 'http://localhost:4200',
+    baseURL: process.env['E2E_BASE_URL'] ?? 'http://localhost:8000',
     locale: 'fr-FR',
+    // The service worker would answer requests that `page.route` then never sees.
+    serviceWorkers: 'block',
     trace: 'retain-on-failure',
   },
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } },
-    },
-  ],
-  webServer: [
-    {
-      command: 'java -jar ../backend/target/book-reader-0.0.1-SNAPSHOT.jar',
-      url: 'http://localhost:8080/actuator/health',
-      timeout: 120_000,
-      reuseExistingServer: false,
-      env: {
-        DB_URL: process.env['E2E_DB_URL'] ?? 'jdbc:postgresql://localhost:55432/book_reader',
-        DB_USERNAME: process.env['E2E_DB_USERNAME'] ?? 'book_reader',
-        DB_PASSWORD: process.env['E2E_DB_PASSWORD'] ?? 'book_reader',
-        ADMIN_API_KEY: E2E_ADMIN_KEY,
-        API_DOCS_ENABLED: 'false',
-      },
-    },
-    {
-      command: 'npm start',
-      url: 'http://localhost:4200',
-      timeout: 180_000,
-      reuseExistingServer: !ci,
     },
   ],
 });

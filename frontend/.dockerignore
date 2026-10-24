@@ -1,10 +1,12 @@
 node_modules/
 dist/
 .angular/
-test-results/
-playwright-report/
-e2e/
+coverage/
 .git/
 .vscode/
 .idea/
 *.md
+e2e/
+playwright.config.ts
+test-results/
+playwright-report/

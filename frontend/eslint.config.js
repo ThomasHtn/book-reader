@@ -22,6 +22,39 @@ const DOCUMENTED_DECLARATIONS = [
   'ExportDefaultDeclaration',
 ];
 
+/**
+ * Aliases each layer must not import, with the reason shown on a violation.
+ */
+const LAYERS = [
+  {
+    layer: 'core',
+    forbidden: ['@shared/*', '@pages/*'],
+    message: 'A layer never imports a layer above it.',
+  },
+  { layer: 'shared', forbidden: ['@pages/*'], message: 'A layer never imports a layer above it.' },
+  {
+    layer: 'pages',
+    forbidden: ['@pages/*'],
+    message: 'A page never imports another page: move shared code to core/ or shared/.',
+  },
+];
+
+/**
+ * Message of the relative import rules: crossing folders goes through an alias the layer rules check.
+ */
+const RELATIVE_MESSAGE =
+  'A relative import stays inside its folder: use @core/, @shared/ or @pages/ instead.';
+
+/**
+ * Two levels up always leaves the component or feature folder the file belongs to.
+ */
+const LEAVES_PARENT = { regex: '^\\.\\./\\.\\./', message: RELATIVE_MESSAGE };
+
+/**
+ * One level up from a folder's top-level file lands among the other folders of its layer.
+ */
+const LEAVES_FOLDER = { regex: '^\\.\\./', message: RELATIVE_MESSAGE };
+
 module.exports = defineConfig([
   {
     files: ['**/*.ts'],
@@ -42,14 +75,18 @@ module.exports = defineConfig([
           style: 'camelCase',
         },
       ],
+      // Attribute selectors too, so buttons and links stay native elements (`<button app-button>`).
       '@angular-eslint/component-selector': [
         'error',
         {
-          type: 'element',
+          type: ['element', 'attribute'],
           prefix: 'app',
           style: 'kebab-case',
         },
       ],
+
+      // OnPush everywhere: with signals and zoneless, a component only renders when its inputs change.
+      '@angular-eslint/prefer-on-push-component-change-detection': 'error',
 
       // Every member states its visibility, so the public surface of a class is explicit rather
       // than inferred from the absence of a keyword.
@@ -100,6 +137,19 @@ module.exports = defineConfig([
       'simple-import-sort/exports': 'error',
     },
   },
+  // Layering, see README.md: core <- shared <- pages, a layer never imports one above it and a page never
+  // imports another page. A relative import never leaves its folder, so it cannot dodge the aliases.
+  ...LAYERS.flatMap(({ layer, forbidden, message }) =>
+    [
+      [`src/app/${layer}/**/*.ts`, LEAVES_PARENT],
+      [`src/app/${layer}/*/*.ts`, LEAVES_FOLDER],
+    ].map(([files, relative]) => ({
+      files: [files],
+      rules: {
+        'no-restricted-imports': ['error', { patterns: [{ group: forbidden, message }, relative] }],
+      },
+    })),
+  ),
   {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],

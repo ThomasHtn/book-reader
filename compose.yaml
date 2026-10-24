@@ -1,0 +1,53 @@
+# Whole app from its images on http://localhost:8000: try it, or check the images before a delivery (CI does).
+# Local only: no TLS, no backups. Day-to-day development runs natively (CONTRIBUTING.md), on the postgres below.
+# Usage: `docker compose up --build` (or `make up`), nothing to configure; the backoffice key is
+# book-reader-demo-admin-key-0123456789. A server writes its own compose from the contract in docs/deployment.md.
+name: book-reader
+
+services:
+  # Also the development database (`make db`): published on 127.0.0.1:5433, never on the network.
+  postgres:
+    image: postgres:17.11-alpine3.24@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_DB: book_reader
+      POSTGRES_USER: book_reader
+      POSTGRES_PASSWORD: book_reader
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U book_reader -d book_reader"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    # Demo settings first, then your backend/.env if any. Raw: values are taken verbatim, like Spring does.
+    env_file:
+      - path: backend/.env.example
+        format: raw
+      - path: backend/.env
+        format: raw
+        required: false
+    # Replaces the localhost database of the env files with the one above, and keeps Swagger off as in production.
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/book_reader
+      DB_USERNAME: book_reader
+      DB_PASSWORD: book_reader
+      API_DOCS_ENABLED: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # The app's single entry point: serves the bundle and relays /api and /readyz to the backend.
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:8000:8080"
+    depends_on:
+      - backend
+
+volumes:
+  postgres-data:

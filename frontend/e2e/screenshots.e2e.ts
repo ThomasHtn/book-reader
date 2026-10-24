@@ -47,7 +47,7 @@ const CATALOGUE_RESULTS: CatalogueEntry[] = [
 ];
 
 /**
- * README captures; run on demand with SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts.
+ * README captures; run on demand with SCREENSHOTS=1 npx playwright test e2e/screenshots.e2e.ts.
  */
 test.skip(!process.env['SCREENSHOTS'], 'Captures are generated on demand only');
 

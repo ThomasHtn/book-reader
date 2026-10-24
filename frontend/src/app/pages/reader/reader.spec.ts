@@ -6,10 +6,14 @@ import { provideRouter, Router } from '@angular/router';
 import { BookContent } from '@core/http/api.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { ProgressStore } from '@core/reader/progress-store';
+import {
+  FakeProgressStore,
+  FakeReaderData,
+  stubResizeObserver,
+} from '@core/reader/reader.fixtures';
 import { ReaderData } from '@core/reader/reader-data';
 import { TextPosition } from '@core/reader/reading-progress';
 
-import { FakeProgressStore, FakeReaderData, stubResizeObserver } from '../../testing/reader-fakes';
 import { CHAPTER_LAYOUT_FACTORY, ChapterContent, ChapterLayout } from './pagination/chapter-layout';
 import { PageGeometry } from './pagination/page-count';
 import { Reader } from './reader';

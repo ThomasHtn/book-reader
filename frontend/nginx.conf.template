@@ -1,0 +1,96 @@
+# Template: at startup the image fills in ${BACKEND_URL} and ${NGINX_LOCAL_RESOLVERS}, every lowercase $name is nginx's.
+
+# Scheme the client used, as told by the proxy in front, or this connection's when nothing is in front.
+map $http_x_forwarded_proto $forwarded_proto {
+	default $http_x_forwarded_proto;
+	"" $scheme;
+}
+
+server {
+	# Unprivileged image: the worker cannot bind a port below 1024.
+	listen 8080;
+	server_name _;
+	root /usr/share/nginx/html;
+	index index.html;
+	# No nginx version in the Server header and error pages.
+	server_tokens off;
+
+	gzip on;
+	gzip_types text/plain text/css application/javascript application/json application/manifest+json image/svg+xml;
+
+	# Private reader: never indexed. Headers are repeated in each location because add_header does not
+	# inherit. HSTS belongs to whatever terminates HTTPS in front.
+	add_header X-Robots-Tag "noindex, nofollow" always;
+	add_header X-Content-Type-Options "nosniff" always;
+	add_header X-Frame-Options "DENY" always;
+	add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+	# Resolved per request, so nginx starts and answers even while the backend is down or not created yet.
+	resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+	set $backend ${BACKEND_URL};
+
+	# One origin for the whole app: whatever sits in front only routes the domain to this port.
+	location /api/ {
+		# Largest EPUB (app.catalogue.max-epub-size, specification section 11): bigger is refused here.
+		client_max_body_size 20m;
+		proxy_pass $backend;
+		proxy_http_version 1.1;
+		proxy_set_header Host $host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $forwarded_proto;
+		add_header X-Robots-Tag "noindex, nofollow" always;
+		error_page 502 504 = @backend-down;
+	}
+
+	# Public uptime probe: the API and its database.
+	location = /readyz {
+		proxy_pass $backend;
+	}
+
+	# Backend unreachable: a JSON 503 rather than an HTML error page, so the reader shows its status screen.
+	location @backend-down {
+		default_type application/json;
+		add_header X-Robots-Tag "noindex, nofollow" always;
+		add_header X-Content-Type-Options "nosniff" always;
+		add_header Cache-Control "no-store" always;
+		return 503 '{"status":503,"code":"UNAVAILABLE","detail":"The library server is not running."}';
+	}
+
+	# Liveness of nginx for the Docker healthcheck and the uptime probe; kept out of the access log.
+	location = /healthz {
+		access_log off;
+		default_type text/plain;
+		add_header X-Robots-Tag "noindex, nofollow" always;
+		add_header Cache-Control "no-store" always;
+		return 200 'ok';
+	}
+
+	# Hashed bundles and self-hosted fonts never change under a given URL. Cache-Control without
+	# `always`: a bundle gone with a deployment answers a 404 that must not be cached for a year.
+	location ~* \.(?:js|css|woff2)$ {
+		add_header X-Robots-Tag "noindex, nofollow" always;
+		add_header X-Content-Type-Options "nosniff" always;
+		add_header Cache-Control "public, max-age=31536000, immutable";
+	}
+
+	# The service worker decides which version runs: it must always be revalidated.
+	location ~ ^/(?:ngsw-worker\.js|ngsw\.json|safety-worker\.js|worker-basic\.min\.js)$ {
+		add_header X-Robots-Tag "noindex, nofollow" always;
+		add_header X-Content-Type-Options "nosniff" always;
+		add_header Cache-Control "no-cache" always;
+	}
+
+	# SPA shell: names the hashed bundles, so never cached; unknown paths fall back to it.
+	# CSP limits the damage of an XSS, which could read the admin key from localStorage. Styles need
+	# 'unsafe-inline' for Angular component styles; inlineCritical is off so no inline handler is needed.
+	location / {
+		add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+		add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+		add_header X-Robots-Tag "noindex, nofollow" always;
+		add_header X-Content-Type-Options "nosniff" always;
+		add_header X-Frame-Options "DENY" always;
+		add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+		add_header Cache-Control "no-cache" always;
+		try_files $uri /index.html;
+	}
+}

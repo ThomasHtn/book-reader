@@ -1,5 +1,5 @@
 /**
- * Administrator key the backend is started with for end-to-end runs.
+ * Administrator key of the app under test: the demo key of backend/.env.example, which compose.yaml starts with.
  */
 export const E2E_ADMIN_KEY =
-  process.env['E2E_ADMIN_KEY'] ?? 'e2e-admin-key-0123456789abcdef0123456';
+  process.env['E2E_ADMIN_KEY'] ?? 'book-reader-demo-admin-key-0123456789';
