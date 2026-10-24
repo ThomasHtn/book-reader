@@ -130,6 +130,24 @@ class OpdsCatalogueClientTest {
     }
 
     @Test
+    @DisplayName("Reports a refused download when the site answers 403 or 429, as it does when it bans an address")
+    void reportsBannedAddress() {
+        server.enqueue(new MockResponse.Builder().code(403).build());
+        assertThatThrownBy(() -> client.downloadEpub(726)).isInstanceOf(CatalogueRefusedException.class);
+
+        server.enqueue(new MockResponse.Builder().code(429).build());
+        assertThatThrownBy(() -> client.downloadEpub(726)).isInstanceOf(CatalogueRefusedException.class);
+        assertThat(server.getRequestCount()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Spells every catalogue book page the way the feed does")
+    void canonicalizesEntryId() {
+        assertThat(OpdsCatalogueClient.canonicalEntryId(726))
+            .isEqualTo("https://www.ebooksgratuits.com/details.php?book=726");
+    }
+
+    @Test
     @DisplayName("Reports a book the catalogue no longer has")
     void reportsMissingBook() {
         server.enqueue(new MockResponse.Builder().code(404).build());

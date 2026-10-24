@@ -76,6 +76,16 @@ public class OpdsCatalogueClient {
     }
 
     /**
+     * Spells a book page the way the feed identifies it, so one book has one identifier whatever the caller sent.
+     *
+     * @param bookNumber number of the book page
+     * @return entry identifier, such as {@code https://www.ebooksgratuits.com/details.php?book=726}
+     */
+    public static String canonicalEntryId(int bookNumber) {
+        return "https://www.ebooksgratuits.com/details.php?book=" + bookNumber;
+    }
+
+    /**
      * Extracts the book number from an entry identifier returned by {@link #search(String)}.
      *
      * @param entryId entry identifier, the URL of the book page on the site
@@ -112,9 +122,10 @@ public class OpdsCatalogueClient {
      * @param bookNumber number of the book page, from {@link #bookNumberOf(String)}
      * @return EPUB bytes
      * @throws CatalogueUnavailableException when the site does not answer
-     * @throws ResourceNotFoundException     when the site has no EPUB for this book
+     * @throws ResourceNotFoundException     when the site has no EPUB for this book (404 or 410)
      * @throws EpubRejectedException         when the file exceeds the size limit
-     * @throws CatalogueRefusedException     when the site answers with a web page, as when it bans the address
+     * @throws CatalogueRefusedException     when the site answers with a web page, 403 or 429, as when it bans
+     *                                       the address
      */
     public byte[] downloadEpub(int bookNumber) {
         byte[] epub = withRetry(webClient.get()
@@ -125,8 +136,9 @@ public class OpdsCatalogueClient {
             .exchangeToMono(OpdsCatalogueClient::readEpub))
             .onErrorMap(OpdsCatalogueClient::isTooLarge,
                 error -> new EpubRejectedException(Reason.TOO_LARGE, "Catalogue EPUB exceeds the size limit"))
-            .onErrorMap(OpdsCatalogueClient::isClientError,
+            .onErrorMap(OpdsCatalogueClient::isMissing,
                 error -> new ResourceNotFoundException("The catalogue has no EPUB for this book."))
+            .onErrorMap(OpdsCatalogueClient::isRefusal, OpdsCatalogueClient::refused)
             .onErrorMap(OpdsCatalogueClient::isTransportFailure, OpdsCatalogueClient::unavailable)
             .block();
         return epub == null ? new byte[0] : epub;
@@ -189,13 +201,38 @@ public class OpdsCatalogueClient {
     }
 
     /**
-     * Tells whether the site answered with a 4xx, meaning it has no such book.
+     * Tells whether the site answered that it has no such book.
      *
      * @param error failure of a call
-     * @return {@code true} on a client error status
+     * @return {@code true} on 404 or 410
      */
-    private static boolean isClientError(Throwable error) {
-        return error instanceof WebClientResponseException response && response.getStatusCode().is4xxClientError();
+    private static boolean isMissing(Throwable error) {
+        return error instanceof WebClientResponseException response
+            && (response.getStatusCode().value() == 404 || response.getStatusCode().value() == 410);
+    }
+
+    /**
+     * Turns a 403 or 429 of the download into a refusal, naming the status for the logs.
+     *
+     * @param error refused call
+     * @return refusal
+     */
+    private static CatalogueRefusedException refused(Throwable error) {
+        String answer = error instanceof WebClientResponseException response
+            ? "HTTP " + response.getStatusCode().value()
+            : error.getMessage();
+        return new CatalogueRefusedException(answer);
+    }
+
+    /**
+     * Tells whether the site refused the download, as it does for a while after banning an address.
+     *
+     * @param error failure of a call
+     * @return {@code true} on 403 or 429
+     */
+    private static boolean isRefusal(Throwable error) {
+        return error instanceof WebClientResponseException response
+            && (response.getStatusCode().value() == 403 || response.getStatusCode().value() == 429);
     }
 
     /**

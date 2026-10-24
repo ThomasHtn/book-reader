@@ -205,6 +205,26 @@ class CatalogueApiTest extends PostgreSqlIntegrationTest {
     }
 
     @Test
+    @DisplayName("Treats another spelling of an imported entry as the same book, without downloading it again")
+    void recognizesEntrySpellings() throws Exception {
+        String id = JsonPath.read(importEntry(FANTINE).andReturn().getResponse().getContentAsString(), "$.id");
+
+        importEntry("http://www.ebooksgratuits.com/details.php?book=0726")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(id));
+        assertThat(repository.count()).isEqualTo(1);
+        assertDownloads(1);
+    }
+
+    @Test
+    @DisplayName("Refuses a search longer than any title or author, without relaying it to the site")
+    void rejectsOverlongSearch() throws Exception {
+        search("a".repeat(201))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"));
+    }
+
+    @Test
     @DisplayName("Refuses a blank search")
     void rejectsBlankSearch() throws Exception {
         search("  ").andExpect(status().isBadRequest());

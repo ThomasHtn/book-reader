@@ -23,6 +23,11 @@ import org.springframework.stereotype.Service;
 public class DefaultCatalogueService implements CatalogueService {
 
     /**
+     * Longest search relayed to the site, well above any title or author.
+     */
+    static final int MAX_QUERY_LENGTH = 200;
+
+    /**
      * Client of the catalogue site.
      */
     private final OpdsCatalogueClient client;
@@ -55,12 +60,15 @@ public class DefaultCatalogueService implements CatalogueService {
      *
      * @param query non-blank query
      * @return entries offering an EPUB, in feed order
-     * @throws InvalidRequestException when the query is blank
+     * @throws InvalidRequestException when the query is blank or longer than any title
      */
     @Override
     public List<CatalogueEntryResponse> search(String query) {
         if (query == null || query.isBlank()) {
             throw new InvalidRequestException("The search query must not be blank.");
+        }
+        if (query.length() > MAX_QUERY_LENGTH) {
+            throw new InvalidRequestException("The search query must not exceed " + MAX_QUERY_LENGTH + " characters.");
         }
         List<OpdsEntry> entries = client.search(query);
         Map<String, Boolean> activeBySourceId =
@@ -85,6 +93,17 @@ public class DefaultCatalogueService implements CatalogueService {
         int bookNumber = OpdsCatalogueClient.bookNumberOf(entryId).orElseThrow(
             () -> new InvalidRequestException("The entry identifier is not a catalogue book page.")
         );
+        return importBook(bookNumber, OpdsCatalogueClient.canonicalEntryId(bookNumber));
+    }
+
+    /**
+     * Imports a book under its canonical identifier, so http, https or a leading zero never duplicate it.
+     *
+     * @param bookNumber number of the book page
+     * @param entryId    canonical entry identifier, stored as the book's source
+     * @return activated book and whether it was created
+     */
+    private CatalogueImportResult importBook(int bookNumber, String entryId) {
         Optional<AdminBookResponse> reactivated = books.reactivateCatalogueBook(entryId);
         if (reactivated.isPresent()) {
             return new CatalogueImportResult(reactivated.get(), false);
