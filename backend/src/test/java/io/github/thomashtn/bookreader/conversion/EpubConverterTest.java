@@ -151,12 +151,30 @@ class EpubConverterTest {
     class Rejections {
 
         @Test
-        @DisplayName("Rejects an encrypted EPUB")
+        @DisplayName("Rejects an EPUB whose resources are encrypted (DRM)")
         void rejectsEncrypted() {
             Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
-            entries.put("META-INF/encryption.xml", "<encryption/>".getBytes(StandardCharsets.UTF_8));
+            entries.put("META-INF/encryption.xml", encryption("http://www.w3.org/2001/04/xmlenc#aes128-cbc"));
 
             assertRejected(EpubFixtures.zip(entries), Reason.ENCRYPTED);
+        }
+
+        @Test
+        @DisplayName("Converts an EPUB whose encryption.xml only obfuscates its fonts")
+        void acceptsFontObfuscation() {
+            Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
+            entries.put("META-INF/encryption.xml", encryption("http://www.idpf.org/2008/embedding"));
+
+            assertThat(converter.convert(EpubFixtures.zip(entries)).blocks()).isNotEmpty();
+        }
+
+        @Test
+        @DisplayName("Accepts an entry name holding two dots, which is not a parent segment")
+        void acceptsDoubleDotInName() {
+            Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
+            entries.put("Ops/images/Chapitre..jpg", new byte[1]);
+
+            assertThat(converter.convert(EpubFixtures.zip(entries)).blocks()).isNotEmpty();
         }
 
         @Test
@@ -232,5 +250,23 @@ class EpubConverterTest {
                 .isInstanceOfSatisfying(EpubRejectedException.class,
                     exception -> assertThat(exception.reason()).isEqualTo(reason));
         }
+    }
+
+    /**
+     * Builds an encryption.xml declaring one encrypted font with the given algorithm.
+     *
+     * @param algorithm encryption method URI
+     * @return document bytes
+     */
+    private static byte[] encryption(String algorithm) {
+        return """
+            <encryption xmlns="urn:oasis:names:tc:opendocument:xmlns:container"
+                xmlns:enc="http://www.w3.org/2001/04/xmlenc#">
+              <enc:EncryptedData>
+                <enc:EncryptionMethod Algorithm="%s"/>
+                <enc:CipherData><enc:CipherReference URI="Ops/fonts/font.otf"/></enc:CipherData>
+              </enc:EncryptedData>
+            </encryption>
+            """.formatted(algorithm).getBytes(StandardCharsets.UTF_8);
     }
 }

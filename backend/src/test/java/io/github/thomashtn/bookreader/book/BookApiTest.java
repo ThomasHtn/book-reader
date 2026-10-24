@@ -172,6 +172,17 @@ class BookApiTest extends PostgreSqlIntegrationTest {
         patchBook(id, "{\"title\": \"  \"}")
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+        patchBook(id, "{\"title\": \"\u00a0\"}").andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Accepts a title written on two lines")
+    void acceptsMultilineTitle() throws Exception {
+        String id = uploadId(EpubFixtures.epub("epub3"));
+
+        patchBook(id, "{\"title\": \"Vers\\nlibres\"}")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("Vers\nlibres"));
     }
 
     @Test
@@ -186,7 +197,14 @@ class BookApiTest extends PostgreSqlIntegrationTest {
     @DisplayName("Explains why an EPUB is refused")
     void explainsRejection() throws Exception {
         Map<String, byte[]> entries = EpubFixtures.entries("atlantis");
-        entries.put("META-INF/encryption.xml", "<encryption/>".getBytes(StandardCharsets.UTF_8));
+        entries.put("META-INF/encryption.xml", """
+            <encryption xmlns="urn:oasis:names:tc:opendocument:xmlns:container"
+                xmlns:enc="http://www.w3.org/2001/04/xmlenc#">
+              <enc:EncryptedData>
+                <enc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+              </enc:EncryptedData>
+            </encryption>
+            """.getBytes(StandardCharsets.UTF_8));
 
         upload(EpubFixtures.zip(entries))
             .andExpect(status().isUnprocessableContent())

@@ -255,7 +255,8 @@ persister.
    tels blocs (`notes.html`, notes sur plusieurs paragraphes comprises), tables des matières et pages
    de garde (`epub:type` ou `guide` : cover, title-page, toc, copyright-page, bibliography, cette
    dernière étant la page "À propos" de Feedbooks).
-5. Rejet avec message clair : chiffré (`META-INF/encryption.xml`), sans texte, trop volumineux.
+5. Rejet avec message clair : chiffré (`META-INF/encryption.xml` qui déclare autre chose qu'une
+   obfuscation de polices, courante et sans effet sur le texte), sans texte, trop volumineux.
 
 Titre et auteur pris dans l'OPF, modifiables dans le backoffice.
 

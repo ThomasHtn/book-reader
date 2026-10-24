@@ -69,11 +69,16 @@ final class EpubPaths {
 
     /**
      * Percent-decodes an href; a literal {@code +} is kept, since only query strings encode spaces as {@code +}.
+     * A {@code %} that encodes nothing, as in {@code 100%.xhtml}, leaves the href as written.
      *
      * @param href percent-encoded reference
      * @return decoded reference
      */
     private static String decode(String href) {
-        return URLDecoder.decode(href.replace("+", "%2B"), StandardCharsets.UTF_8);
+        try {
+            return URLDecoder.decode(href.replace("+", "%2B"), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException malformed) {
+            return href;
+        }
     }
 }

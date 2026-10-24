@@ -6,6 +6,8 @@ import io.github.thomashtn.bookreader.conversion.model.ConvertedBook;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.jsoup.nodes.Element;
 
 /**
  * Converts an EPUB into the internal format, purely in memory: no I/O, no database, no clock.
@@ -13,9 +15,17 @@ import java.util.Map;
 public class EpubConverter {
 
     /**
-     * Archive entry whose presence means DRM-protected resources.
+     * Archive entry listing encrypted resources: DRM, or only obfuscated fonts.
      */
     private static final String ENCRYPTION = "META-INF/encryption.xml";
+
+    /**
+     * Font obfuscation methods (IDPF and Adobe): they hide fonts the reader never uses, not the text.
+     */
+    private static final Set<String> FONT_OBFUSCATION = Set.of(
+        "http://www.idpf.org/2008/embedding",
+        "http://ns.adobe.com/pdf/enc#RC"
+    );
 
     /**
      * Decompression guards.
@@ -40,7 +50,7 @@ public class EpubConverter {
      */
     public ConvertedBook convert(byte[] epub) {
         Map<String, byte[]> entries = EpubArchive.read(epub, limits);
-        if (entries.containsKey(ENCRYPTION)) {
+        if (entries.containsKey(ENCRYPTION) && encryptsMoreThanFonts(entries.get(ENCRYPTION))) {
             throw new EpubRejectedException(Reason.ENCRYPTED, "The EPUB declares encrypted resources");
         }
         EpubPackage epubPackage = EpubPackage.parse(entries);
@@ -56,5 +66,21 @@ public class EpubConverter {
             throw new EpubRejectedException(Reason.NO_TEXT, "No readable text in the EPUB");
         }
         return new ConvertedBook(epubPackage.title(), epubPackage.author(), blocks);
+    }
+
+    /**
+     * Tells whether an encryption.xml protects anything beyond obfuscated fonts, which means DRM.
+     *
+     * @param encryption content of {@code META-INF/encryption.xml}
+     * @return {@code true} when one method is not a font obfuscation
+     */
+    private static boolean encryptsMoreThanFonts(byte[] encryption) {
+        for (Element element : EpubXml.parse(encryption).getAllElements()) {
+            boolean method = element.tagName().replaceFirst(".*:", "").equals("EncryptionMethod");
+            if (method && !FONT_OBFUSCATION.contains(element.attr("Algorithm"))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

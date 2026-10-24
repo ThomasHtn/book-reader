@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -40,7 +41,7 @@ final class EpubArchive {
             ZipEntry entry;
             while ((entry = zip.getNextEntry()) != null) {
                 String name = entry.getName();
-                if (name.contains("..") || name.startsWith("/") || name.startsWith("\\")) {
+                if (escapesRoot(name)) {
                     throw new EpubRejectedException(Reason.INVALID, "Unsafe entry path: " + name);
                 }
                 if (entry.isDirectory()) {
@@ -79,5 +80,15 @@ final class EpubArchive {
             content.write(buffer, 0, read);
         }
         return content.toByteArray();
+    }
+
+    /**
+     * Tells whether an entry name points outside the archive root: absolute, or with a {@code ..} segment.
+     *
+     * @param name entry name as stored in the archive
+     * @return {@code true} for an unsafe name
+     */
+    private static boolean escapesRoot(String name) {
+        return name.startsWith("/") || name.startsWith("\\") || List.of(name.split("[/\\\\]")).contains("..");
     }
 }
