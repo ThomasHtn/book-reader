@@ -1,5 +1,6 @@
 package io.github.thomashtn.bookreader.book;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -12,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import io.github.thomashtn.bookreader.book.entity.Book;
 import io.github.thomashtn.bookreader.book.repository.BookRepository;
 import io.github.thomashtn.bookreader.conversion.EpubFixtures;
 import io.github.thomashtn.bookreader.shared.security.AdminApiKeyFilter;
@@ -48,6 +50,16 @@ class BookApiTest extends PostgreSqlIntegrationTest {
     @BeforeEach
     void emptyLibrary() {
         repository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("Lists books without loading their content, which the reader polls every ten seconds")
+    void listsWithoutContent() throws Exception {
+        upload(EpubFixtures.epub("atlantis")).andExpect(status().isCreated());
+
+        // A full entity would mean the JSONB content was selected too.
+        assertThat(repository.findByActiveTrueOrderByActivatedAtDesc()).singleElement().isNotInstanceOf(Book.class);
+        assertThat(repository.findAllByOrderByCreatedAtDesc()).singleElement().isNotInstanceOf(Book.class);
     }
 
     @Test

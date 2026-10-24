@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Book columns without the content, so lists never load the JSONB blocks; the entity implements it too.
+ * Book columns without the content; the entity implements it, so lists query {@link BookListItem} instead.
  */
 public interface BookSummary {
 

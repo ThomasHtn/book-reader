@@ -1,7 +1,7 @@
 package io.github.thomashtn.bookreader.book.repository;
 
 import io.github.thomashtn.bookreader.book.entity.Book;
-import io.github.thomashtn.bookreader.book.entity.BookSummary;
+import io.github.thomashtn.bookreader.book.entity.BookListItem;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -18,14 +18,14 @@ public interface BookRepository extends JpaRepository<Book, UUID> {
      *
      * @return active book summaries
      */
-    List<BookSummary> findByActiveTrueOrderByActivatedAtDesc();
+    List<BookListItem> findByActiveTrueOrderByActivatedAtDesc();
 
     /**
      * Lists every imported book, most recently imported first.
      *
      * @return all book summaries
      */
-    List<BookSummary> findAllByOrderByCreatedAtDesc();
+    List<BookListItem> findAllByOrderByCreatedAtDesc();
 
     /**
      * Finds a book the reader may open.
