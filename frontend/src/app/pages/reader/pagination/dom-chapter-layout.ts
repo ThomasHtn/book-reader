@@ -12,7 +12,7 @@ import { ChapterContent, ChapterLayout, PageGeometry } from './pagination.model'
  */
 export class DomChapterLayout implements ChapterLayout {
   /**
-   * Page width in CSS pixels, read from the viewport at render.
+   * Page width in CSS pixels, read from the viewport at render, fractions included.
    */
   private columnWidth = 1;
 
@@ -67,10 +67,10 @@ export class DomChapterLayout implements ChapterLayout {
     const style = getComputedStyle(this.columns);
     const gap = parseFloat(style.columnGap) || 0;
     this.perView = Math.max(1, parseInt(style.getPropertyValue('--pages-per-view'), 10) || 1);
-    this.columnWidth = Math.max(
-      1,
-      (this.viewport.clientWidth - gap * (this.perView - 1)) / this.perView,
-    );
+    // The exact width, not `clientWidth`: its rounding, added up page after page, shifts the pitch
+    // enough to file the first character of a page under the previous one.
+    const width = this.viewport.getBoundingClientRect().width;
+    this.columnWidth = Math.max(1, (width - gap * (this.perView - 1)) / this.perView);
     this.pitch = this.columnWidth + gap;
     this.columns.style.transform = '';
     this.columns.replaceChildren(...nodes);
@@ -137,7 +137,7 @@ export class DomChapterLayout implements ChapterLayout {
     const bold = this.measurer(style, headingWeight);
     return {
       width: this.columnWidth,
-      height: this.viewport.clientHeight,
+      height: this.viewport.getBoundingClientRect().height,
       fontSize,
       charWidth: (char) => body?.measureText(char).width ?? fontSize * AVERAGE_ADVANCE_EM,
       boldCharWidth: (char) => bold?.measureText(char).width ?? fontSize * AVERAGE_ADVANCE_EM,
