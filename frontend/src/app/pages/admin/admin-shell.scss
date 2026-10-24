@@ -1,0 +1,12 @@
+/* Backoffice stylesheet on the --admin-* tokens, loaded with the lazy /admin route only. Unscoped
+   (ViewEncapsulation.None): these `a-*` primitives serve every view, each view adding its own file. */
+
+/* Sections in cascade order: a later one may refine an earlier one. */
+@use 'styles/shell';
+@use 'styles/views';
+@use 'styles/buttons';
+@use 'styles/surfaces';
+@use 'styles/chip';
+@use 'styles/segmented';
+@use 'styles/feedback';
+@use 'styles/sign-in';

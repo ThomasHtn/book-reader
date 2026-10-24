@@ -1,0 +1,11 @@
+<!-- Flush-end row: with no title the indicator stays right, a title pushes itself to the left. -->
+<header
+  class="page-head mx-auto flex w-full items-center justify-end gap-(--space-3)"
+  [class.page-head--wide]="wide()"
+>
+  @if (heading(); as text) {
+    <h1 class="page-head__title">{{ text }}</h1>
+  }
+  <p class="page-head__indicator" aria-live="polite">{{ indicator() }}</p>
+  <ng-content />
+</header>

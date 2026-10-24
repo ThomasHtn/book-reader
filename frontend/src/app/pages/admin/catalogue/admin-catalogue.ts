@@ -16,6 +16,7 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideDownload, LucideLoaderCircle, LucideRotateCw, LucideSearch],
   templateUrl: './admin-catalogue.html',
+  styleUrl: './admin-catalogue.scss',
 })
 export class AdminCatalogue {
   /**

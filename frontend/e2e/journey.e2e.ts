@@ -39,7 +39,7 @@ test.describe.configure({ mode: 'serial' });
  * site is never contacted: its search is intercepted, and its activation uploads the same EPUB instead.
  */
 test('reader journey', async ({ page }) => {
-  const readerIndicator = page.locator('.page-indicator');
+  const readerIndicator = page.locator('.page-head__indicator');
   const prevBar = page.locator('button.nav-bar--prev');
   const nextBar = page.locator('button.nav-bar--next');
 

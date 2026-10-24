@@ -17,6 +17,7 @@ import { uploadResultMessage } from './admin-upload.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideFileUp, LucideLoaderCircle, LucideUpload],
   templateUrl: './admin-upload.html',
+  styleUrl: './admin-upload.scss',
 })
 export class AdminUpload {
   /**

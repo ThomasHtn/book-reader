@@ -1,5 +1,4 @@
-/* Reader UI: values come from tokens.css only (design system section 9). These partials are listed
-   in order in angular.json, after tokens.css; the cascade depends on that order. */
+/* Element defaults of the whole app: fonts, box model, the reader's body and its large cursors. */
 
 /* Luciole, self-hosted; `block` holds the text back until it loads, so the first layout is the right one. */
 @font-face {
@@ -9,6 +8,7 @@
   font-display: block;
 }
 
+/* Bold Luciole, for reading text and book titles. */
 @font-face {
   font-family: Luciole;
   src: url('/fonts/luciole/Luciole-Bold.woff2') format('woff2');
@@ -23,7 +23,7 @@
   box-sizing: border-box;
 }
 
-/* Full-height chain down to `.screen`, which divides the window. */
+/* Full-height chain down to each screen, which divides the window. */
 html,
 body {
   height: 100%;
@@ -47,51 +47,20 @@ button {
   cursor: pointer;
 }
 
-/* Reader only: the backoffice is for a sighted helper and keeps the system cursor */
+/* Reader only: the backoffice is for a sighted helper and keeps the system cursor. */
 @media (pointer: fine) and (width >= 1100px) {
   :root:not([data-density='admin']) body {
     cursor: var(--cursor-large);
   }
 
-  /* Everything that can be pressed carries the hand; the arrow is left to the page and its text */
+  /* Everything that can be pressed carries the hand; the arrow is left to the page and its text. */
   :root:not([data-density='admin']) button {
     cursor: var(--cursor-large-pointer);
   }
 
-  /* Near the window edge Chrome would fall back to the small system cursor: LargeCursor draws it */
+  /* Near the window edge Chrome would fall back to the small system cursor: LargeCursor draws it. */
   :root[data-cursor] body,
   :root[data-cursor] body * {
     cursor: none;
   }
-}
-
-/* Overlay drawn by LargeCursor, shown only while `data-cursor` names an image. */
-.large-cursor {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  width: var(--cursor-size);
-  height: var(--cursor-size);
-  pointer-events: none;
-}
-
-/* Same images as the native 64 px cursors. */
-:root[data-cursor='arrow'] .large-cursor {
-  display: block;
-  background: var(--cursor-arrow-image);
-}
-
-:root[data-cursor='hand'] .large-cursor {
-  display: block;
-  background: var(--cursor-hand-image);
-}
-
-/* Component hosts add no box, so grid and flex layouts see their children directly. */
-app-root,
-app-large-cursor,
-app-nav-bar,
-app-book-card {
-  display: contents;
 }

@@ -129,7 +129,7 @@ async function openAt(page: Page, bookId: string, blockIndex: number): Promise<v
   await page.goto('/livres');
   await seedProgress(page, bookId, blockIndex);
   await page.goto(`/lire/${bookId}`);
-  await expect(page.locator('.page-indicator')).toHaveText(/^Page \d+ sur \d+$/);
+  await expect(page.locator('.page-head__indicator')).toHaveText(/^Page \d+ sur \d+$/);
   const viewport = page.viewportSize()!;
   await page.mouse.move(viewport.width / 2, viewport.height / 2);
 }

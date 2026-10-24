@@ -1,4 +1,4 @@
-/* === Sign-in ============================================================== */
+/* Sign-in screen; after the surfaces, since its card refines `.a-card`. */
 
 /* Sign-in screen: card centred on the navy rail colour. */
 .a-login {
@@ -22,6 +22,7 @@
   text-decoration: none;
 }
 
+/* Arrow of the way back. */
 .a-login-back svg {
   width: 20px;
   height: 20px;
@@ -37,10 +38,12 @@
   box-shadow: var(--admin-shadow-pop);
 }
 
+/* Brand mark at the top left of the card. */
 .a-login__card .a-brand__mark {
   justify-self: start;
 }
 
+/* Sign-in title in the reader's face. */
 .a-login h1 {
   margin: 0;
   font: var(--weight-heading) var(--admin-text-2xl) / 1.15 var(--font-reading);

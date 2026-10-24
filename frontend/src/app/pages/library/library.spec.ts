@@ -63,16 +63,16 @@ describe('Library', () => {
 
     const element = await render();
 
-    expect(element.querySelector('.book-empty')?.textContent?.trim()).toBe(
+    expect(element.querySelector('.library__empty')?.textContent?.trim()).toBe(
       "Aucun livre pour l'instant. Ils apparaîtront ici dès leur ajout.",
     );
-    expect(element.querySelector('.page-indicator')?.textContent?.trim()).toBe('');
+    expect(element.querySelector('.page-head__indicator')?.textContent?.trim()).toBe('');
   });
 
   it('keeps the page blank while the list is loading, as for a book', async () => {
     const element = await render();
 
-    expect(element.querySelector('.book-empty')).toBeNull();
+    expect(element.querySelector('.library__empty')).toBeNull();
     expect(element.querySelector('.book-card')).toBeNull();
   });
 
@@ -95,20 +95,16 @@ describe('Library', () => {
     const cards = [...element.querySelectorAll<HTMLButtonElement>('button.book-card')];
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Mes livres');
-    expect(cards.map((card) => card.querySelector('.title')?.textContent?.trim())).toEqual([
-      'Titre reading',
-      'Titre done',
-      'Titre new',
-    ]);
-    expect(cards.map((card) => card.querySelector('.author')?.textContent?.trim())).toEqual([
-      'Auteur reading',
-      'Auteur done',
-      'Auteur new',
-    ]);
+    expect(
+      cards.map((card) => card.querySelector('.book-card__title')?.textContent?.trim()),
+    ).toEqual(['Titre reading', 'Titre done', 'Titre new']);
+    expect(
+      cards.map((card) => card.querySelector('.book-card__author')?.textContent?.trim()),
+    ).toEqual(['Auteur reading', 'Auteur done', 'Auteur new']);
     expect(cards[0].classList).toContain('book-card--current');
-    expect(cards[0].querySelector('.tag')?.textContent?.trim()).toBe('En cours');
+    expect(cards[0].querySelector('.book-card__tag')?.textContent?.trim()).toBe('En cours');
     expect(cards[1].classList).toContain('book-card--finished');
-    expect(cards[1].querySelector('.tag')?.textContent?.trim()).toBe('Terminé');
+    expect(cards[1].querySelector('.book-card__tag')?.textContent?.trim()).toBe('Terminé');
     expect(cards[2].classList).not.toContain('book-card--current');
   });
 
@@ -153,7 +149,7 @@ describe('Library', () => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
       this: HTMLElement,
     ) {
-      const cards = [...(this.closest('.book-grid')?.querySelectorAll('.book-card') ?? [])];
+      const cards = [...(this.closest('.library__grid')?.querySelectorAll('.book-card') ?? [])];
       const index = cards.indexOf(this);
       return { top: index < 0 ? 0 : Math.floor(index / 3) * 100, height: 90 } as DOMRect;
     });
@@ -161,7 +157,7 @@ describe('Library', () => {
     const fixture = TestBed.createComponent(Library);
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
-    const indicator = () => element.querySelector('.page-indicator')?.textContent?.trim();
+    const indicator = () => element.querySelector('.page-head__indicator')?.textContent?.trim();
     const press = async (key: string, init: KeyboardEventInit = {}) => {
       const event = new KeyboardEvent('keydown', { key, cancelable: true, ...init });
       document.dispatchEvent(event);

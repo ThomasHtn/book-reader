@@ -1,16 +1,4 @@
-/* === Settings: the preview is her screen ================================= */
-
-/* Controls and preview, stacked on phones, side by side from 900px. */
-.a-settings {
-  display: grid;
-  gap: calc(var(--admin-spacing) * 8);
-}
-
-.a-settings__controls {
-  display: grid;
-  align-content: start;
-  gap: calc(var(--admin-spacing) * 4);
-}
+/* Settings view: the tier picker beside a preview of her screen, then the credits. */
 
 /* Larger tier buttons: the tier is the one choice of this view. */
 .a-settings .a-seg button {
@@ -22,11 +10,6 @@
    against the viewport (tier px at 1280px wide); here the paper is the viewport, hence `cqi`. */
 .a-preview {
   --preview-tier: 100;
-
-  display: grid;
-  justify-items: center;
-  gap: calc(var(--admin-spacing) * 3);
-  margin: 0;
 }
 
 /* Bezel around the paper, so the preview reads as her screen. */
@@ -68,4 +51,18 @@
   color: var(--admin-fg-muted);
   font-size: var(--admin-text-sm);
   text-align: center;
+}
+
+/* Font and catalogue credits at the foot of the view. */
+.a-credits {
+  padding-top: calc(var(--admin-spacing) * 4);
+  border-top: 1px solid var(--admin-border);
+  color: var(--admin-fg-muted);
+  font-size: var(--admin-text-xs);
+}
+
+/* Credit links stay underlined. */
+.a-credits a {
+  color: inherit;
+  text-decoration: underline;
 }

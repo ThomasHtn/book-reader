@@ -19,6 +19,7 @@ import { ReaderData } from '@core/reader/reader-data';
 import { sortLibrary } from '@core/reader/reading-progress.utils';
 import { BookCard } from '@shared/book-card/book-card';
 import { NavBar } from '@shared/nav-bar/nav-bar';
+import { PageHead } from '@shared/page-head/page-head';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
 import { assignCoverTones } from './cover-tone.utils';
@@ -40,9 +41,10 @@ const GRID_COLUMNS = 3;
 @Component({
   selector: 'app-library',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BookCard, NavBar, StatusScreen],
+  imports: [BookCard, NavBar, PageHead, StatusScreen],
   host: { '(document:keydown)': 'onKeydown($event)' },
   templateUrl: './library.html',
+  styleUrl: './library.scss',
 })
 export class Library {
   /**

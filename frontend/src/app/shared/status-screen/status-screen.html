@@ -1,5 +1,15 @@
 <!-- Own landmark and heading: it replaces the whole screen while the server is down (spec 5.6). -->
-<main class="status">
-  <h1>Le service est indisponible, nouvel essai dans quelques secondes.</h1>
-  <button type="button" class="button" (click)="retry.emit()">Réessayer</button>
+<main
+  class="status-screen grid h-full place-content-center gap-(--space-6) p-(--reading-padding) text-center"
+>
+  <h1 class="status-screen__message">
+    Le service est indisponible, nouvel essai dans quelques secondes.
+  </h1>
+  <button
+    type="button"
+    class="status-screen__retry inline-flex items-center gap-(--space-2) justify-self-center"
+    (click)="retry.emit()"
+  >
+    Réessayer
+  </button>
 </main>

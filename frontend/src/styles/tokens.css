@@ -13,7 +13,7 @@
   --color-paper-200: #cfc6b0;
   --color-ink-900: #141414;
   --color-ink-700: #4a4a4a;
-  --color-ink-800: #333333;
+  --color-ink-800: #333;
 
   /* Book cloths, spread round the hue circle: cream text on each is 7,6:1 or more, and each
      stands as far off the page */
@@ -64,7 +64,7 @@
   --color-rose-200: #ffc2d6;
   --color-rose-300: #ffa6c1;
   --color-rose-400: #ff8ab0;
-  --color-white: #ffffff;
+  --color-white: #fff;
 
   /* Status (backoffice) */
   --color-rust-700: #8a1c1c;
@@ -76,14 +76,17 @@
   --color-moss-50: #e3f1e5;
   --color-moss-300: #8fd19a;
   --color-moss-900: #16281b;
+
   /* Typography */
   --font-reading:
     'Luciole', 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', Arial, sans-serif;
   --font-admin:
     'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, 'Segoe UI', Arial, sans-serif;
+
   /* Tiers are unitless: the size in px on any viewport of 1280px CSS or more */
   --tier-current: 100;
   --text-floor: 20px;
+
   /* Luciole ships 400 and 700 only. Bold is kept for reading text and book titles; the chrome
      around them (commands, authors, labels, head line) is regular. */
   --weight-body: 700;
@@ -124,6 +127,7 @@
 }
 
 /* === SEMANTIC ============================================================ */
+
 /* Default theme: dark text on warm off-white (reduces glare compared to pure white). */
 :root {
   --color-bg: var(--color-paper-50);
@@ -132,8 +136,10 @@
   --color-surface-raised: var(--color-paper-100);
   --color-surface-raised-strong: var(--color-paper-200);
   --color-marker: var(--color-rose-300);
+
   /* Commands share the blocks' surface; their ink edge is what tells them from the page, and both
      edge and label follow the text colour. */
+
   /* Commands are solid ink plates with cream labels (16,1:1): with no rule around them, the fill
      alone has to set them off the page. Hover lifts the plate one tone (12,1:1), pressed turns it
      to the paper surface with ink text (10,8:1). */
@@ -162,12 +168,15 @@
 :root[data-tier='48'] {
   --tier-current: 48;
 }
+
 :root[data-tier='72'] {
   --tier-current: 72;
 }
+
 :root[data-tier='100'] {
   --tier-current: 100;
 }
+
 :root[data-tier='140'] {
   --tier-current: 140;
 }
@@ -178,8 +187,10 @@
      header: the content owns every pixel above them. */
   --nav-bar-arrow-size: calc(var(--text-control) * 1.2);
   --nav-bar-height: calc(var(--button-min-height) * 1.4);
+
   /* Reference width for label sizing, not an actual layout dimension any more. */
   --nav-bar-label-reference-width: 300px;
+
   /* Label sits beside the chevron; sized so "Précédent" always fits on one line */
   --nav-bar-label-size: min(var(--text-control), calc(var(--nav-bar-label-reference-width) / 5.8));
   --nav-bar-bg: var(--color-control-bg);
@@ -187,6 +198,7 @@
   --nav-bar-bg-active: var(--color-control-bg-active);
   --nav-bar-fg: var(--color-control-fg);
   --nav-bar-fg-active: var(--color-control-fg-active);
+
   /* Bars stand apart on a strip of page instead of sharing a rule */
   --nav-row-gap: var(--space-1);
   --nav-row-padding: var(--space-1) var(--grid-padding) var(--grid-padding);
@@ -217,10 +229,12 @@
      and a cloth colour identify a book, so the title gets the block's full width. */
   --grid-columns: 3;
   --grid-gap: var(--space-3);
+
   /* Same axis as the reading text, on a narrow side padding of its own: the blocks are the content
      here, so they take the width the margins give up. */
   --grid-max-width: 1500px;
   --grid-padding: clamp(8px, 1vw, 20px);
+
   /* Each book is bound in one of ten cloths, chosen from its id (`coverTone`): colour survives in
      peripheral vision where the title does not, so a book can be found by colour first. */
   --book-cover-1: var(--color-cloth-green);
@@ -234,24 +248,31 @@
   --book-cover-9: var(--color-cloth-indigo);
   --book-cover-10: var(--color-cloth-rust);
   --book-block-fg: var(--color-bg);
+
   /* Pointing at a block darkens its cloth, which only raises the text contrast; nothing moves */
   --book-block-hover-darken: 30%;
   --book-block-padding: var(--space-3);
   --book-block-min-height: calc(var(--button-min-height) * 2);
+
   /* The book in progress is the only light, rose block among the cloths, so it reads as "resume
      here" from across the room */
   --book-block-current-bg: var(--color-marker);
+
   /* The rose block deepens too, on the same rose ramp, and keeps its ink text at 8,3:1 */
   --book-block-current-bg-hover: var(--color-rose-400);
+
   /* Ink text on the rose plate */
   --book-block-current-fg: var(--color-ink-900);
+
   /* A finished book loses its cloth: pale surface, ink text (13,5:1), put back on the shelf */
   --book-block-finished-bg: var(--color-surface-raised);
   --book-block-finished-bg-hover: var(--color-surface-raised-strong);
   --book-block-finished-fg: var(--color-fg);
+
   /* Blocks are containers, so their text is sized against the column, never the viewport. The
      factor is capped so a wide column does not cost a row of the grid. */
   --card-title-size: clamp(var(--text-floor), 8cqi, var(--text-body));
+
   /* Author on a lower step than the title: the block is read title first, and the two lines must
      not compete at the same size once a narrow column caps both on `cqi`. */
   --card-author-size: clamp(16px, 6cqi, var(--text-meta));
@@ -272,6 +293,7 @@
 }
 
 /* === BACKOFFICE ========================================================== */
+
 /* A workbench for a sighted, tech-literate helper: cool slate canvas, navy cloth rail, stamp-blue
    controls. Rose keeps its one meaning, "you are here", as the current section marker. Book titles
    and view titles use the reader's own face, the rest is Atkinson. System colour scheme. */
@@ -301,7 +323,6 @@
   --admin-rail-current-fg: var(--color-white);
   --admin-marker: var(--color-rose-300);
   --admin-screen-bezel: var(--color-slate-900);
-
   --admin-text-xs: 13px;
   --admin-text-sm: 14px;
   --admin-text-base: 16px;
@@ -311,12 +332,11 @@
   --admin-leading: 1.5;
   --admin-weight: 400;
   --admin-weight-strong: 700;
-
   --admin-radius: 8px;
   --admin-radius-lg: 14px;
   --admin-radius-pill: 999px;
-  --admin-shadow: 0 1px 2px rgb(22 26 36 / 0.06), 0 8px 24px -12px rgb(22 26 36 / 0.18);
-  --admin-shadow-pop: 0 12px 32px -8px rgb(22 26 36 / 0.28);
+  --admin-shadow: 0 1px 2px rgb(22 26 36 / 6%), 0 8px 24px -12px rgb(22 26 36 / 18%);
+  --admin-shadow-pop: 0 12px 32px -8px rgb(22 26 36 / 28%);
   --admin-control-height: 44px;
   --admin-gutter: 16px;
   --admin-spacing: 0.25rem;
@@ -355,6 +375,6 @@
     --admin-rail-current-bg: var(--color-night-750);
     --admin-screen-bezel: var(--color-night-800);
     --admin-shadow: none;
-    --admin-shadow-pop: 0 12px 32px -8px rgb(0 0 0 / 0.6);
+    --admin-shadow-pop: 0 12px 32px -8px rgb(0 0 0 / 60%);
   }
 }

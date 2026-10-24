@@ -1,4 +1,4 @@
-/* === State chip ======================================================= */
+/* State chip: a pill with a leading dot. */
 
 /* State chip: pill with a leading dot; --ok for active books, --off for withdrawn ones. */
 .a-chip {
@@ -14,6 +14,7 @@
   white-space: nowrap;
 }
 
+/* Dot in the chip's colour. */
 .a-chip::before {
   content: '';
   width: 6px;
@@ -22,11 +23,13 @@
   background: currentcolor;
 }
 
+/* Active book. */
 .a-chip--ok {
   background: var(--admin-success-soft);
   color: var(--admin-success);
 }
 
+/* Withdrawn book. */
 .a-chip--off {
   background: var(--admin-surface-muted);
   color: var(--admin-fg-muted);

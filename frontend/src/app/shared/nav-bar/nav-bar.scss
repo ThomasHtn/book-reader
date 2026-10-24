@@ -1,0 +1,75 @@
+/* Footer command bar: a large target reacting on its whole surface, without border (design system 9). */
+
+@use 'tools' as *;
+
+/* No box of its own, so the footer row lays out the bar itself. */
+:host {
+  display: contents;
+}
+
+/* Page turns share the room the row leaves; the colours change at once, never through a transition. */
+.nav-bar {
+  flex: 1;
+  background: var(--nav-bar-bg);
+  color: var(--nav-bar-fg);
+  border: none;
+  font-size: var(--text-control);
+  font-weight: var(--weight-regular);
+  padding: var(--space-2);
+  min-height: var(--nav-bar-height);
+  border-radius: var(--radius-reader);
+
+  /* Three labelled commands on one row: the inner margins give way to the labels. */
+  @include phone {
+    padding-inline: var(--space-1);
+  }
+}
+
+/* "Mes livres" takes its label's width, unless the book fits one page and it is the only command. */
+.nav-bar--exit {
+  flex: 0 1 auto;
+}
+
+/* Alone in the row, "Mes livres" takes it all. */
+:host(:only-child) .nav-bar--exit {
+  flex: 1;
+}
+
+/* Chevron drawn as a stroke in the text colour. */
+.nav-bar__arrow {
+  width: var(--nav-bar-arrow-size);
+  height: var(--nav-bar-arrow-size);
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  /* On phones the chevrons give way to the labels. */
+  @include phone {
+    display: none;
+  }
+}
+
+/* Label kept on one line. */
+.nav-bar__label {
+  font-size: var(--nav-bar-label-size);
+  white-space: nowrap;
+}
+
+/* Hover lifts the plate one tone. */
+.nav-bar:hover {
+  background: var(--nav-bar-bg-hover);
+}
+
+/* Pressed: paper surface, ink label. */
+.nav-bar:active {
+  background: var(--nav-bar-bg-active);
+  color: var(--nav-bar-fg-active);
+}
+
+/* Keyboard focus ring, the only shadow the reader allows. */
+.nav-bar:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-shadow);
+}

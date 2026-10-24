@@ -32,6 +32,7 @@ const HOTSPOTS = { arrow: { x: 6, y: 4 }, hand: { x: 22, y: 4 } } as const;
   selector: 'app-large-cursor',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './large-cursor.html',
+  styleUrl: './large-cursor.scss',
 })
 export class LargeCursor {
   /**

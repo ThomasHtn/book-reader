@@ -44,6 +44,7 @@ import { bookMeta, fold } from './admin-library.utils';
     LucideX,
   ],
   templateUrl: './admin-library.html',
+  styleUrl: './admin-library.scss',
 })
 export class AdminLibrary {
   /**

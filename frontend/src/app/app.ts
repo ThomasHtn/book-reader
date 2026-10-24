@@ -11,5 +11,6 @@ import { LargeCursor } from '@shared/large-cursor/large-cursor';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, LargeCursor],
   templateUrl: './app.html',
+  styleUrl: './app.scss',
 })
 export class App {}

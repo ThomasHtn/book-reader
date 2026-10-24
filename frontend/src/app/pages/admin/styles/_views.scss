@@ -1,9 +1,16 @@
-/* === Views ================================================================ */
+/* Views: the stack of a section, its title, and the form fields every section shares. */
+
+@use 'tools' as *;
 
 /* A view stacks its header, controls, messages and lists. */
 .a-view {
   display: grid;
   gap: calc(var(--admin-spacing) * 5);
+
+  /* Roomier beside the rail. */
+  @include rail {
+    gap: calc(var(--admin-spacing) * 6);
+  }
 }
 
 /* An empty live region stays in the page for screen readers but takes no row, hence no gap. */
@@ -17,11 +24,13 @@
   gap: var(--admin-spacing);
 }
 
+/* View title in the reader's face. */
 .a-view-head h2 {
   margin: 0;
   font: var(--weight-heading) var(--admin-text-2xl) / 1.1 var(--font-reading);
 }
 
+/* Line under the title, muted. */
 .a-view-sub {
   margin: 0;
   color: var(--admin-fg-muted);
@@ -53,11 +62,13 @@
   font: inherit;
 }
 
+/* Hint text, muted but opaque. */
 .a-input::placeholder {
   color: var(--admin-fg-muted);
   opacity: 1;
 }
 
+/* Focus tints the border too. */
 .a-input:focus-visible {
   border-color: var(--admin-focus);
 }
@@ -68,6 +79,7 @@
   min-width: 0;
 }
 
+/* Magnifier inside the field, on the left. */
 .a-filter svg {
   position: absolute;
   top: 50%;
@@ -79,31 +91,8 @@
   pointer-events: none;
 }
 
+/* Room for the magnifier. */
 .a-filter .a-input {
   display: block;
   padding-left: calc(var(--admin-spacing) * 10);
-}
-
-/* Catalogue search: a large field and its button on one row. */
-.a-search {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: calc(var(--admin-spacing) * 2);
-}
-
-.a-search .a-input {
-  height: 52px;
-  font-size: var(--admin-text-lg);
-  box-shadow: var(--admin-shadow);
-}
-
-.a-search .a-btn {
-  min-height: 52px;
-}
-
-/* Library toolbar: text filter and state filter, side by side from 640px. */
-.a-toolbar {
-  display: grid;
-  align-items: center;
-  gap: calc(var(--admin-spacing) * 3);
 }

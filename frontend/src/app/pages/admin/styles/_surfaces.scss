@@ -1,4 +1,4 @@
-/* === Surfaces ============================================================= */
+/* Surfaces: cards and their title, meta and summary lines, and rows of buttons. */
 
 /* Card: catalogue results and the sign-in form. */
 .a-card {
@@ -12,15 +12,13 @@
 }
 
 /* Book titles wear the reader's face, so a line here reads like the shelf she sees. */
-.a-card .t,
-.a-item .t {
+.a-card .t {
   margin: 0;
   font: var(--weight-heading) var(--admin-text-lg) / 1.25 var(--font-reading);
 }
 
 /* Meta line under a title: author, origin, date. */
-.a-card .m,
-.a-item .m {
+.a-card .m {
   margin: 0;
   color: var(--admin-fg-muted);
   font-size: var(--admin-text-sm);

@@ -53,7 +53,7 @@ const SIGN_IN_ERRORS: Record<Exclude<SignInOutcome, 'ok'>, string> = {
     LucideSettings,
     LucideUpload,
   ],
-  styleUrl: './admin.css',
+  styleUrl: './admin-shell.scss',
   templateUrl: './admin-shell.html',
 })
 export class AdminShell {

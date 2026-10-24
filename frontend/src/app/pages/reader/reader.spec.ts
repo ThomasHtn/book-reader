@@ -216,9 +216,7 @@ describe('Reader', () => {
     const { prev, next, indicator, fixture } = await open();
 
     expect(store.last).toBe('b1');
-    expect(fixture.nativeElement.querySelector('h1.visually-hidden')?.textContent?.trim()).toBe(
-      'Le Horla',
-    );
+    expect(fixture.nativeElement.querySelector('h1.sr-only')?.textContent?.trim()).toBe('Le Horla');
     expect(visible().content).toEqual({
       blocks: BOOK.blocks.slice(0, 3),
       firstBlock: 0,

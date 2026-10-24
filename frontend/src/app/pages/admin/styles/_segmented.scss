@@ -1,4 +1,4 @@
-/* === Segmented control ================================================ */
+/* Segmented control: settings tiers, library state filter. */
 
 /* Segmented control: settings tiers, library state filter. */
 .a-seg {
@@ -31,6 +31,7 @@
     color var(--admin-duration);
 }
 
+/* Hover darkens the label only. */
 .a-seg button:hover {
   color: var(--admin-fg);
 }
@@ -56,6 +57,7 @@
   font-weight: var(--admin-weight-strong);
 }
 
+/* Accent badge in the pressed segment. */
 .a-seg button[aria-pressed='true'] .a-count {
   background: var(--admin-accent);
   color: var(--admin-accent-fg);

@@ -9,10 +9,10 @@
 
   <!-- Filters only make sense once the list has arrived. -->
   @if (books.hasValue()) {
-    <div class="a-toolbar">
+    <div class="grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
       <div class="a-filter" role="search">
         <svg aria-hidden="true" lucideSearch></svg>
-        <label for="library-filter" class="visually-hidden">Filtrer par titre ou auteur</label>
+        <label for="library-filter" class="sr-only">Filtrer par titre ou auteur</label>
         <input
           id="library-filter"
           class="a-input"
@@ -70,7 +70,10 @@
           <li class="a-item" [class.a-item--muted]="!book.active">
             <!-- Edit mode: the row becomes a title and author form. -->
             @if (editingId() === book.id) {
-              <form class="a-edit" (submit)="save($event, book)">
+              <form
+                class="a-edit grid gap-3 sm:grid-cols-[1fr_1fr] sm:items-end"
+                (submit)="save($event, book)"
+              >
                 <div class="a-field">
                   <label [for]="'title-' + book.id">Titre</label>
                   <input
@@ -91,7 +94,7 @@
                     (input)="author.set($any($event.target).value)"
                   />
                 </div>
-                <div class="actions">
+                <div class="actions sm:col-span-full">
                   <button
                     type="submit"
                     class="a-btn a-btn--primary a-btn--sm"
@@ -112,7 +115,7 @@
                 </div>
               </form>
             } @else {
-              <div class="a-item__main">
+              <div class="a-item__main grid min-w-0 gap-0.5 sm:col-span-full rail:col-auto">
                 <p class="t">{{ book.title }}</p>
                 <p class="m">{{ meta(book) }}</p>
               </div>
@@ -145,7 +148,7 @@
                 </div>
               } @else {
                 <!-- State chips, then the row actions; each button spins only for its own action. -->
-                <div class="a-item__state">
+                <div class="flex gap-1">
                   @if (book.active) {
                     <span class="a-chip a-chip--ok">Active</span>
                   } @else {

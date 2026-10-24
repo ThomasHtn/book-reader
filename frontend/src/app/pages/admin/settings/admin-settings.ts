@@ -18,6 +18,7 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideLoaderCircle, LucideRotateCw, LucideSave],
   templateUrl: './admin-settings.html',
+  styleUrl: './admin-settings.scss',
 })
 export class AdminSettings {
   /**

@@ -1,4 +1,6 @@
-/* === Feedback ============================================================= */
+/* Feedback: help text, empty and loading states, busy icons and action outcomes. */
+
+@use 'tools' as *;
 
 /* Muted help text; links in it and in the credits stay underlined. */
 .a-help {
@@ -7,8 +9,8 @@
   font-size: var(--admin-text-sm);
 }
 
-.a-help a,
-.a-credits a {
+/* Links in help text stay underlined. */
+.a-help a {
   color: inherit;
   text-decoration: underline;
 }
@@ -41,14 +43,17 @@
   animation: a-spine-pull var(--admin-loading-duration) ease-in-out infinite;
 }
 
+/* Second spine, an eighth later. */
 .a-loading .a-brand__mark i:nth-child(2) {
   animation-delay: calc(var(--admin-loading-duration) / 8);
 }
 
+/* Third spine, a quarter later. */
 .a-loading .a-brand__mark i:nth-child(3) {
   animation-delay: calc(var(--admin-loading-duration) / 4);
 }
 
+/* A spine pulled up then put back. */
 @keyframes a-spine-pull {
   0%,
   60%,
@@ -66,6 +71,7 @@
   animation: a-spin var(--admin-spin-duration) linear infinite;
 }
 
+/* One full turn. */
 @keyframes a-spin {
   to {
     transform: rotate(360deg);
@@ -83,15 +89,16 @@
   font-weight: var(--admin-weight-strong);
 }
 
+/* Failure outcome. */
 .a-message--failure {
   background: var(--admin-danger-soft);
   color: var(--admin-danger);
 }
 
-/* Font and catalogue credits at the foot of the settings view. */
-.a-credits {
-  padding-top: calc(var(--admin-spacing) * 4);
-  border-top: 1px solid var(--admin-border);
-  color: var(--admin-fg-muted);
-  font-size: var(--admin-text-xs);
+/* The label still says what is running; the motion only repeats it. */
+@include reduced-motion {
+  .a-loading .a-brand__mark i,
+  .a-spin {
+    animation: none;
+  }
 }

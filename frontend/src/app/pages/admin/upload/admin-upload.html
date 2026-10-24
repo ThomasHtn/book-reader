@@ -6,7 +6,7 @@
   </header>
   <!-- Drop zone; dragover must be cancelled for the drop event to fire. -->
   <div
-    class="a-drop"
+    class="a-drop grid place-items-center gap-3"
     [class.a-drop--over]="dragging()"
     (dragenter)="dragging.set(true)"
     (dragover)="$event.preventDefault()"
@@ -19,7 +19,7 @@
     <label for="upload-file" class="a-btn a-btn--secondary">Choisir des fichiers EPUB</label>
     <input
       id="upload-file"
-      class="visually-hidden"
+      class="sr-only"
       type="file"
       accept=".epub,application/epub+zip"
       multiple
@@ -28,7 +28,7 @@
   </div>
   <!-- Selection: one file is named, a batch is counted then listed. -->
   @if (files().length) {
-    <div class="a-files">
+    <div class="a-files grid gap-1">
       <p class="a-label">
         {{ files().length === 1 ? files()[0].name : files().length + ' fichiers sélectionnés' }}
       </p>

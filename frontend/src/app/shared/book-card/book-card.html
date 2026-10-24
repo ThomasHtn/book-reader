@@ -1,19 +1,19 @@
-<!-- The whole block is one button; data-tone picks its cloth colour in book-grid.css. -->
+<!-- The whole block is one button; data-tone picks its cloth colour in book-card.scss. -->
 <button
   type="button"
-  class="book-card"
+  class="book-card @container grid w-full content-start gap-(--card-gap)"
   [class.book-card--current]="current()"
   [class.book-card--finished]="finished()"
   [attr.data-tone]="tone()"
   (click)="activate.emit()"
 >
-  <span class="title">{{ title() }}</span>
-  <span class="author">{{ author() }}</span>
+  <span class="book-card__title">{{ title() }}</span>
+  <span class="book-card__author">{{ author() }}</span>
   <!-- States are spelled out, never shown by colour alone (spec 5.4). -->
   @if (current()) {
-    <span class="tag">En cours</span>
+    <span class="book-card__tag mt-(--space-1) justify-self-start">En cours</span>
   }
   @if (finished()) {
-    <span class="tag">Terminé</span>
+    <span class="book-card__tag mt-(--space-1) justify-self-start">Terminé</span>
   }
 </button>

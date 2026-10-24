@@ -1,0 +1,60 @@
+/* "Mes livres": the book grid paged by whole rows, the empty shelf and the caregiver's gear. */
+
+@use 'tools' as *;
+
+/* Every row the same height: `1fr` rows on a grid of undefined height take the tallest block. */
+.library__grid {
+  /* Three blocks per row stay on a phone, closer together. */
+  @include phone {
+    --grid-gap: var(--space-2);
+  }
+}
+
+/* Blocks of the other pages keep their box, so the measurement stays valid, but stay out of sight:
+   without this the top of the next row shows under the current page. */
+.library__grid > [inert] {
+  visibility: hidden;
+}
+
+/* Empty shelf: the same centred sentence as the status screen, without a button she could not use. */
+.library__empty {
+  max-width: 24ch;
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  text-wrap: balance;
+}
+
+/* Only entry point to the backoffice from the reader side (decision log, 22 September 2026):
+   discreet on purpose, meant for the sighted caregiver, not the low-vision reader; pinned to the
+   actual screen corner, outside the bounded content column, and kept small. Same edge margins as the
+   wide head line (`--space-3` block, `--grid-padding` inline), so it lines up with the title row. */
+.library__settings {
+  top: var(--space-3);
+  right: var(--grid-padding);
+  width: var(--space-4);
+  height: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--color-fg-muted);
+  border-radius: var(--radius-none);
+}
+
+/* The gear only darkens on hover, for the caregiver's mouse. */
+.library__settings:hover {
+  color: var(--color-fg);
+}
+
+/* Keyboard focus ring. */
+.library__settings:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-shadow);
+}
+
+/* Fixed size, not tied to the font tier: this is chrome for the caregiver, not reading content. */
+.library__settings svg {
+  width: var(--space-3);
+  height: var(--space-3);
+  fill: currentcolor;
+}

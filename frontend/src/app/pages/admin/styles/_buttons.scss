@@ -1,4 +1,4 @@
-/* === Buttons ============================================================== */
+/* Buttons: one shape, primary, secondary and danger fills, a small size for rows and cards. */
 
 /* Base button: shape and short colour transitions; variants set the colours. */
 .a-btn {
@@ -38,6 +38,7 @@
   color: var(--admin-accent-fg);
 }
 
+/* One tone darker on hover. */
 .a-btn--primary:hover:not(:disabled) {
   background: var(--admin-accent-hover);
 }
@@ -48,6 +49,7 @@
   color: var(--admin-fg);
 }
 
+/* One tone darker on hover. */
 .a-btn--secondary:hover:not(:disabled) {
   background: var(--admin-control-bg-hover);
 }
@@ -58,8 +60,7 @@
   color: var(--admin-danger);
 }
 
-.a-btn--danger:hover:not(:disabled),
-.a-confirm .a-btn--danger {
+.a-btn--danger:hover:not(:disabled) {
   background: var(--admin-danger);
   color: var(--admin-surface);
 }
@@ -70,6 +71,7 @@
   font-size: var(--admin-text-sm);
 }
 
+/* Icon size in small buttons. */
 .a-btn--sm svg {
   width: 16px;
   height: 16px;

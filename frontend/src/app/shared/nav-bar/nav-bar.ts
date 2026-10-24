@@ -1,21 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
-import { PageCommand } from '@core/reader/reader.model';
+import { ACCESSIBLE_NAMES, LABELS } from './nav-bar.constants';
+import { NavBarDirection } from './nav-bar.model';
 
 /**
- * "Précédent" or "Suivant" bar, sitting in the footer. It is rendered only when there is somewhere to
- * go, so it carries no disabled state: its caller drops it from the DOM instead.
+ * "Mes livres", "Précédent" or "Suivant" bar, sitting in the footer. It is rendered only when there is
+ * somewhere to go, so it carries no disabled state: its caller drops it from the DOM instead.
  */
 @Component({
   selector: 'app-nav-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nav-bar.html',
+  styleUrl: './nav-bar.scss',
 })
 export class NavBar {
   /**
    * Which bar it is: sets the arrow side, the label and the default accessible name.
    */
-  public readonly direction = input.required<PageCommand>();
+  public readonly direction = input.required<NavBarDirection>();
 
   /**
    * Accessible name, "Page précédente" by default; the list says "Titres précédents".
@@ -30,14 +32,12 @@ export class NavBar {
   /**
    * Visible label, next to the arrow.
    */
-  protected readonly label = computed(() =>
-    this.direction() === 'previous' ? 'Précédent' : 'Suivant',
-  );
+  protected readonly label = computed(() => LABELS[this.direction()]);
 
   /**
    * Name read by screen readers, more explicit than the visible label.
    */
   protected readonly accessibleName = computed(
-    () => this.name() ?? (this.direction() === 'previous' ? 'Page précédente' : 'Page suivante'),
+    () => this.name() ?? ACCESSIBLE_NAMES[this.direction()],
   );
 }

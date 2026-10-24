@@ -1,0 +1,26 @@
+/* Imports only; order is cascade order, so append new files at the end of their group. */
+
+/* Tailwind for layout only: no preflight (base.css is the one reset of the design system) and no
+   default theme, whose colour and type variables share names with the design tokens. */
+@layer theme, base, utilities;
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+
+/* Design tokens, copied verbatim from docs/design-system/tokens.css. */
+@import './styles/tokens.css';
+
+/* Element defaults, fonts and cursors. */
+@import './styles/base.css' layer(base);
+
+/* Book text, written by DomChapterLayout outside any component template. */
+@import './styles/reading.css' layer(base);
+
+/* Classes are only read from the templates, so a word in a TypeScript comment never becomes a class. */
+@source './app/**/*.html';
+
+/* The only theme values the layout uses: the spacing unit, equal to --admin-spacing (`gap-3` is
+   0.75rem), Tailwind's `sm:` at 640 px and the backoffice rail at 900 px (`rail:`). */
+@theme {
+  --spacing: 0.25rem;
+  --breakpoint-sm: 40rem;
+  --breakpoint-rail: 56.25rem;
+}

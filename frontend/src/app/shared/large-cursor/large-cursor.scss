@@ -1,0 +1,26 @@
+/* Overlay drawn by LargeCursor, shown only while `data-cursor` on <html> names an image. */
+
+/* No box of its own. */
+:host {
+  display: contents;
+}
+
+/* Hidden until the pointer reaches the window edge; above everything, and never hit by the pointer. */
+.large-cursor {
+  display: none;
+  z-index: 1000;
+  width: var(--cursor-size);
+  height: var(--cursor-size);
+}
+
+/* Same images as the native 64 px cursors. */
+:host-context([data-cursor='arrow']) .large-cursor {
+  display: block;
+  background: var(--cursor-arrow-image);
+}
+
+/* The hand, over anything that can be pressed. */
+:host-context([data-cursor='hand']) .large-cursor {
+  display: block;
+  background: var(--cursor-hand-image);
+}

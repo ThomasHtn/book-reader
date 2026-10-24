@@ -7,6 +7,7 @@ import { ChangeDetectionStrategy, Component, output } from '@angular/core';
   selector: 'app-status-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './status-screen.html',
+  styleUrl: './status-screen.scss',
 })
 export class StatusScreen {
   /**

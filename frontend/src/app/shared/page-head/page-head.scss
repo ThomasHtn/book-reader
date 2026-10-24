@@ -1,0 +1,47 @@
+/* Head line of the list and the reader: title and page indicator, on the axis of the content below. */
+
+/* No box of its own, so the screen grid lays out the header itself. */
+:host {
+  display: contents;
+}
+
+/* Same axis as the reading column, or the title floats away from what it names. */
+.page-head {
+  padding: var(--head-padding);
+  max-width: var(--reading-max-width);
+}
+
+/* List head line, as wide as the grid below it. */
+.page-head--wide {
+  /* How far the grid stands from the screen edge, zero once the window is narrower than the grid. */
+  --page-head-outside: max(0px, (100vw - var(--grid-max-width)) / 2);
+
+  max-width: var(--grid-max-width);
+
+  /* Head and grid share one side padding, or the title stops sitting over the first block. */
+  padding-inline: var(--grid-padding);
+
+  /* Room for the corner gear once the head reaches the screen edge, below the grid's maximum width. */
+  padding-inline-end: max(
+    var(--grid-padding),
+    var(--grid-padding) + var(--space-4) + var(--space-1) - var(--page-head-outside)
+  );
+}
+
+/* Title on the left; its auto right margin pushes the indicator to the right. */
+.page-head__title {
+  margin: 0 auto 0 0;
+  font-size: var(--page-title-size);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-tight);
+}
+
+/* Small muted indicator; tabular digits keep its width steady as pages turn. */
+.page-head__indicator {
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: var(--indicator-size);
+  font-weight: var(--weight-regular);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

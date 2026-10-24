@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { NavBar } from './nav-bar';
+import { NavBarDirection } from './nav-bar.model';
 
 /**
  * Host binding the bar's direction and counting its activations.
@@ -14,7 +15,7 @@ class Host {
   /**
    * Direction bound to the bar.
    */
-  public readonly direction = signal<'previous' | 'next'>('next');
+  public readonly direction = signal<NavBarDirection>('next');
 
   /**
    * Number of `activate` events received.
@@ -51,6 +52,17 @@ describe('NavBar', () => {
     expect(button.textContent?.trim()).toBe('Précédent');
     expect(button.getAttribute('aria-label')).toBe('Page précédente');
     expect(button.classList).toContain('nav-bar--prev');
+  });
+
+  it('labels the way back to the list by its visible text alone, without an arrow', () => {
+    const { fixture, button, host } = render();
+    host.direction.set('exit');
+    fixture.detectChanges();
+
+    expect(button.textContent?.trim()).toBe('Mes livres');
+    expect(button.hasAttribute('aria-label')).toBe(false);
+    expect(button.querySelector('svg')).toBeNull();
+    expect(button.classList).toContain('nav-bar--exit');
   });
 
   it('emits on click', () => {

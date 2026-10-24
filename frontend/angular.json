@@ -10,7 +10,12 @@
   "projects": {
     "frontend": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss",
+          "changeDetection": "OnPush"
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
@@ -26,16 +31,11 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles/tokens.css",
-              "src/styles/base.css",
-              "src/styles/screen.css",
-              "src/styles/controls.css",
-              "src/styles/reading.css",
-              "src/styles/book-grid.css",
-              "src/styles/status.css",
-              "src/styles/phone.css"
-            ]
+            "styles": ["src/styles.css"],
+            "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": ["src/styles/scss"]
+            }
           },
           "configurations": {
             "production": {

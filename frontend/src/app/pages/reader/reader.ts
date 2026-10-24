@@ -27,6 +27,7 @@ import { ReaderData } from '@core/reader/reader-data';
 import { startPosition, withReadMark } from '@core/reader/reading-progress.utils';
 import { layoutKey } from '@core/reader/stored-page-counts.utils';
 import { NavBar } from '@shared/nav-bar/nav-bar';
+import { PageHead } from '@shared/page-head/page-head';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
 import {
@@ -71,9 +72,10 @@ interface OpenedBook {
 @Component({
   selector: 'app-reader',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavBar, StatusScreen],
+  imports: [NavBar, PageHead, StatusScreen],
   host: { '(document:keydown)': 'onKeydown($event)' },
   templateUrl: './reader.html',
+  styleUrl: './reader.scss',
 })
 export class Reader {
   /**

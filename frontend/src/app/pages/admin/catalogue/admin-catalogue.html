@@ -5,8 +5,12 @@
     <p class="a-view-sub">Recherche en direct dans Ebooks libres et gratuits</p>
   </header>
   <!-- Search runs on submit only: the site is queried live, never on each keystroke. -->
-  <form class="a-search" role="search" (submit)="search($event)">
-    <label for="catalogue-query" class="visually-hidden">Titre ou auteur</label>
+  <form
+    class="a-search grid grid-cols-[minmax(0,1fr)_auto] gap-2"
+    role="search"
+    (submit)="search($event)"
+  >
+    <label for="catalogue-query" class="sr-only">Titre ou auteur</label>
     <div class="a-filter">
       <svg aria-hidden="true" lucideSearch></svg>
       <input
@@ -54,10 +58,10 @@
 
   <!-- Results, kept outside the live region so the count alone is announced. -->
   @if (results.hasValue() && results.value().length) {
-    <div class="a-results">
+    <div class="grid gap-3">
       @for (entry of results.value(); track entry.entryId) {
-        <article class="a-card a-result">
-          <div class="a-result__text">
+        <article class="a-card a-result sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+          <div class="grid min-w-0 gap-0.5">
             <h3 class="t">{{ entry.title }}</h3>
             @if (entry.author) {
               <p class="m">{{ entry.author }}</p>
@@ -90,7 +94,7 @@
           <!-- Outcome of the activation, announced on the card it concerns. -->
           @if (messages()[entry.entryId]; as message) {
             <p
-              class="a-message"
+              class="a-message sm:col-span-full"
               [class.a-message--failure]="message.kind === 'failure'"
               role="status"
             >

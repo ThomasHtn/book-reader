@@ -1,0 +1,18 @@
+/* Catalogue view: the live search form and its result cards. */
+
+/* A large field, raised like a card: the search is the one action of this view. */
+.a-search .a-input {
+  height: 52px;
+  font-size: var(--admin-text-lg);
+  box-shadow: var(--admin-shadow);
+}
+
+/* Its button as tall as the field. */
+.a-search .a-btn {
+  min-height: 52px;
+}
+
+/* Card body: text, actions, then the activation outcome. */
+.a-result {
+  gap: calc(var(--admin-spacing) * 3);
+}

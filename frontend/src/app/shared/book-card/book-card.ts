@@ -8,6 +8,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   selector: 'app-book-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './book-card.html',
+  styleUrl: './book-card.scss',
 })
 export class BookCard {
   /**

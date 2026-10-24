@@ -1,0 +1,41 @@
+/* Status screen: one centred sentence and its retry button (spec 5.6). */
+
+/* Message at reading size: the one sentence she has to read. */
+.status-screen__message {
+  font-size: var(--text-body);
+  font-weight: var(--weight-body);
+  line-height: var(--leading-body);
+  margin: 0;
+  max-width: 24ch;
+  text-wrap: balance;
+}
+
+/* Plain reader button, an ink plate like the command bars. */
+.status-screen__retry {
+  min-height: var(--button-min-height);
+  padding: 0 var(--button-padding-x);
+  background: var(--button-bg);
+  color: var(--button-fg);
+  border: none;
+  font-size: var(--text-control);
+  font-weight: var(--weight-regular);
+  white-space: nowrap;
+  border-radius: var(--radius-reader);
+}
+
+/* Hover lifts the plate one tone, at once. */
+.status-screen__retry:hover {
+  background: var(--button-bg-hover);
+}
+
+/* Pressed: paper surface, ink label. */
+.status-screen__retry:active {
+  background: var(--button-bg-active);
+  color: var(--button-fg-active);
+}
+
+/* Keyboard focus ring. */
+.status-screen__retry:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-shadow);
+}

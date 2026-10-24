@@ -1,0 +1,6 @@
+/* Root component: its host adds no box, so each screen fills the window directly. */
+
+/* No box of its own. */
+:host {
+  display: contents;
+}

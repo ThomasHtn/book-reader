@@ -1,0 +1,98 @@
+/* Library view: one sheet of book rows, their state, the delete confirmation and the edit form. */
+
+@use 'tools' as *;
+
+/* Phones: tighter state filter buttons so all four fit. */
+.a-seg--tabs button {
+  @include below-sm {
+    padding: 0 var(--admin-spacing);
+  }
+}
+
+/* One sheet of rows rather than a pile of cards: 50 books stay scannable. */
+.a-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  box-shadow: var(--admin-shadow);
+}
+
+/* Row: text, state chips and actions, gaining columns with the width. */
+.a-item {
+  display: grid;
+  gap: calc(var(--admin-spacing) * 2);
+  padding: calc(var(--admin-spacing) * 3) calc(var(--admin-spacing) * 4);
+}
+
+/* From 640px: text above, chips and actions side by side; the edit form keeps its own grid. */
+.a-item:not(:has(> .a-edit)) {
+  @include from-sm {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  /* From 900px: text, chips and actions on one line. */
+  @include rail {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: calc(var(--admin-spacing) * 4);
+  }
+}
+
+/* A confirmation keeps two columns: the question and its buttons. */
+.a-item:has(> .a-confirm) {
+  @include rail {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+/* Hairline between rows instead of a gap. */
+.a-item + .a-item {
+  border-top: 1px solid var(--admin-border);
+}
+
+/* Book titles wear the reader's face, so a row reads like the shelf she sees. */
+.a-item .t {
+  margin: 0;
+  font: var(--weight-heading) var(--admin-text-lg) / 1.25 var(--font-reading);
+}
+
+/* Meta line under a title: author, origin, date. */
+.a-item .m {
+  margin: 0;
+  color: var(--admin-fg-muted);
+  font-size: var(--admin-text-sm);
+}
+
+/* Withdrawn books read as muted, the chip saying why. */
+.a-item--muted .t {
+  color: var(--admin-fg-muted);
+}
+
+/* Row buttons sit closer than elsewhere. */
+.a-item .actions {
+  gap: var(--admin-spacing);
+}
+
+/* Delete confirmation: tinted red so it cannot pass for the usual actions. */
+.a-confirm {
+  padding: calc(var(--admin-spacing) * 2) calc(var(--admin-spacing) * 3);
+  border-radius: var(--admin-radius);
+  background: var(--admin-danger-soft);
+}
+
+/* The question, in red, pushing its buttons to the right. */
+.a-confirm .m {
+  color: var(--admin-danger);
+  font-weight: var(--admin-weight-strong);
+  margin-right: auto;
+}
+
+/* In the confirmation the delete button is already full red. */
+.a-confirm .a-btn--danger {
+  background: var(--admin-danger);
+  color: var(--admin-surface);
+}

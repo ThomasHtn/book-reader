@@ -1,0 +1,46 @@
+/* Sass helpers for component stylesheets: `@use 'tools' as *;` at the top of the file. */
+
+/**
+ * Phones (480 px and less), where the book grid and the command bars get tighter.
+ */
+@mixin phone {
+  @media (width <= 480px) {
+    @content;
+  }
+}
+
+/**
+ * Backoffice from Tailwind's `sm:` width, where rows and forms gain a second column.
+ */
+@mixin from-sm {
+  @media (width >= 640px) {
+    @content;
+  }
+}
+
+/**
+ * Backoffice below Tailwind's `sm:` width.
+ */
+@mixin below-sm {
+  @media (width <= 639px) {
+    @content;
+  }
+}
+
+/**
+ * Backoffice from the `rail:` width, where the tab bar becomes the navy rail.
+ */
+@mixin rail {
+  @media (width >= 900px) {
+    @content;
+  }
+}
+
+/**
+ * Backoffice motion is switched off for users who asked for reduced motion.
+ */
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}

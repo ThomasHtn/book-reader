@@ -1,4 +1,6 @@
-/* === Shell: fonts, header, tab bar or rail, scrolling content ======== */
+/* Shell: fonts, header, tab bar or rail, scrolling content. */
+
+@use 'tools' as *;
 
 /* Backoffice face, self-hosted; the reader keeps Luciole. */
 @font-face {
@@ -28,6 +30,14 @@
   font: var(--admin-weight) var(--admin-text-base) / var(--admin-leading) var(--font-admin);
   letter-spacing: 0;
   overflow: hidden;
+
+  /* From 900px: the tab bar becomes a navy rail on the left. */
+  @include rail {
+    &:not(.a-login) {
+      grid-template-columns: var(--admin-rail-width) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+    }
+  }
 }
 
 /* One focus ring for every control, drawn from the --admin-focus-ring token. */
@@ -61,6 +71,15 @@
   padding: 0 var(--admin-gutter);
   background: var(--admin-rail-bg);
   color: var(--admin-rail-fg);
+
+  /* On the rail: brand, sections, then sign-out at the foot. */
+  @include rail {
+    flex-direction: column;
+    align-items: stretch;
+    gap: calc(var(--admin-spacing) * 8);
+    padding: calc(var(--admin-spacing) * 6) calc(var(--admin-spacing) * 4)
+      calc(var(--admin-spacing) * 4);
+  }
 }
 
 /* Brand: mark beside a two-line title in the reader's face. */
@@ -69,8 +88,14 @@
   align-items: center;
   gap: calc(var(--admin-spacing) * 3);
   min-width: 0;
+
+  /* Aligned with the rail links. */
+  @include rail {
+    padding-inline: calc(var(--admin-spacing) * 2);
+  }
 }
 
+/* App name in the reader's face, on two lines with its subtitle. */
 .a-brand h1 {
   margin: 0;
   font: var(--weight-heading) var(--admin-text-lg) / 1.1 var(--font-reading);
@@ -78,6 +103,7 @@
   white-space: nowrap;
 }
 
+/* "administration" under the name, muted. */
 .a-brand small {
   display: block;
   font: var(--admin-weight) var(--admin-text-xs) / 1.3 var(--font-admin);
@@ -103,11 +129,13 @@
   background: var(--color-paper-100);
 }
 
+/* Middle spine, the rose one. */
 .a-brand__mark i:nth-child(2) {
   height: 22px;
   background: var(--admin-marker);
 }
 
+/* Last spine, shorter and darker. */
 .a-brand__mark i:nth-child(3) {
   height: 15px;
   background: var(--color-paper-200);
@@ -128,12 +156,21 @@
   font: inherit;
   font-size: var(--admin-text-sm);
   transition: background var(--admin-duration);
+
+  /* At the foot of the rail. */
+  @include rail {
+    margin: auto 0 0;
+    justify-content: flex-start;
+    color: var(--admin-rail-fg-muted);
+  }
 }
 
+/* Lifts on hover. */
 .a-signout:hover {
   background: var(--admin-rail-current-bg);
 }
 
+/* Sign-out icon. */
 .a-signout svg {
   width: 18px;
   height: 18px;
@@ -149,6 +186,15 @@
   grid-auto-columns: 1fr;
   background: var(--admin-rail-bg);
   padding-bottom: env(safe-area-inset-bottom);
+
+  /* On the rail: links stacked under the brand. */
+  @include rail {
+    position: static;
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    gap: var(--admin-spacing);
+    padding: 0;
+  }
 }
 
 /* Tab: icon over label, at least the nav height so it is easy to hit. */
@@ -162,8 +208,26 @@
   color: var(--admin-rail-fg-muted);
   font-size: var(--admin-text-xs);
   text-decoration: none;
+
+  /* On the rail: icon beside the label, a lit row on hover. */
+  @include rail {
+    grid-template-columns: 22px 1fr;
+    justify-items: start;
+    gap: calc(var(--admin-spacing) * 3);
+    min-height: var(--admin-control-height);
+    padding: 0 calc(var(--admin-spacing) * 3);
+    border-radius: var(--admin-radius);
+    font-size: var(--admin-text-base);
+    transition: background var(--admin-duration);
+
+    &:hover {
+      background: var(--admin-rail-current-bg);
+      color: var(--admin-rail-current-fg);
+    }
+  }
 }
 
+/* Section icons. */
 .a-nav svg {
   width: 22px;
   height: 22px;
@@ -173,6 +237,11 @@
 .a-nav a[aria-current='page'] {
   color: var(--admin-rail-current-fg);
   font-weight: var(--admin-weight-strong);
+
+  /* On the rail the current row stays lit. */
+  @include rail {
+    background: var(--admin-rail-current-bg);
+  }
 }
 
 /* Rose marks "you are here", as it marks the book in progress in the reader. */
@@ -183,6 +252,14 @@
   height: 3px;
   border-radius: 0 0 3px 3px;
   background: var(--admin-marker);
+
+  /* On the rail the marker stands on the left edge. */
+  @include rail {
+    inset: 10px auto 10px 0;
+    width: 3px;
+    height: auto;
+    border-radius: 0 3px 3px 0;
+  }
 }
 
 /* Scrolling content; the bottom padding keeps the last line clear of the tab bar. */
@@ -190,6 +267,11 @@
   overflow: auto;
   padding: calc(var(--admin-spacing) * 6) var(--admin-gutter)
     calc(var(--admin-nav-height) + env(safe-area-inset-bottom) + var(--admin-spacing) * 6);
+
+  /* Roomier content beside the rail. */
+  @include rail {
+    padding: calc(var(--admin-spacing) * 12) calc(var(--admin-spacing) * 10);
+  }
 }
 
 /* Each routed view is centred and capped to a readable width. */
@@ -197,4 +279,11 @@
   display: block;
   max-width: var(--admin-content-max);
   margin-inline: auto;
+}
+
+/* Reduced motion: no transitions anywhere in the backoffice. */
+@include reduced-motion {
+  .admin * {
+    transition: none !important;
+  }
 }

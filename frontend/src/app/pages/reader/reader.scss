@@ -1,0 +1,13 @@
+/* Reading screen: the paged surface; the book text inside it is styled globally (styles/reading.css). */
+
+/* Focused by script only, after a click, so Space keeps turning pages: no ring on it. */
+.reader__page:focus {
+  outline: none;
+}
+
+/* One column per page, `--column-width` being the viewport width set by DomChapterLayout (spec 5.2). */
+.reader__columns {
+  column-width: var(--column-width);
+  column-gap: 0;
+  column-fill: auto;
+}

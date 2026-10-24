@@ -4,31 +4,33 @@
 } @else {
   <!-- Laid out but hidden until the first page is placed; no context menu on the reader (spec 5.1). -->
   <div
-    class="screen"
+    class="grid h-full grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_auto]"
     [style.visibility]="location() ? null : 'hidden'"
     (contextmenu)="$event.preventDefault()"
   >
     <!-- Page indicator alone at the top right, announced politely on each turn (spec 5.1). -->
-    <header class="page-head">
-      <p class="page-indicator" aria-live="polite">{{ indicator() }}</p>
-    </header>
-    <main>
+    <app-page-head [indicator]="indicator()" />
+    <main class="grid min-h-0 grid-rows-[minmax(0,1fr)]">
       <!-- Title for screen readers; the title page shows it on screen. -->
-      <h1 class="visually-hidden">{{ title() }}</h1>
+      <h1 class="sr-only">{{ title() }}</h1>
       <!-- Reading surface: focusable by script only, to take the focus back after a click (spec 5.1). -->
-      <section class="paged reading" lang="fr" aria-label="Texte du livre" tabindex="-1" #text>
+      <section
+        class="reader__page reading relative min-h-0 w-full max-w-(--reading-max-width) justify-self-center overflow-hidden p-(--reading-padding)"
+        lang="fr"
+        aria-label="Texte du livre"
+        tabindex="-1"
+        #text
+      >
         <!-- One page window; DomChapterLayout fills and translates the columns inside it (spec 5.2). -->
-        <div class="paged-viewport" #viewport>
-          <div class="paged-columns" #columns></div>
+        <div class="h-full overflow-hidden" #viewport>
+          <div class="reader__columns h-full" #columns></div>
         </div>
       </section>
     </main>
     <!-- The three commands; a bar with nowhere to go is removed and the other takes its room (spec 5.1). -->
-    <footer class="nav-footer">
-      <div class="nav-row nav-row--exit">
-        <button type="button" class="nav-bar nav-bar--exit" (click)="openLibrary()">
-          <span>Mes livres</span>
-        </button>
+    <footer>
+      <div class="flex gap-(--nav-row-gap) p-(--nav-row-padding)">
+        <app-nav-bar direction="exit" (activate)="openLibrary()" />
         <!-- No "Précédent" on the first page of the book. -->
         @if (!isFirst()) {
           <app-nav-bar direction="previous" (activate)="onBar('previous')" />
