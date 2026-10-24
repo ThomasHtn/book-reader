@@ -41,13 +41,19 @@ public class OpdsCatalogueClient {
     private static final String USER_AGENT = "book-reader/1.0 (+https://book-reader.thomashtn.dev)";
 
     /**
-     * Book page on the catalogue site, which is how the feed identifies an entry.
+     * Book page URL without its number: the feed identifies an entry by it, and the database stores it.
      *
-     * <p>Pinned to the real host rather than to the configured base URL: an entry identifier comes
-     * from the caller, and only the number it carries is ever sent to the site.</p>
+     * <p>A stored identifier rather than a setting, hence not the configured base URL: changing it would
+     * orphan every imported book. Only the number it carries is ever sent to the site.</p>
      */
-    private static final Pattern BOOK_PAGE =
-        Pattern.compile("https?://www\\.ebooksgratuits\\.com/details\\.php\\?book=(\\d{1,9})");
+    private static final String ENTRY_ID_PREFIX = "https://www.ebooksgratuits.com/details.php?book=";
+
+    /**
+     * Entry identifier as received, in http or https, capturing the book number.
+     */
+    private static final Pattern BOOK_PAGE = Pattern.compile(
+        "https?" + Pattern.quote(ENTRY_ID_PREFIX.substring("https".length())) + "(\\d{1,9})"
+    );
 
     /**
      * Pause before the single retry, short enough to keep the backoffice responsive.
@@ -93,7 +99,7 @@ public class OpdsCatalogueClient {
      * @return entry identifier, such as {@code https://www.ebooksgratuits.com/details.php?book=726}
      */
     public static String canonicalEntryId(int bookNumber) {
-        return "https://www.ebooksgratuits.com/details.php?book=" + bookNumber;
+        return ENTRY_ID_PREFIX + bookNumber;
     }
 
     /**
