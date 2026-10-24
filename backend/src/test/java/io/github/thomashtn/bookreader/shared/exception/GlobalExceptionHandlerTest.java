@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -102,6 +103,15 @@ class GlobalExceptionHandlerTest {
             new HttpMediaTypeNotSupportedException("Content-Type is not supported"), request);
 
         assertError(response, HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE");
+    }
+
+    @Test
+    @DisplayName("Keeps the 4xx status Spring gives a caller mistake no handler names, such as 406")
+    void rendersOtherCallerMistakes() {
+        ResponseEntity<ApiErrorResponse> response = handler.handleUnexpectedException(
+            new HttpMediaTypeNotAcceptableException("Acceptable representations: [application/json]"), request);
+
+        assertError(response, HttpStatus.NOT_ACCEPTABLE, "NOT_ACCEPTABLE");
     }
 
     @Test

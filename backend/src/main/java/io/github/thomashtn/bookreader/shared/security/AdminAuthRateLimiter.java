@@ -90,7 +90,7 @@ public class AdminAuthRateLimiter {
             remoteAddress,
             (key, existing) -> existing == null || existing.isExpired(clock, lockoutDuration)
                 ? new AttemptWindow(1, clock.instant())
-                : existing.increment()
+                : existing.increment(clock.instant(), maxFailures)
         );
     }
 
@@ -142,12 +142,16 @@ public class AdminAuthRateLimiter {
     private record AttemptWindow(int failureCount, Instant firstFailureAt) {
 
         /**
-         * Returns a window with one additional failure, keeping the original start instant.
+         * Returns a window with one additional failure; the failure that reaches the budget restarts the
+         * window, so the lockout lasts its whole duration from that moment.
          *
+         * @param now    instant of this failure
+         * @param budget failure budget of an address
          * @return incremented attempt window
          */
-        AttemptWindow increment() {
-            return new AttemptWindow(failureCount + 1, firstFailureAt);
+        AttemptWindow increment(Instant now, int budget) {
+            int count = failureCount + 1;
+            return new AttemptWindow(count, count == budget ? now : firstFailureAt);
         }
 
         /**
@@ -155,7 +159,7 @@ public class AdminAuthRateLimiter {
          *
          * @param currentClock  application clock
          * @param windowMaxAge  configured window duration
-         * @return {@code true} when the window started more than {@code windowMaxAge} ago
+         * @return {@code true} when the window started, or the lockout began, more than {@code windowMaxAge} ago
          */
         boolean isExpired(Clock currentClock, Duration windowMaxAge) {
             return currentClock.instant().isAfter(firstFailureAt.plus(windowMaxAge));

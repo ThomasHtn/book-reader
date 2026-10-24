@@ -27,7 +27,7 @@ public record UpdateBookRequest(
 ) {
 
     /**
-     * Matches a value holding at least one non-space character.
+     * Matches a value holding at least one visible character: a no-break space counts as a space.
      */
-    static final String NOT_BLANK = ".*\\S.*";
+    static final String NOT_BLANK = "(?s).*[^\\s\\u00a0\\u2007\\u202f].*";
 }

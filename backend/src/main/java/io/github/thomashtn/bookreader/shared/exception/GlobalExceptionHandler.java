@@ -10,6 +10,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -216,14 +217,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles any exception without a more specific handler.
+     * Handles any exception without a more specific handler: a caller mistake Spring raised keeps its 4xx,
+     * anything else is a logged 500.
      *
      * @param exception unexpected exception, logged with its stack trace
      * @param request   current HTTP request
-     * @return 500 response
+     * @return 4xx response for a caller mistake, 500 otherwise
      */
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception exception, HttpServletRequest request) {
+        // Spring already knows the 4xx of the caller mistakes it raises (406, a missing header...).
+        if (exception instanceof ErrorResponse spring && spring.getStatusCode().is4xxClientError()) {
+            HttpStatus status = HttpStatus.valueOf(spring.getStatusCode().value());
+            return problems.of(status, status.name(), "The request cannot be served as sent.", request);
+        }
         LOGGER.error("Unexpected error while processing {} {}",
             request.getMethod(), request.getRequestURI(), exception);
         String detail = "An unexpected error occurred.";

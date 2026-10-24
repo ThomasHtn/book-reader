@@ -87,6 +87,23 @@ class AdminAuthRateLimiterTest {
     }
 
     @Test
+    @DisplayName("Keeps a lockout for its whole duration, even when the budget is reached late in the window")
+    void shouldLockOutForFullDurationFromLastFailure() {
+        AdminAuthRateLimiter rateLimiter = createRateLimiter(2);
+
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
+        clock.advance(Duration.ofSeconds(58));
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
+        clock.advance(Duration.ofSeconds(10));
+
+        assertThat(rateLimiter.isLockedOut(REMOTE_ADDRESS)).isTrue();
+
+        clock.advance(Duration.ofMinutes(1));
+
+        assertThat(rateLimiter.isLockedOut(REMOTE_ADDRESS)).isFalse();
+    }
+
+    @Test
     @DisplayName("Reclaims expired windows once many addresses are tracked, so rotating addresses cannot leak memory")
     void shouldSweepExpiredWindowsOnceEnoughAddressesAreTracked() {
         AdminAuthRateLimiter rateLimiter = createRateLimiter(3);
