@@ -70,7 +70,7 @@ export class AdminCatalogue {
   protected readonly messages = signal<Record<string, AdminMessage>>({});
 
   /**
-   * Sends the query; the same query again reloads, since the resource would not refetch on its own.
+   * Sends the query, forgetting the outcomes shown so far; the same query again reloads, since the resource would not refetch on its own.
    */
   protected search(event: Event): void {
     event.preventDefault();
@@ -78,6 +78,9 @@ export class AdminCatalogue {
     if (!query) {
       return;
     }
+    // Fresh results bring fresh states: outcomes of the previous search would stick to the wrong cards.
+    this.states.set({});
+    this.messages.set({});
     if (query === this.submitted()) {
       this.results.reload();
     } else {

@@ -1,23 +1,48 @@
-import { FontTier } from '@core/http/api.model';
+import { BookContent, FontTier } from '@core/http/api.model';
 
 import { MeasuredCounts } from './reader.model';
 
 /**
- * Version of the reading typography, raised whenever reading.css changes how much a page holds, so
- * counts measured under an older style are forgotten.
- */
-const TYPOGRAPHY_VERSION = 2;
-
-/**
  * Names the layout page counts were measured under: typography, viewport size and font tier.
  *
+ * @param typography - Fingerprint of the reading styles, from `ChapterLayout.typography()`.
  * @param width - Viewport width in CSS pixels.
  * @param height - Viewport height in CSS pixels.
  * @param tier - Font tier, `undefined` before the settings are known.
  * @returns Key stored next to the counts.
  */
-export function layoutKey(width: number, height: number, tier: FontTier | undefined): string {
-  return `v${TYPOGRAPHY_VERSION}:${width}x${height}:${tier}`;
+export function layoutKey(
+  typography: string,
+  width: number,
+  height: number,
+  tier: FontTier | undefined,
+): string {
+  return `${typography}:${width}x${height}:${tier}`;
+}
+
+/**
+ * Hashes a text into a short stable name, for keys only: collisions merely cost a recount.
+ *
+ * @param text - Text to hash.
+ * @returns 32-bit hash in base 36.
+ */
+export function shortHash(text: string): string {
+  let hash = 0;
+  for (const char of text) {
+    hash = (Math.imul(hash, 31) + char.codePointAt(0)!) | 0;
+  }
+  return (hash >>> 0).toString(36);
+}
+
+/**
+ * Names what a book's counts depend on besides the layout: its title page and its blocks. Titles and
+ * authors can be edited in the backoffice, which changes the first chapter's page count.
+ *
+ * @param book - Book as received.
+ * @returns Short hash, appended to the layout key.
+ */
+export function bookFingerprint(book: Pick<BookContent, 'title' | 'author' | 'blocks'>): string {
+  return shortHash(`${book.title}\n${book.author}\n${book.blocks.length}`);
 }
 
 /**

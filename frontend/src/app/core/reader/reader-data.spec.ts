@@ -81,6 +81,21 @@ describe('ReaderData', () => {
     expect(document.documentElement.dataset['tier']).toBe('28');
   });
 
+  it('keeps the same list object when a poll brings the same books, so nothing renders again', async () => {
+    http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 32 });
+    await settle();
+    const first = data.books();
+
+    vi.advanceTimersByTime(POLL_INTERVAL_MS);
+    TestBed.tick();
+    http.expectOne(API_ENDPOINTS.books).flush(structuredClone(BOOKS));
+    http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 32 });
+    await settle();
+
+    expect(data.books()).toBe(first);
+  });
+
   it('keeps the last valid response when a poll fails', async () => {
     http.expectOne(API_ENDPOINTS.books).flush(BOOKS);
     http.expectOne(API_ENDPOINTS.settings).flush({ fontTier: 32 });

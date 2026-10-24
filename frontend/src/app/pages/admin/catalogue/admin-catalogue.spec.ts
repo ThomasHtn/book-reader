@@ -167,6 +167,29 @@ describe('AdminCatalogue', () => {
     );
   });
 
+  it('forgets the outcomes of the previous search when searching again', async () => {
+    const { element, settle } = await render();
+    await search(element, settle, 'horla');
+    http.expectOne((r) => r.url === API_ENDPOINTS.admin.catalogue).flush(ENTRIES);
+    await settle();
+    card(element, 'Le Horla').querySelector<HTMLButtonElement>('button')!.click();
+    await settle();
+    http
+      .expectOne(API_ENDPOINTS.admin.fromCatalogue)
+      .flush({ id: 'b1', title: 'Le Horla' }, { status: 201, statusText: 'Created' });
+    await settle();
+
+    // The book was withdrawn since: the new answer says so, and the old message is gone.
+    await search(element, settle, 'horla');
+    http
+      .expectOne((r) => r.url === API_ENDPOINTS.admin.catalogue)
+      .flush([{ ...ENTRIES[0], state: 'withdrawn' }]);
+    await settle();
+
+    expect(card(element, 'Le Horla').textContent).not.toContain('Livre activé');
+    expect(card(element, 'Le Horla').querySelector('button')?.textContent?.trim()).toBe('Activer');
+  });
+
   it('offers to retry when the catalogue site is unreachable', async () => {
     const { element, settle } = await render();
     await search(element, settle, 'hugo');

@@ -242,7 +242,10 @@ export class Reader {
     await (this.document.fonts?.ready ?? Promise.resolve());
     this.store.markOpened(content.id);
     const progress = withReadMark(this.store.progressOf(content.id), content.finishedAt);
-    pagination.open(startPosition(progress, content.blocks.length), this.currentLayoutKey());
+    pagination.open(
+      startPosition(progress, content.blocks.length),
+      this.currentLayoutKey(pagination),
+    );
     // A finished book stays finished until a page is turned: opening it by mistake changes nothing.
     if (!progress?.finished) {
       this.save(pagination);
@@ -265,19 +268,25 @@ export class Reader {
     }
     this.relayoutTimer = setTimeout(() => {
       this.relayoutTimer = undefined;
-      this.pagination()?.relayout(this.currentLayoutKey());
+      const pagination = this.pagination();
+      pagination?.relayout(this.currentLayoutKey(pagination));
     });
   }
 
   /**
-   * Viewport size and tier: page counts hold only for the layout they were measured under (spec 5.2).
-   * Counts are stored per tier, so none is read or written before the settings are known.
+   * Typography, viewport size and tier: page counts hold only for the layout they were measured under
+   * (spec 5.2). Counts are stored per tier, so none is read or written before the settings are known.
    */
-  private currentLayoutKey(): LayoutKey {
+  private currentLayoutKey(pagination: BookPagination): LayoutKey {
     const viewport = this.viewport()?.nativeElement;
     const settings = this.data.settings();
     return {
-      value: layoutKey(viewport?.clientWidth ?? 0, viewport?.clientHeight ?? 0, settings?.fontTier),
+      value: layoutKey(
+        pagination.typography(),
+        viewport?.clientWidth ?? 0,
+        viewport?.clientHeight ?? 0,
+        settings?.fontTier,
+      ),
       persisted: settings !== undefined,
     };
   }

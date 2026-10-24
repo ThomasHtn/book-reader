@@ -3,6 +3,7 @@ import { computed, signal } from '@angular/core';
 import { BookContent } from '@core/http/api.model';
 import { ProgressStore } from '@core/reader/progress-store';
 import { PageCommand, TextPosition } from '@core/reader/reader.model';
+import { bookFingerprint } from '@core/reader/stored-page-counts.utils';
 
 import {
   chapterContent,
@@ -68,6 +69,11 @@ export class BookPagination {
   private key: LayoutKey = { value: '', persisted: false };
 
   /**
+   * Title page and block count the stored counts were measured with.
+   */
+  private readonly fingerprint: string;
+
+  /**
    * Left page of the view, `null` until the first layout.
    */
   public readonly location = this.shown.asReadonly();
@@ -111,6 +117,16 @@ export class BookPagination {
     private readonly store: ProgressStore,
   ) {
     this.chapters = splitIntoChapters(content.blocks);
+    this.fingerprint = bookFingerprint(content);
+  }
+
+  /**
+   * Returns the fingerprint of the reading styles, part of the layout key.
+   *
+   * @returns Short hash.
+   */
+  public typography(): string {
+    return this.layout.typography();
   }
 
   /**
@@ -190,7 +206,7 @@ export class BookPagination {
     this.key = key;
     // Counts measured earlier under this exact layout skip the estimate for their chapters.
     this.measured = key.persisted
-      ? this.store.pageCountsOf(this.content.id, key.value, this.chapters.length)
+      ? this.store.pageCountsOf(this.content.id, this.storedKey(), this.chapters.length)
       : this.chapters.map(() => undefined);
     const chapter = chapterOfBlock(this.chapters, position.blockIndex);
     this.renderChapter(chapter);
@@ -218,8 +234,15 @@ export class BookPagination {
     if (this.measured[chapter] !== pages) {
       this.measured[chapter] = pages;
       if (this.key.persisted) {
-        this.store.savePageCounts(this.content.id, this.key.value, this.measured);
+        this.store.savePageCounts(this.content.id, this.storedKey(), this.measured);
       }
     }
+  }
+
+  /**
+   * Key the counts are stored under: the layout, and the book they were measured on.
+   */
+  private storedKey(): string {
+    return `${this.key.value}:${this.fingerprint}`;
   }
 }

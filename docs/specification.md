@@ -109,7 +109,7 @@ Règles :
   sans titres.
 - L'indicateur affiche "Page 12 sur 840" dès l'ouverture, sans mettre en page d'autre chapitre que
   celui affiché. Un chapitre déjà affiché compte pour son nombre réel de pages, mémorisé par livre et
-  par mise en page (version de la typographie, taille de la zone de texte et palier) ; les autres sont estimés par un calcul pur
+  par mise en page (empreinte des styles du texte calculée par la liseuse, taille de la zone de texte et palier) et par livre (titre, auteur, nombre de blocs) ; les autres sont estimés par un calcul pur
   (`pages/reader/pagination/page-count.utils.ts`) : largeurs de caractères lues une fois au canvas, coupure des lignes
   entre les mots avec une césure approchée (mots de 7 lettres et plus, 3 de chaque côté), remplissage
   des colonnes avec deux lignes au moins de part et d'autre d'une coupure, sauf un paragraphe de trois
@@ -289,7 +289,7 @@ Titre et auteur pris dans l'OPF, modifiables dans le backoffice.
 |---|---|
 | `reader.lastBookId` | dernier livre ouvert |
 | `reader.progress.<bookId>` | `{ "blockIndex": 0, "charOffset": 0, "finished": false, "updatedAt": "…" }` |
-| `reader.pages.<bookId>` | `{ "layout": "v2:1604x678:32", "counts": [4, null, 150] }`, pages des chapitres déjà affichés sous la dernière mise en page (5.2) |
+| `reader.pages.<bookId>` | `{ "layout": "1x9k2qd:1604x678:32:3b7m1a", "counts": [4, null, 150] }`, pages des chapitres déjà affichés sous la dernière mise en page (5.2) |
 
 ## 9. Backoffice
 
@@ -455,6 +455,7 @@ La version 1 est livrable quand :
 | Le focus revient au texte après chaque page tournée, au clavier comme au clic ; les deux pieds ("Mes livres" et lecture) partagent un seul composant qui reçoit aussi les flèches et l'anti-rebond | focus rendu après un clic seulement, pied et clavier recopiés dans chaque écran | 24 octobre 2026 : revue du code ; un seul endroit décide quand une commande passe, et le texte garde le focus quelle que soit la façon de tourner |
 | La première mise en page attend les réglages (ou leur échec) ; après un changement de taille, une vue en début de chapitre y reste | mise en page immédiate puis refaite au palier reçu ; position seule pour retrouver la page | 24 octobre 2026 : revue du code ; en ouvrant `/lire/:id` directement la page changeait de taille sous ses yeux, et une page de titre seule sur sa page partage sa position avec la page suivante, qui renvoyait alors sur le titre |
 | Redirections du catalogue limitées à l'hôte configuré, délai global par appel, gardes EPUB sur le nombre d'entrées et la profondeur XML | suivre toute redirection ; délais de connexion et de lecture seuls | 24 octobre 2026 : revue du code ; un site détourné ne doit pas faire appeler une autre adresse au serveur, ni le bloquer en répondant goutte à goutte, ni le faire tomber avec une archive piégée |
+| Comptes de pages mémorisés sous une empreinte des styles du texte et du livre, calculée par la liseuse ; liste et réglages gardés tels quels quand une interrogation rapporte la même chose ; états de la recherche du catalogue oubliés à chaque recherche | numéro de version de la typographie augmenté à la main ; nouvelle liste à chaque interrogation | 24 octobre 2026 : revue du code ; un oubli de version donnait des numéros de page faux, un titre corrigé dans le backoffice aussi, et chaque interrogation redessinait "Mes livres" pour rien |
 
 ## 15. Vitrine
 

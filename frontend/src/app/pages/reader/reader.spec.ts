@@ -13,6 +13,7 @@ import {
 } from '@core/reader/reader.fixtures';
 import { TextPosition } from '@core/reader/reader.model';
 import { ReaderData } from '@core/reader/reader-data';
+import { bookFingerprint } from '@core/reader/stored-page-counts.utils';
 
 import { CHAPTER_LAYOUT_FACTORY } from './pagination/pagination.constants';
 import { ChapterContent, ChapterLayout, PageGeometry } from './pagination/pagination.model';
@@ -104,6 +105,13 @@ class FakeLayout implements ChapterLayout {
   }
 
   /**
+   * Stands for the reading styles, which jsdom does not apply.
+   */
+  public typography(): string {
+    return 'fake';
+  }
+
+  /**
    * Pages side by side, as given to the constructor.
    */
   public pagesPerView(): number {
@@ -119,9 +127,9 @@ class FakeLayout implements ChapterLayout {
 }
 
 /**
- * Layout key in jsdom at tier 32: no layout, so no size.
+ * Key of the counts of BOOK in jsdom at tier 32: no layout, so no size.
  */
-const JSDOM_LAYOUT = 'v2:0x0:32';
+const JSDOM_LAYOUT = `fake:0x0:32:${bookFingerprint(BOOK)}`;
 
 describe('Reader', () => {
   /**

@@ -82,14 +82,22 @@ export class ReaderData {
 
 /**
  * Keeps the last successful value of a resource. Filled by an effect rather than a lazy `linkedSignal`,
- * so a response nobody reads yet (the list while a book is open) survives a later failed poll.
+ * so a response nobody reads yet (the list while a book is open) survives a later failed poll. An
+ * answer equal to the last one keeps the old object, so an unchanged poll renders nothing again.
  */
 function lastValidValue<T>(resource: HttpResourceRef<T | undefined>): Signal<T | undefined> {
-  const latest = signal<T | undefined>(undefined);
+  const latest = signal<T | undefined>(undefined, { equal: sameJson });
   effect(() => {
     if (resource.hasValue()) {
       latest.set(resource.value());
     }
   });
   return latest.asReadonly();
+}
+
+/**
+ * Compares two JSON responses by content: each poll parses a new object even for a 304.
+ */
+function sameJson(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
 }

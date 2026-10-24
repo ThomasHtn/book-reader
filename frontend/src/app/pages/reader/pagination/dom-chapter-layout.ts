@@ -1,4 +1,5 @@
 import { TextPosition } from '@core/reader/reader.model';
+import { shortHash } from '@core/reader/stored-page-counts.utils';
 
 import { lowerBound } from './lower-bound.utils';
 import { pageAt, pageCount } from './page-math.utils';
@@ -156,6 +157,20 @@ export class DomChapterLayout implements ChapterLayout {
   }
 
   /**
+   * Hashes the book text rules of every stylesheet, the values of the tokens they use and the columns'
+   * font and gap: a change to reading.css or to a reading token gives another fingerprint.
+   */
+  public typography(): string {
+    const rules = readingRules(this.columns.ownerDocument);
+    const style = getComputedStyle(this.columns);
+    const tokens = [...new Set(rules.match(/--[\w-]+/g))].map(
+      (name) => `${name}=${style.getPropertyValue(name).trim()}`,
+    );
+    const columns = [style.fontFamily, style.lineHeight, style.letterSpacing, style.columnGap];
+    return shortHash([rules, ...tokens, ...columns].join('\n'));
+  }
+
+  /**
    * Pages side by side, as read at the last render.
    */
   public pagesPerView(): number {
@@ -185,6 +200,31 @@ function element(document: Document, tag: string, text: string, className?: stri
     node.className = className;
   }
   return node;
+}
+
+/**
+ * Text of the style rules aimed at the book text (`.reading`), nested ones included.
+ */
+function readingRules(document: Document): string {
+  const texts: string[] = [];
+  const collect = (rules: CSSRuleList) => {
+    for (const rule of rules) {
+      if (rule instanceof CSSStyleRule && rule.selectorText.includes('.reading')) {
+        texts.push(rule.cssText);
+      } else if (rule instanceof CSSGroupingRule) {
+        collect(rule.cssRules);
+      }
+    }
+  };
+  for (const sheet of document.styleSheets) {
+    // A stylesheet from another origin refuses to show its rules; the app serves none.
+    try {
+      collect(sheet.cssRules);
+    } catch {
+      continue;
+    }
+  }
+  return texts.join('\n');
 }
 
 /**

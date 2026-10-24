@@ -160,6 +160,12 @@ export interface ChapterLayout {
   geometry(): PageGeometry;
 
   /**
+   * Returns a fingerprint of everything in the styles that decides how much a page holds, so counts
+   * measured under other styles are forgotten without anyone raising a version by hand.
+   */
+  typography(): string;
+
+  /**
    * Returns how many pages the rendered chapter shows side by side: two on a wide screen, else one.
    */
   pagesPerView(): number;
