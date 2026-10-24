@@ -65,7 +65,8 @@ public class EpubConverter {
         if (blocks.isEmpty()) {
             throw new EpubRejectedException(Reason.NO_TEXT, "No readable text in the EPUB");
         }
-        return new ConvertedBook(epubPackage.title(), epubPackage.author(), blocks);
+        // Some EPUBs converted from a PDF hold one paragraph per printed line: rejoin them.
+        return new ConvertedBook(epubPackage.title(), epubPackage.author(), LineReflow.reflow(blocks));
     }
 
     /**

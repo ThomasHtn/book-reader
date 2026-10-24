@@ -276,7 +276,13 @@ persister.
    tels blocs (`notes.html`, notes sur plusieurs paragraphes comprises), tables des matières et pages
    de garde (`epub:type` ou `guide` : cover, title-page, toc, copyright-page, bibliography, cette
    dernière étant la page "À propos" de Feedbooks).
-5. Rejet avec message clair : chiffré (`META-INF/encryption.xml` qui déclare autre chose qu'une
+5. Lignes recollées : certains EPUB tirés d'un PDF ont un paragraphe par ligne imprimée. Quand
+   moins de 70 % des paragraphes d'un livre (50 au moins) finissent une phrase, les lignes sont
+   recollées : une ligne qui finit une phrase et reste nettement plus courte qu'une ligne pleine
+   (85 % du 9e décile des longueurs) clôt son paragraphe, un titre aussi. Un trait d'union en fin de
+   ligne disparaît si le mot recollé figure ailleurs dans le livre (« di-rigeait »), sinon il reste
+   (« lui-même »). Les livres déjà importés sont recollés par la migration V6.
+6. Rejet avec message clair : chiffré (`META-INF/encryption.xml` qui déclare autre chose qu'une
    obfuscation de polices, courante et sans effet sur le texte), sans texte, trop volumineux.
 
 Titre et auteur pris dans l'OPF, modifiables dans le backoffice.
@@ -456,6 +462,7 @@ La version 1 est livrable quand :
 | La première mise en page attend les réglages (ou leur échec) ; après un changement de taille, une vue en début de chapitre y reste | mise en page immédiate puis refaite au palier reçu ; position seule pour retrouver la page | 24 octobre 2026 : revue du code ; en ouvrant `/lire/:id` directement la page changeait de taille sous ses yeux, et une page de titre seule sur sa page partage sa position avec la page suivante, qui renvoyait alors sur le titre |
 | Redirections du catalogue limitées à l'hôte configuré, délai global par appel, gardes EPUB sur le nombre d'entrées et la profondeur XML | suivre toute redirection ; délais de connexion et de lecture seuls | 24 octobre 2026 : revue du code ; un site détourné ne doit pas faire appeler une autre adresse au serveur, ni le bloquer en répondant goutte à goutte, ni le faire tomber avec une archive piégée |
 | Comptes de pages mémorisés sous une empreinte des styles du texte et du livre, calculée par la liseuse ; liste et réglages gardés tels quels quand une interrogation rapporte la même chose ; états de la recherche du catalogue oubliés à chaque recherche | numéro de version de la typographie augmenté à la main ; nouvelle liste à chaque interrogation | 24 octobre 2026 : revue du code ; un oubli de version donnait des numéros de page faux, un titre corrigé dans le backoffice aussi, et chaque interrogation redessinait "Mes livres" pour rien |
+| Paragraphes recollés à la conversion quand un EPUB a un paragraphe par ligne imprimée, et migration des livres déjà importés | le laisser tel quel, ou demander un autre fichier | 24 octobre 2026 : demande de l'utilisateur ; un livre téléversé tiré d'un PDF montrait un alinéa à chaque ligne, 15 450 blocs pour 5 546 paragraphes ; la position de lecture de ce livre repart du début |
 
 ## 15. Vitrine
 

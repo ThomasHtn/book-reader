@@ -27,4 +27,12 @@
     files="[\\/]src[\\/]test[\\/]"
     checks="ParameterNumber"/>
 
+  <!--
+      Flyway reads a Java migration's version and description from its class name, which must
+      therefore read V<version>__<description>, underscores included.
+  -->
+  <suppress
+    files="[\\/]db[\\/]migration[\\/]V\d+__\w+\.java"
+    checks="TypeName"/>
+
 </suppressions>
