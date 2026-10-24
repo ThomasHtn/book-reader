@@ -1,148 +1,208 @@
 # Contributing
 
-This guide is for whoever takes over the project. It says where everything lives, which rules the
-code follows and which tools enforce them. The reasons behind functional choices are in the
-[specification](docs/specification.md); the visual ones, in the [design system](docs/design-system.md).
-Both are written in French.
+This guide is for whoever takes over the project: where everything lives, which rules the code follows
+and which tools enforce them. The reasons behind functional choices are in the
+[specification](docs/specification.md), the visual ones in the [design system](docs/design-system.md).
+Both are written in French. Any change of behaviour goes through the specification first (section 14
+holds the decision log).
 
-## Before writing a line
+## Up and running
 
-1. Read the section of the specification that covers the task. Any change of behaviour goes through
-   that document first (section 14 holds the decision log).
-2. Write the test that describes the expected behaviour, watch it fail, then write the code.
-3. Let the tools fix the form (`npm run fix`, `./mvnw spotless:apply`) and read what they cannot fix.
-
-## Setup
+You need Java 25, Node 22 and Docker. Then, the first time:
 
 ```bash
-cd backend && cp .env.example .env     # then set ADMIN_API_KEY (32 characters or more)
-cd frontend && npx npm@11 install      # also installs the git pre-commit hook
+make setup
 ```
 
-Requirements: Java 25, Node 22, Docker (backend tests start a PostgreSQL 17 Testcontainer).
+And every day:
 
-## Code map
+```bash
+make dev
+```
 
-### Backend (`backend/src/main/java/io/github/thomashtn/bookreader`)
+That starts PostgreSQL in Docker, the API on http://localhost:8080 and the app on http://localhost:4200.
+The backoffice (`/admin`) takes the demo key **book-reader-demo-admin-key-0123456789**. Ctrl+C stops the
+API and the app, the database keeps your books.
 
-| Package | Role |
-|---|---|
-| `book` | Books: public API (`/api/books`) and backoffice, JSONB entity, projection without content |
-| `catalogue` | Search relayed to the OPDS catalogue, activation of a title (download, then conversion) |
-| `conversion` | EPUB to the internal format (flat list of blocks), pure and free of Spring |
-| `settings` | Global display settings, a single database row |
-| `shared/config` | Spring configuration: typed properties, OpenAPI, clock, cache headers |
-| `shared/security` | `X-Admin-Key` admin key, per-IP lockout, Spring Security chain |
-| `shared/exception` | `ApiErrorResponse` and `GlobalExceptionHandler`, the only source of error responses |
+Type `make` alone to see every shortcut. Each one wraps a plain command, so make is a convenience, never
+a requirement.
 
-Every business package follows the same layout: `controller`, `dto`, `entity`, `repository`,
-`service`.
+## Try the real thing
 
-### Frontend (`frontend/src/app`)
+The whole app from its Docker images, exactly as a server runs it, on http://localhost:8000:
 
-| Folder | Role |
-|---|---|
-| `core/http` | API URLs (`api-endpoints.ts`), response models, HTTP status reading |
-| `core/reader` | Shared reader state: server polling, progress in `localStorage`, commands |
-| `core/admin` | Backoffice session and calls, result messages |
-| `pages/start` | `/`: resumes the last book or opens the list |
-| `pages/library` | `/livres`: book grid paged by rows, cover colours |
-| `pages/reader` | `/lire/:id`: reading screen; `pagination/` holds the pure computation and the DOM measurement |
-| `pages/admin` | `/admin`, lazy-loaded: catalogue, library, upload, settings |
-| `shared` | Reused components: navigation bar, book card, unavailability screen |
-| `testing` | Test doubles, excluded from the build |
+```bash
+make reset up
+make e2e
+```
 
-A screen is a trio `x.ts`, `x.html`, `x.spec.ts`. A screen's pure functions go in `x.utils.ts`, its
-types in `x.model.ts`, each with its own spec.
+The browser tests replay the reader journey of specification section 12, with axe-core on every screen.
+They start from an empty library, hence the `reset`. With a `backend/.env` of your own, pass its key:
+`E2E_ADMIN_KEY=<your key> make e2e`.
 
-## Conventions
+Done:
 
-### Comments
+```bash
+make down
+```
 
-No declaration without a comment, private or not: class, field, method, constant, type, interface
-property. The comment says why, or under which constraint, in one short sentence, and does not
-repeat the name. It is always written on several lines:
+## The daily loop
+
+1. Read the section of the specification that covers the task.
+2. Write a test that fails, then make it pass.
+3. Tidy up, then run every check the CI runs:
+
+```bash
+make fix
+make verify
+```
+
+Green here means green on GitHub. Coverage floors only ever go up: 90 % of lines on both sides.
+
+## What lives where
+
+```text
+backend/            the API (Spring Boot): EPUB conversion, OPDS catalogue, books, settings
+frontend/           the reader and its backoffice (Angular), served by nginx, which relays /api
+docs/               specification, design system, deployment contract, screenshots
+compose.yaml        the whole app on your machine, also started by every delivery
+```
+
+The backend and frontend READMEs hold the day-to-day commands and the code map of each side.
+
+## House rules
+
+- The interface speaks French. Everything else is English: code, comments, tests, logs, commit messages.
+- Small functions, names that explain themselves, no dead code, no magic numbers.
+- Something moves to shared only when a second place needs it.
+- The reader has exactly three commands (next, previous, "Mes livres"). No screen, shortcut, message or
+  confirmation is ever added on the reader side.
+- Never log the administrator key.
+
+## Comments
+
+Every declaration gets a one-sentence comment that says why, private ones included:
 
 ```ts
 /**
  * Last valid book list, kept through failed polls so "Mes livres" stays available offline.
  */
-public readonly books = lastValidValue(this.booksResource);
 ```
 
-In HTML templates, a one-line comment above each block that deserves one (`<!-- ... -->`). In CSS,
-a header per file and one line above each rule. Checkstyle (backend) and ESLint (frontend) reject an
-undocumented declaration.
+The format follows the file:
 
-Code, comments, identifiers, tests and logs are in English; the user interface, the specification
-and the design system are in French.
+```text
+.java .ts .js .mjs                /** ... */ above every declaration
+.html                             <!-- ... --> above each meaningful block
+.scss .css                        /* ... */ file header, one line above each rule
+.sql                              -- ... above each statement
+.properties .env.example .yml     # === section headers, # ... above keys that need it
+```
 
-### Backend
+Backend test methods are named by their @DisplayName instead. Checkstyle and ESLint fail on a missing
+comment.
 
-- A service called by a controller is an interface plus a `Default*` implementation; the contract's
-  Javadoc sits on the interface.
-- DTOs are `record`s annotated `@Schema`; controllers carry `@Tag`, `@Operation`, `@ApiResponse`.
-- An error is thrown (`ResourceNotFoundException`, `InvalidRequestException`, domain exceptions) and
-  `GlobalExceptionHandler` translates it. A controller never builds an error response. The returned
-  `code` values are a contract with `frontend/src/app/core/admin/admin-message.ts`.
-- Constructor injection only. Configuration goes through typed, validated properties
-  (`ApplicationProperties`, `CatalogueProperties`), never `@Value`.
-- Never edit a Flyway migration that has already run: Flyway checks every file's checksum, comments
-  included. Every change is a new `V<n>__<subject>.sql` migration.
+## Backend rules
 
-### Frontend
+- One package per feature, split into controller, dto, entity, repository and service. Shared code
+  goes in shared, which depends on no feature.
+- Packages only use the tiers below them (see the backend README), and only services touch
+  repositories. Another feature's data goes through its service. ArchitectureTest checks it.
+- A service is an interface plus its Default implementation, documented on the interface.
+- DTOs are records with @Schema. Controllers carry @Tag, @Operation and @ApiResponse.
+- Errors are thrown, and only exception handlers render them: GlobalExceptionHandler for the shared
+  ones, CatalogueExceptionHandler for EPUB and catalogue failures. Error codes are a contract with
+  `frontend/src/app/core/admin/admin-message.utils.ts`: change one on both sides or not at all.
+- Constructor injection and typed settings (ApplicationProperties, CatalogueProperties), never @Value.
+- Flyway owns the schema. Never edit an applied migration: add the next V<n>__<subject>.sql.
+- Conversion runs in three steps: download outside any transaction, pure in-memory conversion, short
+  transaction to persist.
+- A SpotBugs false positive shared by the whole codebase goes in config/spotbugs/exclude.xml with its
+  reason. A one-off gets a justified @SuppressFBWarnings.
 
-- Standalone components, signals, zoneless; `@Service()` for services.
-- Data goes through `httpResource`, URLs through `API_ENDPOINTS`: a component never builds a URL.
-- The reader only uses the tokens of `src/styles/tokens.css`, a verbatim copy of
-  `docs/design-system/tokens.css` (edit the source, then copy it). The forbidden list is in section 9
-  of the design system: no transition, no border, no hard-coded value, three commands and nothing
-  else.
-- The backoffice has its own visual register, in plain CSS on the `--admin-*` tokens:
-  `pages/admin/admin.css` imports the sections of `pages/admin/styles/` in cascade order, and spacing
-  is a multiple of `--admin-spacing`. No CSS framework.
-- Every DOM measurement goes through `ChapterLayout` (`pages/reader/pagination/chapter-layout.ts`);
-  the pagination computation stays pure and is tested on its own.
+## Frontend rules
 
-## Automated quality
-
-| Command | Effect |
-|---|---|
-| `cd frontend && npm run fix` | Fixes what can be fixed: import order, comment layout, ESLint, stylelint, Prettier |
-| `cd frontend && npm run lint` | ESLint (TypeScript, templates, accessibility, comments) and stylelint |
-| `cd frontend && npm run format:check` | Checks Prettier formatting |
-| `cd backend && ./mvnw spotless:apply` | Fixes unused imports, import order, trailing whitespace |
-| `cd backend && ./mvnw clean verify` | Spotless, Checkstyle, tests, SpotBugs, JaCoCo coverage (90 % lines, 70 % branches) |
-
-**Pre-commit hook.** `npm install` in `frontend/` links `scripts/git-hooks/pre-commit` into
-`.git/hooks` without touching other hooks. On every commit, it runs the fixers on the staged files
-only (configuration in `.lintstagedrc.mjs`), stages the result again and blocks the commit when an
-error needs a human, a missing comment for instance.
-
-**Continuous integration.** Three GitHub workflows, triggered by the paths changed: backend
-(`clean verify`), frontend (format, lint, tests, build) and end-to-end (Playwright and axe-core).
+- Standalone OnPush components, signals, zoneless. Services use @Service() and inject().
+- Imports go core, then shared, then pages, never upwards, and a page never imports another page. Other
+  folders are reached through the @core, @shared and @pages aliases. ESLint checks it.
+- Data comes through httpResource, URLs through API_ENDPOINTS.
+- One suffix per role: x.ts, x.html, x.scss, x.spec.ts, x.model.ts, x.constants.ts, x.utils.ts, and
+  x.fixtures.ts for tests.
+- Tailwind for layout only, in the templates. Everything visual goes in the component's .scss, in BEM
+  classes on the tokens of `src/styles/tokens.css`, a verbatim copy of `docs/design-system/tokens.css`
+  (edit the source, then copy it). A utility never sets a property the component's .scss also sets: the
+  .scss would win.
+- The reader follows the forbidden list of design system section 9: no hard-coded value, no transition,
+  no border, contrast 7:1, targets of 44 px at least.
+- Every DOM measurement goes through ChapterLayout (`pages/reader/pagination/pagination.model.ts`); the
+  pagination computation stays pure and is tested on its own.
 
 ## Recipes
 
-**Add an endpoint.** A `record` DTO in `dto/`, a method on the service interface then in
-`Default*Service`, a controller method documented for OpenAPI, an API test in
-`src/test/.../<package>/*ApiTest.java` (it extends `PostgreSqlIntegrationTest`). On the frontend:
-the URL in `API_ENDPOINTS`, the type in `api.model.ts` or `admin.model.ts`.
+**A new endpoint**: a DTO, the service interface and its implementation, a documented controller
+method, and an API test extending PostgreSqlIntegrationTest. On the frontend, its URL in API_ENDPOINTS
+and its type in a .model.ts.
 
-**Add a backoffice view.** A `pages/admin/<view>/` folder with `admin-<view>.ts`, `.html`,
-`.spec.ts`, a route in `admin.routes.ts`, a link in `admin-shell.html`, its own styles in
-`pages/admin/styles/<view>.css` imported by `admin.css` before `responsive.css`.
+**A new table**: a migration, an entity, a repository, an integration test.
 
-**Touch the pagination.** Read section 5.2 of the specification. The pure computation
-(`page-math.ts`, `chapters.ts`, `page-count.ts`) is tested with Vitest; the real measurement
-(`DomChapterLayout`) can only be checked in a browser, through `npm run e2e`.
+**A new backoffice view**: a folder in `pages/admin` with its .ts, .html, .scss and .spec.ts, a route
+in `admin.routes.ts` and a link in `admin-shell.html`. It reuses the `a-*` primitives of
+`pages/admin/styles/` and keeps its own rules in its .scss.
 
-## Known pitfalls
+**Touch the pagination**: read section 5.2 of the specification. The pure computation
+(`page-math.utils.ts`, `chapters.utils.ts`, `page-count.utils.ts`) is tested with Vitest; the real
+measurement (DomChapterLayout) can only be checked in a browser, through `make e2e`.
 
-- `-Dtest=` does not select `@Nested` classes: run the whole suite.
-- The IDE may write broken classes into `backend/target/`: always `clean`.
-- npm 10.9 crashes on jsdom's optional `canvas` dependency: install with `npx npm@11 install`
-  (`npm ci` works).
-- Never download EPUBs in bulk from ebooksgratuits.com: the site bans the IP address after a few
-  files. The tests never call the site.
-- End-to-end tests start from an empty database: recreate it before each `npm run e2e`.
+**Refresh the README screenshots**: `make reset up`, then from frontend/
+`SCREENSHOTS=1 npx playwright test e2e/screenshots.e2e.ts`.
+
+## Shipping a release
+
+Set the version on both sides:
+
+```bash
+make version VERSION=1.1.0
+```
+
+Commit, then tag:
+
+```bash
+git tag v1.1.0 && git push origin v1.1.0
+```
+
+The delivery checks that the tag matches both versions, publishes the images 1.1.0 and 1.1, and writes
+the GitHub release from the commits. Commit messages follow Conventional Commits (fix(reader): ...), so
+the notes sort themselves.
+
+## What the CI does
+
+- **A pull request** runs the checks of the side it touches.
+- **A push to main** runs both, builds both images, starts them, scans them, drives them with the
+  Playwright journey, and only then pushes them to GHCR. A failed commit has no image, so it can never
+  be deployed.
+- **CodeQL** reads the Java, TypeScript and workflows on every push and once a week.
+- **Dependabot** groups the weekly bumps of each ecosystem, base images included.
+
+## Pitfalls
+
+**npm install crashes**: npm 10.9 trips on jsdom's optional canvas dependency. Use npm 11:
+
+```bash
+npx npm@11 install
+```
+
+**Playwright cannot find its browser**: install it once, from the frontend folder:
+
+```bash
+npx playwright install chromium
+```
+
+**One test class with -Dtest skips the @Nested ones**: run the whole suite.
+
+**Strange compilation errors**: the IDE left broken classes in backend/target. Build with clean.
+
+**The image scan fails a delivery**: it names the package. Bump the base image or the Spring Boot
+managed version in pom.xml, never silence the scan.
+
+**ebooksgratuits.com**: never download EPUBs in bulk, the site bans the address after a handful of
+files. The tests only talk to a fake server, and the browser tests intercept the catalogue.

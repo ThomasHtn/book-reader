@@ -97,7 +97,7 @@ Règles :
 - L'indicateur affiche "Page 12 sur 840" dès l'ouverture, sans mettre en page d'autre chapitre que
   celui affiché. Un chapitre déjà affiché compte pour son nombre réel de pages, mémorisé par livre et
   par mise en page (taille de la zone de texte et palier) ; les autres sont estimés par un calcul pur
-  (`pages/reader/pagination/page-count.ts`) : largeurs de caractères lues une fois au canvas, coupure des lignes
+  (`pages/reader/pagination/page-count.utils.ts`) : largeurs de caractères lues une fois au canvas, coupure des lignes
   entre les mots avec une césure approchée (mots de 7 lettres et plus, 3 de chaque côté), remplissage
   des colonnes avec deux lignes au moins de part et d'autre d'une coupure, sauf un paragraphe de trois
   lignes coupé deux et un, comme Blink. Les numéros se suivent de un en un ; seul le total s'ajuste
@@ -328,16 +328,19 @@ compression.
 ## 11. Architecture
 
 **Frontend** : Angular 22, composants autonomes, signaux, sans zone, vitest, eslint, prettier.
-Aucun framework CSS : la liseuse et le backoffice n'utilisent que `tokens.css`, sans valeur en dur.
+Tailwind 4 pour la mise en page seulement, sans preflight ni thème par défaut ; chaque composant porte
+sa feuille SCSS en classes BEM sur les tokens de `tokens.css`, sans valeur en dur.
 Aucune bibliothèque de composants. Routes `/`, `/livres`, `/lire/:id`, `/admin` (différé). Données
 par `httpResource`, URLs dans `core/http/api-endpoints.ts`, dernière réponse valide conservée pour
 les ressources interrogées périodiquement. Manifeste et service worker Angular limité aux ressources
 de l'application : sans lui, un démarrage avant le réseau montre la page "Pas de connexion" de Chrome
 au lieu de notre écran d'attente. Pas d'installation PWA : le raccourci kiosque suffit.
 
-**Backend** : Spring Boot 4, Java 25, Flyway, PostgreSQL 17, spring-dotenv, springdoc, Checkstyle,
-SpotBugs, JaCoCo (90 % lignes, 70 % branches). Paquets `book`, `catalogue`, `conversion`,
-`settings`, `shared`. `GET /api/**` public, `/api/admin/**` protégé, `FORWARD_HEADERS_STRATEGY=framework`.
+**Backend** : Spring Boot 4, Java 25, Flyway, PostgreSQL 17, springdoc, Checkstyle, SpotBugs, ArchUnit,
+JaCoCo (90 % lignes, 70 % branches). Paquets `book`, `catalogue`, `conversion`, `settings`, `shared`,
+en paliers vérifiés par `ArchitectureTest`. `GET /api/**` public, `/api/admin/**` protégé,
+`FORWARD_HEADERS_STRATEGY=native`. Actuator sur son propre port (8081), `/readyz` et `/livez` sur le port
+principal.
 Client OPDS `WebClient` avec délais courts et un réessai. Compression HTTP activée.
 
 **Base** :
@@ -347,12 +350,13 @@ Client OPDS `WebClient` avec délais courts et un réessai. Compression HTTP act
 | `book` | `id`, `title`, `author`, `source` (`catalogue` ou `upload`), `source_id` (identifiant OPDS, unique, nul pour un dépôt), `source_url`, `content` (JSONB), `block_count`, `active`, `activated_at`, `created_at`, `finished_at` (marque "lu" du backoffice, nulle sinon) |
 | `reader_settings` | une ligne : `font_tier`, `updated_at` |
 
-**Déploiement** : `https://book-reader.thomashtn.dev`. Deux images Docker (nginx pour le bundle, jar
-Spring) derrière Traefik sur le VPS, même origine, `/api/*` vers le backend, base PostgreSQL existante avec base et rôle dédiés. `.env`
-documenté dans `.env.example` (base, `ADMIN_API_KEY`, URL du flux, `API_DOCS_ENABLED`). Limite de
-20 Mo alignée dans nginx, Traefik et Spring. `robots.txt` interdisant tout et `X-Robots-Tag: noindex`.
-Limitation de débit Traefik sur `/api/**`. CI GitHub Actions `backend-ci.yml` et `frontend-ci.yml`
-par chemin, plus `e2e.yml` (parcours Playwright sur une base vide) dès que l'un des deux change.
+**Déploiement** : `https://book-reader.thomashtn.dev`. Deux images Docker, publiées sur GHCR
+(`sha-<commit>`) par le workflow `Deliver` une fois les tests, l'analyse des images et le parcours
+Playwright passés ; le serveur ne construit rien. Le domaine va au frontend (nginx), qui relaie `/api`
+et `/readyz` au backend : même origine, backend hors du réseau public. Le contrat de déploiement est
+`docs/deployment.md` ; la configuration du serveur vit sur le serveur. Limite de 20 Mo alignée dans
+nginx et Spring. `robots.txt` interdisant tout et `X-Robots-Tag: noindex`. Les requêtes de chaque côté
+lancent `backend-ci.yml` ou `frontend-ci.yml` ; CodeQL analyse le code à chaque poussée.
 
 ## 12. Livraison
 
@@ -392,7 +396,7 @@ La version 1 est livrable quand :
 | Indicateur en petit dans le coin supérieur droit | bande d'état au-dessus des commandes, indicateur supprimé, indicateur dans le bouton "Suivant" | 22 septembre 2026 : une bande pleine largeur donnait trop de poids à une information secondaire ; le coin la garde visible sans voler de surface au texte ni à une cible |
 | Accent rose `#ffa6c1`, réservé aux commandes | tangerine `#ffa03c`, rose sur le seul thème clair | 22 septembre 2026 : demande de l'utilisateur ; le rose ne colore que ce qui s'active, donc une surface rose veut toujours dire "appuyez ici" |
 | Bordure des commandes à 2 px (remplacée le 23 septembre 2026, voir plus bas) | 6 px | les aplats pleins portent les formes, un filet de 6 px alourdissait sans rien ajouter au contraste |
-| Grille de trois blocs par ligne, paginée par rangées | une ligne par livre en multi-colonnes | 22 septembre 2026 : demande de l'utilisateur ; une grille ne se fragmente pas en colonnes CSS, d'où le découpage par rangées entières (`pages/library/grid-math.ts`) |
+| Grille de trois blocs par ligne, paginée par rangées | une ligne par livre en multi-colonnes | 22 septembre 2026 : demande de l'utilisateur ; une grille ne se fragmente pas en colonnes CSS, d'où le découpage par rangées entières (`pages/library/grid.utils.ts`) |
 | Grille sur 1 500 px avec des marges de 20 px, des blocs deux fois plus hauts qu'une commande et un titre plafonné à `8cqi` | grille sur 1 100 px, marges de lecture, titre à `11cqi` | 22 septembre 2026 : demande de l'utilisateur ; sur cet écran les blocs sont le contenu, donc ils prennent la largeur que les marges abandonnent, et le plafond du titre garde neuf titres par page au palier 100 sur 1080 px, barres de pagination comprises |
 | Bloc plein portant le titre, l'auteur et l'état | plateau 3:4 avec l'initiale du titre, couverture extraite de l'EPUB | 22 septembre 2026 : demande de l'utilisateur ; sans couverture à afficher, le plateau ne faisait que voler la place du titre. L'auteur, d'abord écarté avec le plateau, est rétabli le même jour : il tient sur une ligne sous le titre, à `--card-author-size`, sans reprendre de place au titre |
 | Barre retirée quand elle ne mène nulle part | barre laissée en place et désactivée | 22 septembre 2026 : demande de l'utilisateur ; contrepartie assumée, la cible restante change de largeur au premier et au dernier tour de page |
@@ -416,6 +420,8 @@ La version 1 est livrable quand :
 | `page-title` fixé au palier 100, indépendant du palier choisi | `page-title` proportionnel au corps du texte (un tiers) | 22 septembre 2026 : demande de l'utilisateur ; "Mes livres" est du décor d'écran, pas du texte de lecture, il ne doit pas grossir ni rétrécir avec le palier |
 | Thème unique, noir sur blanc cassé, surfaces beige | trois thèmes (noir sur blanc, blanc sur noir, jaune sur noir), choisis dans le backoffice | 22 septembre 2026 : demande de l'utilisateur ; le thème clair suffit, les deux autres n'étaient jamais utilisés |
 | Backoffice en CSS simple sur les tokens `--admin-*` | Tailwind 4 réservé au backoffice | 8 octobre 2026 : demande de l'utilisateur ; Tailwind ne fournissait plus qu'une unité d'espacement et `sr-only`, au prix d'un plugin PostCSS et d'un balayage des gabarits qui générait des classes à partir des mots des commentaires |
+| Tailwind 4 pour la mise en page et une feuille SCSS par composant, sans preflight ni thème par défaut | CSS simple en feuilles globales | 24 octobre 2026 : demande de l'utilisateur, alignement sur ses autres projets (littlewords, valoquests) ; la collision des noms nus est écartée par les classes BEM et la lecture des seuls gabarits HTML, celle des variables par l'absence du thème par défaut ; migration vérifiée au pixel près sur 46 écrans |
+| Images testées puis publiées sur GHCR, le serveur ne fait que les tirer | construction sur le serveur depuis le dépôt | 24 octobre 2026 : demande de l'utilisateur, alignement sur littlewords et jobfinder ; un commit dont les contrôles échouent n'a pas d'image, et un retour arrière ne prend que quelques secondes |
 
 ## 15. Vitrine
 

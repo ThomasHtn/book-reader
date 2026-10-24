@@ -122,10 +122,11 @@ séparés par la gouttière de 24 px. Sous 480 px, retrait des blocs réduit à 
 quoi un tiers d'écran de téléphone coupait les titres en plein mot.
 
 Backoffice : aucune contrainte de basse vision ne s'y applique, ni curseur agrandi, ni paliers, ni
-contraste 7:1. Les classes de la liseuse sont toutes préfixées (`book-grid`, `book-card`,
-`book-cover`) et celles du backoffice portent `a-` : les deux registres partagent la feuille globale,
-un nom nu comme `grid` finirait par entrer en collision. Les espacements du backoffice sont des
-multiples de `--admin-spacing` (4 px au corps par défaut). Sous 900 px, en-tête de 64 px, une colonne, gouttière 16 px, barre d'onglets fixe en bas
+contraste 7:1. Chaque composant de la liseuse porte ses classes BEM dans sa propre feuille
+(`book-card`, `book-card__title`, `library__grid`) ; celles du backoffice portent `a-` et vivent dans les
+partiels Sass du shell, chaque vue ajoutant sa feuille. Tailwind ne sert qu'à la mise en page, sans
+preflight ni thème par défaut. Les espacements du backoffice sont des multiples de `--admin-spacing`
+(4 px au corps par défaut), l'unité de Tailwind : `gap-3` vaut trois fois `--admin-spacing`. Sous 900 px, en-tête de 64 px, une colonne, gouttière 16 px, barre d'onglets fixe en bas
 (Catalogue, Bibliothèque, Dépôt, Réglages) au-dessus de la zone de sécurité ; à partir de 900 px,
 rail de 240 px à gauche, contenu limité à 960 px. Rayons 6 et 10 px, contrôles de 44 px, une ombre en
 clair, aucune en sombre.
@@ -141,20 +142,20 @@ anti-rebond : cahier des charges 5.1. Aucun geste tactile requis.
 
 | Composant | Spécification |
 |---|---|
-| Pied `nav-footer` | pied de `screen`, commandes seules : une rangée `nav-row` en flex. Les barres se partagent la place (`flex: 1`), "Mes livres" prend celle de son libellé, ou toute la largeur s'il reste seul. Une barre qui ne mène nulle part n'est pas rendue, et sur "Mes livres" le pied disparaît entièrement quand tout tient sur une page. Sous 480 px, les barres perdent leur chevron et leur marge interne pour garder les trois libellés sur une rangée ; l'écran ne dépasse jamais la fenêtre |
-| Ligne de tête `page-head` | première rangée de `screen` ; rangée alignée à droite, centrée sur `--reading-max-width` ou, avec `page-head--grid`, sur `--grid-max-width`. Le titre s'y pousse à gauche tout seul, donc l'indicateur reste à droite quand il n'y a pas de titre |
-| Titre `page-title` | `--page-title-size` (entre 20 et 35 px, calé sur le palier 100 sans en dépendre : c'est du décor, pas du texte de lecture). Sur "Mes livres" seulement |
-| Indicateur `page-indicator` | `--indicator-size` (un quart du corps, entre 16 et 32 px), texte atténué, chiffres tabulaires, `aria-live="polite"`, aucun filet. Porte "Page 12 sur 840" en lecture, "Titres 1 à 6 sur 7" sur la liste. Volontairement discret : c'est un état, jamais une commande |
+| Pied | pied de l'écran, commandes seules : une rangée en flex. Les barres se partagent la place (`flex: 1`), "Mes livres" prend celle de son libellé, ou toute la largeur s'il reste seul. Une barre qui ne mène nulle part n'est pas rendue, et sur "Mes livres" le pied disparaît entièrement quand tout tient sur une page. Sous 480 px, les barres perdent leur chevron et leur marge interne pour garder les trois libellés sur une rangée ; l'écran ne dépasse jamais la fenêtre |
+| Ligne de tête `page-head` | première rangée de l'écran ; rangée alignée à droite, centrée sur `--reading-max-width` ou, avec `page-head--wide`, sur `--grid-max-width`. Le titre s'y pousse à gauche tout seul, donc l'indicateur reste à droite quand il n'y a pas de titre |
+| Titre `page-head__title` | `--page-title-size` (entre 20 et 35 px, calé sur le palier 100 sans en dépendre : c'est du décor, pas du texte de lecture). Sur "Mes livres" seulement |
+| Indicateur `page-head__indicator` | `--indicator-size` (un quart du corps, entre 16 et 32 px), texte atténué, chiffres tabulaires, `aria-live="polite"`, aucun filet. Porte "Page 12 sur 840" en lecture, "Titres 1 à 6 sur 7" sur la liste. Volontairement discret : c'est un état, jamais une commande |
 | Barre `nav-bar` | hauteur minimale `1,4 x --button-min-height` ; chevron SVG (1,2 x `--text-control`, trait 12) puis libellé en `--nav-bar-label-size` sur une ligne, en 400 ; chevron à trait 10 et bouts arrondis. Aplat encre sans filet, arrondi 12 px, libellé crème ; survol un ton plus clair, pressé en beige à texte encre. Aucun état désactivé : sur la première ou la dernière page, la barre inutile est retirée du DOM et celle qui reste occupe la place libérée |
 | Sortie `nav-bar--exit` | "Mes livres" en lecture : une `nav-bar` sans chevron, large de son libellé plus `--button-padding-x` |
-| Bouton `button` | "Réessayer" : hauteur `max(56px, 2 x --text-control)`, même aplat, arrondi, graisse et états que la barre |
+| Bouton `status-screen__retry` | "Réessayer" : hauteur `max(56px, 2 x --text-control)`, même aplat, arrondi, graisse et états que la barre |
 | Surface `reading` | 1 500 px max centrée, `overflow: hidden`, `column-gap: 0`, marges par `padding` ; corps `--text-body`, aligné à gauche, `white-space: pre-line`, `hyphens: auto`, `overflow-wrap: anywhere`, `user-select: none` ; titres `--text-heading`, `text-wrap: balance`, `break-after: avoid` ; auteur et "Fin du livre" en `--text-meta` atténué |
-| Grille `book-grid` | trois colonnes égales, gouttière 24 px, 1 500 px de large au maximum, calée en haut. La ligne de tête partage ses marges latérales, sans quoi le titre cesse de surmonter le premier bloc. `grid-auto-rows: 1fr` : sur une grille de hauteur indéfinie, toutes les rangées prennent la hauteur de la plus grande, donc tous les blocs font la même taille quelle que soit la longueur de leur titre. Paginée par rangées entières : une rangée n'est jamais coupée, et une rangée plus haute que l'écran occupe sa propre page. Les blocs des autres pages gardent leur boîte, pour que la mesure reste valable, mais passent en `visibility: hidden` |
+| Grille `library__grid` | trois colonnes égales, gouttière 24 px, 1 500 px de large au maximum, calée en haut. La ligne de tête partage ses marges latérales, sans quoi le titre cesse de surmonter le premier bloc. `grid-auto-rows: 1fr` : sur une grille de hauteur indéfinie, toutes les rangées prennent la hauteur de la plus grande, donc tous les blocs font la même taille quelle que soit la longueur de leur titre. Paginée par rangées entières : une rangée n'est jamais coupée, et une rangée plus haute que l'écran occupe sa propre page. Les blocs des autres pages gardent leur boîte, pour que la mesure reste valable, mais passent en `visibility: hidden` |
 | Bloc `book-card` | le livre entier tient dans un aplat de toile (`data-tone` de 1 à 10, attribué par `assignCoverTones`, absent sur les blocs en cours et terminés) : titre en `--card-title-size` et en 700, auteur en `--card-author-size` et en 400 puis, s'il y a lieu, l'étiquette d'état, groupés en haut à gauche. Ni couverture ni filet. Texte crème sur la toile, retrait interne de 24 px, arrondi 12 px, hauteur minimale `2 x --button-min-height`, alignés à gauche. Conteneur de requête (`container-type: inline-size`), donc son texte se mesure sur la colonne et jamais sur la fenêtre ; le titre est plafonné à `8cqi` pour qu'une colonne large ne coûte pas une rangée de la grille, l'auteur à `6cqi` pour que les deux lignes ne se retrouvent jamais à la même taille sur une colonne étroite. En cours : bloc rose à texte encre, seul bloc clair et coloré. Terminé : bloc beige pâle à texte encre, sans toile. Survol : la toile fonce de 30 % vers l'encre (`color-mix`), rose 400 pour le bloc en cours, beige soutenu pour le bloc terminé ; rien ne bouge. Pressé : beige soutenu à texte encre, comme les commandes |
-| Étiquette `tag` | `--card-meta-size`, pastille encre à texte crème, arrondi 6 px, jamais en capitales ; n'apparaît que sur les blocs clairs (en cours, terminé). "En cours" et "Terminé" : la couleur seule ne suffit jamais à porter l'état |
+| Étiquette `book-card__tag` | `--card-meta-size`, pastille encre à texte crème, arrondi 6 px, jamais en capitales ; n'apparaît que sur les blocs clairs (en cours, terminé). "En cours" et "Terminé" : la couleur seule ne suffit jamais à porter l'état |
 | Aperçu `a-preview` (backoffice) | rendu réel du palier, réduit à la boîte : la boîte est un conteneur et le texte est dimensionné en `cqi`, sinon il se mesure sur la fenêtre entière et déborde |
-| Écran d'état `status` | une phrase centrée en `--text-body`, 24 caractères par ligne maximum, un bouton |
-| Étagère vide `book-empty` | à la place de la grille sur "Mes livres" quand la liste reçue est vide : même phrase centrée que `status`, sans bouton ; la ligne de tête et l'engrenage restent |
+| Écran d'état `status-screen` | une phrase centrée en `--text-body`, 24 caractères par ligne maximum, un bouton |
+| Étagère vide `library__empty` | à la place de la grille sur "Mes livres" quand la liste reçue est vide : même phrase centrée que `status-screen`, sans bouton ; la ligne de tête et l'engrenage restent |
 
 ## 8. Composants du backoffice
 
