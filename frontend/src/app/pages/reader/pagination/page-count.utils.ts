@@ -34,9 +34,19 @@ const HEADING_AFTER_EM = 1;
 const INDENT_EM = 1.5;
 
 /**
- * Author and end mark size relative to the body, as `--text-meta` in tokens.css (its clamp ignored).
+ * Author and end mark size relative to the body, as `--text-meta` in tokens.css.
  */
 const META_SCALE = 0.6;
+
+/**
+ * Smallest author and end mark size in CSS pixels, the lower bound of `--text-meta`.
+ */
+const META_MIN_PX = 16;
+
+/**
+ * Largest author and end mark size in CSS pixels, the upper bound of `--text-meta`.
+ */
+const META_MAX_PX = 64;
 
 /**
  * Lines kept at least at the bottom of a column before a break, as Blink does (spec 5.2).
@@ -80,7 +90,12 @@ export function estimatePageCounts(
   measured: MeasuredCounts,
   geometry: PageGeometry,
 ): number[] {
-  const lines = new LineBreaker(geometry);
+  // Headings and the book title are bold, hence wider than the body text.
+  const lines = new LineBreaker(geometry.width, geometry.charWidth);
+  const boldLines = new LineBreaker(geometry.width, geometry.boldCharWidth);
+  const body = geometry.fontSize;
+  const heading = body * HEADING_SCALE;
+  const meta = Math.min(META_MAX_PX, Math.max(META_MIN_PX, body * META_SCALE));
   return chapters.map((chapter, index) => {
     const known = measured[index];
     if (known !== undefined) {
@@ -88,14 +103,11 @@ export function estimatePageCounts(
     }
     // A chapter always starts on a fresh column.
     const columns = new ColumnFiller(geometry.height);
-    const body = geometry.fontSize;
-    const heading = body * HEADING_SCALE;
-    const meta = body * META_SCALE;
     // The title page sits before the first chapter, as `DomChapterLayout` renders it.
     if (index === 0) {
-      columns.heading(lines.count(book.title, HEADING_SCALE), heading, body);
+      columns.heading(boldLines.count(book.title, HEADING_SCALE), heading, body);
       columns.place(
-        lines.count(book.author, META_SCALE),
+        lines.count(book.author, meta / body),
         meta * LEADING_BODY,
         meta * HEADING_AFTER_EM,
       );
@@ -105,7 +117,7 @@ export function estimatePageCounts(
     for (let block = chapter.firstBlock; block < chapter.firstBlock + chapter.blockCount; block++) {
       const { kind, text } = book.blocks[block];
       if (kind === 'heading') {
-        columns.heading(lines.count(text, HEADING_SCALE), heading, body);
+        columns.heading(boldLines.count(text, HEADING_SCALE), heading, body);
         indent = 0;
       } else {
         columns.place(lines.count(text, 1, indent), body * LEADING_BODY, 0);
@@ -113,7 +125,7 @@ export function estimatePageCounts(
       }
     }
     if (index === chapters.length - 1) {
-      columns.place(lines.count(END_MARK, META_SCALE), meta * LEADING_BODY, 0);
+      columns.place(lines.count(END_MARK, meta / body), meta * LEADING_BODY, 0);
     }
     return columns.pages;
   });
@@ -151,9 +163,12 @@ class LineBreaker {
   private readonly widths = new Map<string, number>();
 
   /**
-   * Takes the column width and the character measure.
+   * Takes the column width and the measure of one character at body size, in one weight.
    */
-  constructor(private readonly geometry: PageGeometry) {}
+  constructor(
+    private readonly columnWidth: number,
+    private readonly charWidth: (char: string) => number,
+  ) {}
 
   /**
    * Returns the line count of a block whose font is `scale` times the body font, its first line
@@ -161,7 +176,7 @@ class LineBreaker {
    */
   public count(text: string, scale: number, indent = 0): number {
     // A larger font fits fewer characters: scale the column down instead of every advance up.
-    const width = this.geometry.width / scale;
+    const width = this.columnWidth / scale;
     const space = this.widthOf(' ');
     const hyphen = this.widthOf('-');
     let lines = 1;
@@ -222,7 +237,7 @@ class LineBreaker {
   private widthOf(char: string): number {
     let width = this.widths.get(char);
     if (width === undefined) {
-      width = this.geometry.charWidth(char);
+      width = this.charWidth(char);
       this.widths.set(char, width);
     }
     return width;

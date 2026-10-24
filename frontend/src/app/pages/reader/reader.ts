@@ -18,82 +18,31 @@ import { Router } from '@angular/router';
 import { BookContent } from '@core/http/api.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints';
 import { httpStatusOf } from '@core/http/http-status.utils';
-import { CommandGate } from '@core/reader/command-gate';
-import { pageCommandOf } from '@core/reader/page-command.utils';
 import { ProgressStore } from '@core/reader/progress-store';
 import { POLL_INTERVAL_MS } from '@core/reader/reader.constants';
-import { PageCommand, TextPosition } from '@core/reader/reader.model';
+import { PageCommand } from '@core/reader/reader.model';
 import { ReaderData } from '@core/reader/reader-data';
 import { startPosition, withReadMark } from '@core/reader/reading-progress.utils';
 import { layoutKey } from '@core/reader/stored-page-counts.utils';
 import { NavBar } from '@shared/nav-bar/nav-bar';
+import { PageTurns } from '@shared/page-turns/page-turns';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
-import {
-  chapterContent,
-  chapterOfBlock,
-  isChapterStart,
-  splitIntoChapters,
-} from './pagination/chapters.utils';
-import { bookPageNumber, bookPageTotal, estimatePageCounts } from './pagination/page-count.utils';
-import { nextLocation, previousLocation, viewStart } from './pagination/page-math.utils';
+import { BookPagination } from './pagination/book-pagination';
+import { indicatorOf } from './pagination/folios.utils';
 import { CHAPTER_LAYOUT_FACTORY } from './pagination/pagination.constants';
-import {
-  Chapter,
-  ChapterLayout,
-  PageLocation,
-  PendingLocation,
-} from './pagination/pagination.model';
+import { LayoutKey } from './pagination/pagination.model';
 
 /**
- * A book once opened: its content, cut into chapters, and the layout showing one of them.
- */
-interface OpenedBook {
-  /**
-   * Book as received.
-   */
-  readonly content: BookContent;
-  /**
-   * Chapters of the book, laid out one at a time.
-   */
-  readonly chapters: readonly Chapter[];
-  /**
-   * Layout of the visible chapter.
-   */
-  readonly layout: ChapterLayout;
-}
-
-/**
- * Page numbers under the view: the left page's, and the right page's when two pages face each other.
- */
-interface Folios {
-  /**
-   * Number of the left page, or of the only page, in the whole book.
-   */
-  readonly left: number;
-
-  /**
-   * Number of the right page, `null` when one page is shown or the right page is blank.
-   */
-  readonly right: number | null;
-
-  /**
-   * Page count of the whole book.
-   */
-  readonly total: number;
-}
-
-/**
- * Route `/lire/:id`: three commands only, all in the footer (Mes livres, Précédent, Suivant); a
- * running head and the page numbers frame the text. The current chapter is laid out in columns, two
- * facing pages on a wide screen; other chapters are never laid out for "Page 12 sur 840": their
- * counts are remembered once shown, estimated until then.
+ * Route `/lire/:id`: three commands only (Mes livres in the head line, Précédent and Suivant in the
+ * footer); a running head and the page numbers frame the text. `BookPagination` lays the current
+ * chapter out, two facing pages on a wide screen; this component loads the book, saves the reading
+ * position and lays the book out again when the screen or the font tier changes.
  */
 @Component({
   selector: 'app-reader',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NavBar, StatusScreen],
-  host: { '(document:keydown)': 'onKeydown($event)' },
+  imports: [NavBar, PageTurns, StatusScreen],
   templateUrl: './reader.html',
   styleUrl: './reader.scss',
 })
@@ -134,24 +83,29 @@ export class Reader {
   private readonly book = httpResource<BookContent>(() => API_ENDPOINTS.book(this.id()));
 
   /**
-   * Reading surface, focused again after each bar click so Space keeps meaning "Suivant" (spec 5.1).
+   * Reading surface, focused again after each page turn so Space keeps meaning "Suivant" (spec 5.1).
    */
   private readonly text = viewChild<ElementRef<HTMLElement>>('text');
 
   /**
-   * Box of exactly one page; its size is part of the layout key.
+   * Box of one view; its size is part of the layout key.
    */
   private readonly viewport = viewChild<ElementRef<HTMLElement>>('viewport');
 
   /**
-   * Multi-column container, translated by one column width per page (spec 5.2).
+   * Multi-column container, translated by whole pages (spec 5.2).
    */
   private readonly columns = viewChild<ElementRef<HTMLElement>>('columns');
 
   /**
-   * Ignores commands under 400 ms apart and held-key repeats (spec 5.1).
+   * Pages of the opened book, set as soon as it starts opening so a later render does not open it twice.
    */
-  private readonly gate = new CommandGate();
+  private readonly pagination = signal<BookPagination | null>(null);
+
+  /**
+   * Pending relayout, so a burst of notifications runs only one.
+   */
+  private relayoutTimer: ReturnType<typeof setTimeout> | undefined;
 
   /**
    * Book title, on the left of the running head.
@@ -159,56 +113,39 @@ export class Reader {
   protected readonly title = computed(() => (this.book.hasValue() ? this.book.value().title : ''));
 
   /**
-   * Author, on the right of the running head.
+   * Author, after the title in the running head.
    */
   protected readonly author = computed(() =>
     this.book.hasValue() ? this.book.value().author : '',
   );
 
   /**
-   * Shown page, `null` until the first layout, which keeps the screen hidden meanwhile.
+   * Shown view, `null` until the first layout, which keeps the screen hidden meanwhile.
    */
-  protected readonly location = signal<PageLocation | null>(null);
+  protected readonly location = computed(() => this.pagination()?.location() ?? null);
 
   /**
-   * Page count of the chapter laid out now.
+   * Whether to drop the "Précédent" bar: first page of the book, or nothing shown yet.
    */
-  private readonly chapterPages = signal(0);
+  protected readonly isFirst = computed(() => this.pagination()?.isFirst() ?? true);
 
   /**
-   * Pages shown side by side, as the layout found them at its last render.
+   * Whether to drop the "Suivant" bar; saving there also marks the book finished (spec 4).
    */
-  private readonly perView = signal(1);
+  protected readonly isLast = computed(() => this.pagination()?.isLast() ?? true);
 
   /**
-   * Page count of every chapter, measured or estimated.
+   * Numbers of the pages shown, over the whole book; `null` until the first layout.
    */
-  private readonly pageCounts = signal<number[]>([]);
+  protected readonly folios = computed(() => this.pagination()?.folios() ?? null);
 
   /**
-   * Counts measured under the current layout, persisted per book.
+   * "Page 12 sur 840", or "Pages 12 et 13 sur 840" on facing pages, announced on each turn (spec 5.1).
    */
-  private measured: (number | undefined)[] = [];
-
-  /**
-   * Set as soon as a book starts opening, so a later render does not open it twice.
-   */
-  private opened: OpenedBook | null = null;
-
-  /**
-   * First character of the shown page, saved on each turn and restored after a relayout (spec 5.3).
-   */
-  private position: TextPosition = { blockIndex: 0, charOffset: 0 };
-
-  /**
-   * Layout key the current page counts belong to.
-   */
-  private lastLayoutKey = '';
-
-  /**
-   * Whether a relayout is already queued, so a burst of notifications runs only one.
-   */
-  private relayoutScheduled = false;
+  protected readonly indicator = computed(() => {
+    const folios = this.folios();
+    return folios ? indicatorOf(folios) : '';
+  });
 
   /**
    * Whether the book cannot be loaded for another reason than not existing.
@@ -219,60 +156,15 @@ export class Reader {
   });
 
   /**
-   * Whether to drop the "Précédent" bar: first page of the book, or nothing shown yet.
-   */
-  protected readonly isFirst = computed(() => {
-    const location = this.location();
-    return !location || (location.chapter === 0 && location.page === 0);
-  });
-
-  /**
-   * Whether to drop the "Suivant" bar; saving there also marks the book finished (spec 4).
-   */
-  protected readonly isLast = computed(() => {
-    const location = this.location();
-    const chapterCount = this.opened?.chapters.length ?? 0;
-    return (
-      !location ||
-      nextLocation(location, this.chapterPages(), chapterCount, this.perView()) === null
-    );
-  });
-
-  /**
-   * Numbers of the pages shown, over the whole book; `null` until the first layout.
-   */
-  protected readonly folios = computed<Folios | null>(() => {
-    const location = this.location();
-    const counts = this.pageCounts();
-    if (!location || counts.length === 0) {
-      return null;
-    }
-    const left = bookPageNumber(counts, location.chapter, location.page);
-    // A chapter with an odd page count leaves the right page of its last view blank.
-    const hasRight = this.perView() > 1 && location.page + 1 < this.chapterPages();
-    return { left, right: hasRight ? left + 1 : null, total: bookPageTotal(counts) };
-  });
-
-  /**
-   * "Page 12 sur 840", or "Pages 12 et 13 sur 840" on facing pages, announced on each turn (spec 5.1).
-   */
-  protected readonly indicator = computed(() => {
-    const folios = this.folios();
-    if (!folios) {
-      return '';
-    }
-    return folios.right === null
-      ? `Page ${folios.left} sur ${folios.total}`
-      : `Pages ${folios.left} et ${folios.right} sur ${folios.total}`;
-  });
-
-  /**
    * Wires relayouts on resize and settings, the redirect of a missing book and the retry poll.
    */
   constructor() {
     const destroyRef = inject(DestroyRef);
     const observer = new ResizeObserver(() => this.scheduleRelayout());
-    destroyRef.onDestroy(() => observer.disconnect());
+    destroyRef.onDestroy(() => {
+      observer.disconnect();
+      clearTimeout(this.relayoutTimer);
+    });
 
     // A deleted or unknown book sends back to the list, without a message (spec 5.6).
     effect(() => {
@@ -296,35 +188,34 @@ export class Reader {
       this.scheduleRelayout();
     });
 
-    // The view children exist only after a render; each loaded book object is opened once.
+    // The view children exist only after a render; each loaded book object is opened once, at the
+    // font tier of the settings, so the first layout is not redone a moment later.
     afterRenderEffect(() => {
       const book = this.book.hasValue() ? this.book.value() : undefined;
       const viewport = this.viewport()?.nativeElement;
       const columns = this.columns()?.nativeElement;
-      if (book && viewport && columns && book !== this.opened?.content) {
+      if (
+        book &&
+        viewport &&
+        columns &&
+        this.data.settingsSettled() &&
+        book !== this.pagination()?.content
+      ) {
         observer.observe(viewport);
-        void this.open(book, viewport, columns);
+        void this.open(new BookPagination(book, this.layoutFactory(viewport, columns), this.store));
       }
     });
   }
 
   /**
-   * Turns the page from a footer bar, then gives the focus back to the text so Space keeps working.
+   * Turns the page from the footer, then gives the focus back to the text so Space keeps working.
    */
-  protected onBar(command: PageCommand): void {
-    this.turn(command, false);
-    this.text()?.nativeElement.focus();
-  }
-
-  /**
-   * Turns the page from the arrows and Space, intercepted at document level (specification 5.1).
-   */
-  protected onKeydown(event: KeyboardEvent): void {
-    const command = pageCommandOf(event, true);
-    if (command && !this.unreachable()) {
-      event.preventDefault();
-      this.turn(command, event.repeat);
+  protected onTurn(command: PageCommand): void {
+    const pagination = this.pagination();
+    if (pagination?.turn(command)) {
+      this.save(pagination);
     }
+    this.text()?.nativeElement.focus();
   }
 
   /**
@@ -345,141 +236,49 @@ export class Reader {
    * Opens a book where it was left, once the fonts are ready so the first layout is the right one; a
    * finished book reopens at its first page and only a page turn starts a new reading.
    */
-  private async open(
-    book: BookContent,
-    viewport: HTMLElement,
-    columns: HTMLElement,
-  ): Promise<void> {
-    const opened: OpenedBook = {
-      content: book,
-      chapters: splitIntoChapters(book.blocks),
-      layout: this.layoutFactory(viewport, columns),
-    };
-    this.opened = opened;
+  private async open(pagination: BookPagination): Promise<void> {
+    const { content } = pagination;
+    this.pagination.set(pagination);
     await (this.document.fonts?.ready ?? Promise.resolve());
-    this.store.markOpened(book.id);
-    const progress = withReadMark(this.store.progressOf(book.id), book.finishedAt);
-    this.layoutAt(opened, startPosition(progress, book.blocks.length));
+    this.store.markOpened(content.id);
+    const progress = withReadMark(this.store.progressOf(content.id), content.finishedAt);
+    pagination.open(startPosition(progress, content.blocks.length), this.currentLayoutKey());
     // A finished book stays finished until a page is turned: opening it by mistake changes nothing.
     if (!progress?.finished) {
-      this.save(opened);
+      this.save(pagination);
     }
-  }
-
-  /**
-   * Moves to the previous or next page, across chapters, unless the command comes too fast.
-   */
-  private turn(command: PageCommand, repeated: boolean): void {
-    const location = this.location();
-    const opened = this.opened;
-    if (!location || !opened || !this.gate.accept(repeated)) {
-      return;
-    }
-    const target =
-      command === 'next'
-        ? nextLocation(location, this.chapterPages(), opened.chapters.length, this.perView())
-        : previousLocation(location, this.perView());
-    if (target) {
-      this.goTo(opened, target);
-      this.save(opened);
-    }
-  }
-
-  /**
-   * Shows a target page, laying its chapter out first when it changes, which resolves `last` to the
-   * left page of the chapter's last view.
-   */
-  private goTo(opened: OpenedBook, target: PendingLocation): void {
-    if (target.chapter !== this.location()?.chapter) {
-      this.renderChapter(opened, target.chapter);
-    }
-    const page =
-      target.page === 'last' ? viewStart(this.chapterPages() - 1, this.perView()) : target.page;
-    opened.layout.show(page);
-    this.location.set({ chapter: target.chapter, page });
-    this.position = opened.layout.positionOfPage(page);
-  }
-
-  /**
-   * Lays the chapter of a position out again, shows the page holding it and estimates the others.
-   */
-  private layoutAt(opened: OpenedBook, position: TextPosition): void {
-    const { content, chapters, layout } = opened;
-    this.lastLayoutKey = this.currentLayoutKey();
-    // Counts measured earlier under this exact layout skip the estimate for their chapters.
-    this.measured = this.countsPersist()
-      ? this.store.pageCountsOf(content.id, this.lastLayoutKey, chapters.length)
-      : chapters.map(() => undefined);
-    const chapter = chapterOfBlock(chapters, position.blockIndex);
-    this.renderChapter(opened, chapter);
-    this.pageCounts.set(estimatePageCounts(content, chapters, this.measured, layout.geometry()));
-    // A chapter's start is its first page, or a fresh book would skip a title page filling a page alone.
-    const page = isChapterStart(chapters[chapter], position)
-      ? 0
-      : viewStart(Math.min(layout.pageOf(position), this.chapterPages() - 1), this.perView());
-    layout.show(page);
-    this.location.set({ chapter, page });
-    this.position = position;
-  }
-
-  /**
-   * Lays a chapter out and records its page count in place of any estimate.
-   */
-  private renderChapter({ content, chapters, layout }: OpenedBook, chapter: number): void {
-    const pages = layout.render(chapterContent(content, chapters, chapter));
-    this.chapterPages.set(pages);
-    this.perView.set(layout.pagesPerView());
-    this.pageCounts.update((counts) =>
-      counts.map((count, index) => (index === chapter ? pages : count)),
-    );
-    if (this.measured[chapter] !== pages) {
-      this.measured[chapter] = pages;
-      if (this.countsPersist()) {
-        this.store.savePageCounts(content.id, this.lastLayoutKey, this.measured);
-      }
-    }
-  }
-
-  /**
-   * Counts are stored per tier, so none is read or written before the settings are known.
-   */
-  private countsPersist(): boolean {
-    return this.data.settings() !== undefined;
   }
 
   /**
    * Persists the position; on the last page it also marks the book finished (spec 4).
    */
-  private save(opened: OpenedBook): void {
-    this.store.save(opened.content.id, this.position, this.isLast());
+  private save(pagination: BookPagination): void {
+    this.store.save(pagination.content.id, pagination.position(), pagination.isLast());
   }
 
   /**
-   * Coalesces resize and settings notifications into one layout, skipped when nothing changed.
+   * Coalesces resize and settings notifications into one relayout, skipped when nothing changed.
    */
   private scheduleRelayout(): void {
-    if (this.relayoutScheduled) {
+    if (this.relayoutTimer !== undefined) {
       return;
     }
-    this.relayoutScheduled = true;
-    setTimeout(() => {
-      this.relayoutScheduled = false;
-      const opened = this.opened;
-      if (opened && this.location() && this.currentLayoutKey() !== this.lastLayoutKey) {
-        this.layoutAt(opened, this.position);
-      }
+    this.relayoutTimer = setTimeout(() => {
+      this.relayoutTimer = undefined;
+      this.pagination()?.relayout(this.currentLayoutKey());
     });
   }
 
   /**
    * Viewport size and tier: page counts hold only for the layout they were measured under (spec 5.2).
+   * Counts are stored per tier, so none is read or written before the settings are known.
    */
-  private currentLayoutKey(): string {
+  private currentLayoutKey(): LayoutKey {
     const viewport = this.viewport()?.nativeElement;
-    return layoutKey(
-      viewport?.clientWidth ?? 0,
-      viewport?.clientHeight ?? 0,
-      this.data.settings()?.fontTier,
-    );
+    const settings = this.data.settings();
+    return {
+      value: layoutKey(viewport?.clientWidth ?? 0, viewport?.clientHeight ?? 0, settings?.fontTier),
+      persisted: settings !== undefined,
+    };
   }
 }

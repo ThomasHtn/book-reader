@@ -16,19 +16,24 @@ const geometry = (height: number): PageGeometry => ({
   height,
   fontSize: 10,
   charWidth: () => 10,
+  boldCharWidth: () => 10,
 });
 
 /**
  * Estimates the middle chapter of three, away from the title page and the end mark.
  */
-function middleChapterPages(blocks: Block[], height: number): number {
+function middleChapterPages(
+  blocks: Block[],
+  height: number,
+  metrics: Partial<PageGeometry> = {},
+): number {
   const book = { title: 'T', author: 'A', blocks: [paragraph('a'), ...blocks, paragraph('z')] };
   const chapters: Chapter[] = [
     { firstBlock: 0, blockCount: 1 },
     { firstBlock: 1, blockCount: blocks.length },
     { firstBlock: blocks.length + 1, blockCount: 1 },
   ];
-  return estimatePageCounts(book, chapters, [], geometry(height))[1];
+  return estimatePageCounts(book, chapters, [], { ...geometry(height), ...metrics })[1];
 }
 
 describe('estimatePageCounts', () => {
@@ -74,6 +79,24 @@ describe('estimatePageCounts', () => {
     // The indented paragraph runs to three lines; one would fit under "oui", but a line alone is
     // pushed on, and the three lines then split two and one.
     expect(middleChapterPages([paragraph('oui'), paragraph('abcd abcd abcd abcd')], 31)).toBe(3);
+  });
+
+  it('measures headings in their bold weight', () => {
+    // "abcd" fits one 66 px heading line in the regular weight but takes two in bold, which pushes
+    // the paragraph after it to the next page.
+    const blocks: Block[] = [{ kind: 'heading', text: 'abcd' }, paragraph('oui')];
+
+    expect(middleChapterPages(blocks, 60)).toBe(1);
+    expect(middleChapterPages(blocks, 60, { boldCharWidth: () => 20 })).toBe(2);
+  });
+
+  it('never sets the author line and the end mark under 16 px, as `--text-meta` does', () => {
+    // At a 10 px body they take 24.8 px lines rather than 9.3 px ones, so the text no longer fits.
+    const book = { title: 'T', author: 'A', blocks: [paragraph('oui')] };
+
+    expect(estimatePageCounts(book, [{ firstBlock: 0, blockCount: 1 }], [], geometry(80))).toEqual([
+      2,
+    ]);
   });
 });
 

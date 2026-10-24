@@ -53,7 +53,7 @@ export function failureReason(error: unknown): string {
           } | null
         )?.code
       : undefined;
-  if (typeof code === 'string' && code in REASONS) {
+  if (typeof code === 'string' && Object.hasOwn(REASONS, code)) {
     return REASONS[code];
   }
   return STATUS_REASONS[httpStatusOf(error) ?? -1] ?? 'erreur inattendue du serveur';

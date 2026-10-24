@@ -96,11 +96,11 @@ class FakeLayout implements ChapterLayout {
   }
 
   /**
-   * One line per block and one block per page: a 24 px page holds a 15.5 px line or a 24 px
-   * heading, never two blocks, so estimates match one page per block.
+   * One line per block and one block per page: a 25 px page holds a 15.5 px line, a 24 px
+   * heading or the 24.8 px author line, never two blocks, so estimates match one page per block.
    */
   public geometry(): PageGeometry {
-    return { width: 1000, height: 24, fontSize: 10, charWidth: () => 1 };
+    return { width: 1000, height: 25, fontSize: 10, charWidth: () => 1, boldCharWidth: () => 1 };
   }
 
   /**
@@ -512,6 +512,33 @@ describe('Reader', () => {
 
     expect(visible().renders).toBe(renders + 1);
     expect(visible().shownPage).toBe(1);
+  });
+
+  it('stays on the page after a title page filling a page alone when the layout changes', async () => {
+    titlePagePages = 1;
+    const { fixture, next } = await open();
+    next()!.click();
+    await flush(fixture);
+    // Page 2 starts at the book's first character, like the title page before it.
+    expect(visible().shownPage).toBe(1);
+
+    data.settings.set({ fontTier: 40 });
+    await flush(fixture);
+
+    expect(visible().shownPage).toBe(1);
+  });
+
+  it('waits for the settings before laying the book out at their font tier', async () => {
+    data.settingsSettled.set(false);
+    const { fixture } = await open();
+    expect(layouts).toEqual([]);
+
+    data.settings.set({ fontTier: 32 });
+    data.settingsSettled.set(true);
+    await flush(fixture);
+
+    expect(visible().renders).toBe(1);
+    expect(store.pageCounts.get('b1')?.layout).toBe(JSDOM_LAYOUT);
   });
 
   it('opens "Mes livres" from the head line', async () => {

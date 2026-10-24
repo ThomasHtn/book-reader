@@ -1,0 +1,16 @@
+<!-- Left half: "Précédent" when there is a page before. -->
+<div class="flex">
+  @if (hasPrevious()) {
+    <app-nav-bar
+      direction="previous"
+      [context]="previousContext()"
+      (activate)="onBar('previous')"
+    />
+  }
+</div>
+<!-- Right half: "Suivant" when there is a page after. -->
+<div class="flex">
+  @if (hasNext()) {
+    <app-nav-bar direction="next" [context]="nextContext()" (activate)="onBar('next')" />
+  }
+</div>

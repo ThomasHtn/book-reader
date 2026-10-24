@@ -36,6 +36,10 @@ export interface PageGeometry {
    * Advance of one character of body text.
    */
   readonly charWidth: (char: string) => number;
+  /**
+   * Advance of one character at body size in the heading weight.
+   */
+  readonly boldCharWidth: (char: string) => number;
 }
 
 /**
@@ -165,3 +169,38 @@ export interface ChapterLayout {
  * Creates a layout over a viewport and its multi-column child.
  */
 export type ChapterLayoutFactory = (viewport: HTMLElement, columns: HTMLElement) => ChapterLayout;
+
+/**
+ * Page numbers under the view: the left page's, and the right page's when two pages face each other.
+ */
+export interface Folios {
+  /**
+   * Number of the left page, or of the only page, in the whole book.
+   */
+  readonly left: number;
+
+  /**
+   * Number of the right page, `null` when one page is shown or the right page is blank.
+   */
+  readonly right: number | null;
+
+  /**
+   * Page count of the whole book.
+   */
+  readonly total: number;
+}
+
+/**
+ * Layout the page counts belong to (spec 5.2).
+ */
+export interface LayoutKey {
+  /**
+   * Typography, viewport size and font tier, as `layoutKey` names them.
+   */
+  readonly value: string;
+
+  /**
+   * Whether counts are read and stored under it: not before the font tier is known.
+   */
+  readonly persisted: boolean;
+}

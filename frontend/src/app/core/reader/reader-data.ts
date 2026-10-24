@@ -42,6 +42,14 @@ export class ReaderData {
   public readonly settings = lastValidValue(this.settingsResource);
 
   /**
+   * Whether the settings answered or failed at least once, so the reader lays its first page out at the
+   * right font tier, or without it when the server does not give one.
+   */
+  public readonly settingsSettled = computed(
+    () => this.settings() !== undefined || this.settingsResource.error() !== undefined,
+  );
+
+  /**
    * Whether the book list never loaded because the server does not answer.
    */
   public readonly unreachable = computed(

@@ -126,23 +126,33 @@ export class DomChapterLayout implements ChapterLayout {
   }
 
   /**
-   * Reads the page size and body font for page count estimates, with a canvas set to the columns' font.
+   * Reads the page size and font for page count estimates, with canvases set to the body and heading weights.
    */
   public geometry(): PageGeometry {
     const style = getComputedStyle(this.columns);
     const fontSize = parseFloat(style.fontSize);
-    const context = this.columns.ownerDocument.createElement('canvas').getContext('2d');
-    if (context) {
-      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-      context.letterSpacing = style.letterSpacing;
-    }
+    const headingWeight = style.getPropertyValue('--weight-heading').trim() || 'bold';
+    const body = this.measurer(style, style.fontWeight);
+    const bold = this.measurer(style, headingWeight);
     return {
       width: this.columnWidth,
       height: this.viewport.clientHeight,
       fontSize,
-      // Without a canvas, an average Luciole advance keeps the estimate in range.
-      charWidth: (char) => context?.measureText(char).width ?? fontSize * 0.55,
+      charWidth: (char) => body?.measureText(char).width ?? fontSize * AVERAGE_ADVANCE_EM,
+      boldCharWidth: (char) => bold?.measureText(char).width ?? fontSize * AVERAGE_ADVANCE_EM,
     };
+  }
+
+  /**
+   * Canvas set to the columns' font in one weight, `null` where canvas is unavailable.
+   */
+  private measurer(style: CSSStyleDeclaration, weight: string): CanvasRenderingContext2D | null {
+    const context = this.columns.ownerDocument.createElement('canvas').getContext('2d');
+    if (context) {
+      context.font = `${weight} ${style.fontSize} ${style.fontFamily}`;
+      context.letterSpacing = style.letterSpacing;
+    }
+    return context;
   }
 
   /**
@@ -159,6 +169,11 @@ export class DomChapterLayout implements ChapterLayout {
     return this.columns.getBoundingClientRect().left;
   }
 }
+
+/**
+ * Average Luciole advance in ems, standing in for character widths without a canvas.
+ */
+const AVERAGE_ADVANCE_EM = 0.55;
 
 /**
  * Creates an element holding plain text only: block text is never parsed as HTML.

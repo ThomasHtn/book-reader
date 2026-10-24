@@ -1,0 +1,6 @@
+/* Two equal halves; the caller sets the width, the side padding and the gap between the halves. */
+:host {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-block: var(--space-1) var(--grid-padding);
+}

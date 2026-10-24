@@ -14,15 +14,13 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { CommandGate } from '@core/reader/command-gate';
-import { pageCommandOf } from '@core/reader/page-command.utils';
 import { ProgressStore } from '@core/reader/progress-store';
 import { PageCommand } from '@core/reader/reader.model';
 import { ReaderData } from '@core/reader/reader-data';
 import { sortLibrary } from '@core/reader/reading-progress.utils';
 import { BookCard } from '@shared/book-card/book-card';
-import { NavBar } from '@shared/nav-bar/nav-bar';
 import { PageHead } from '@shared/page-head/page-head';
+import { PageTurns } from '@shared/page-turns/page-turns';
 import { StatusScreen } from '@shared/status-screen/status-screen';
 
 import { assignCoverTones } from './cover-tone.utils';
@@ -35,8 +33,7 @@ import { GRID_COLUMNS, MAX_ROWS_PER_PAGE } from './library.constants';
 @Component({
   selector: 'app-library',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BookCard, NavBar, PageHead, StatusScreen],
-  host: { '(document:keydown)': 'onKeydown($event)' },
+  imports: [BookCard, PageHead, PageTurns, StatusScreen],
   templateUrl: './library.html',
   styleUrl: './library.scss',
 })
@@ -75,11 +72,6 @@ export class Library {
    * Grid of cards, translated vertically by whole rows.
    */
   private readonly grid = viewChild<ElementRef<HTMLElement>>('grid');
-
-  /**
-   * Ignores commands under 400 ms apart and held-key repeats (spec 5.1).
-   */
-  private readonly gate = new CommandGate();
 
   /**
    * Bumped by the resize observer so the render effect measures again.
@@ -174,33 +166,13 @@ export class Library {
   }
 
   /**
-   * Turns the page of titles from a footer bar.
+   * Shows the previous or next page of titles, from a footer bar or an arrow key.
    */
-  protected onBar(command: PageCommand): void {
-    this.turn(command, false);
-  }
-
-  /**
-   * Turns the page of titles from the arrows; Space is left to the focused block, which it opens.
-   */
-  protected onKeydown(event: KeyboardEvent): void {
-    const command = pageCommandOf(event, false);
-    if (command) {
-      event.preventDefault();
-      this.turn(command, event.repeat);
-    }
-  }
-
-  /**
-   * Shows the previous or next page of titles, if any, unless the command comes too fast.
-   */
-  private turn(command: PageCommand, repeated: boolean): void {
+  protected turn(command: PageCommand): void {
     const target = this.page() + (command === 'next' ? 1 : -1);
-    if (target >= 0 && target < this.pages() && this.gate.accept(repeated)) {
-      const focused = this.document.activeElement;
-      this.page.set(target);
-      afterNextRender(() => this.keepFocus(focused), { injector: this.injector });
-    }
+    const focused = this.document.activeElement;
+    this.page.set(Math.min(Math.max(target, 0), this.pages() - 1));
+    afterNextRender(() => this.keepFocus(focused), { injector: this.injector });
   }
 
   /**

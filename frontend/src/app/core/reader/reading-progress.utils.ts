@@ -36,14 +36,13 @@ export function withReadMark(
   progress: ReadingProgress | undefined,
   finishedAt: string | null,
 ): ReadingProgress | undefined {
-  if (
-    finishedAt === null ||
-    (progress && Date.parse(progress.updatedAt) >= Date.parse(finishedAt))
-  ) {
+  const markedAt = finishedAt === null ? Number.NaN : Date.parse(finishedAt);
+  // A missing or unreadable mark changes nothing; a reading with an unreadable date predates the mark.
+  if (Number.isNaN(markedAt) || (progress && Date.parse(progress.updatedAt) >= markedAt)) {
     return progress;
   }
   // Normalised like ProgressStore dates, so string ordering in sortLibrary holds.
-  return { ...BOOK_START, finished: true, updatedAt: new Date(finishedAt).toISOString() };
+  return { ...BOOK_START, finished: true, updatedAt: new Date(markedAt).toISOString() };
 }
 
 /**

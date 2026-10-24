@@ -63,11 +63,9 @@
   }
 }
 
-/* Two halves, the gap between them on the fold: each page turn sits under its own page. */
+/* The gap between the two halves sits on the fold: each page turn under its own page. */
 .reader__commands {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: var(--command-gap);
-  padding-block: var(--space-1) var(--grid-padding);
 }
 
 /* Focused by script only, after a click, so Space keeps turning pages: no ring on it. */

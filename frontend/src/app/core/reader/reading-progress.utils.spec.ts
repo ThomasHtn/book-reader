@@ -60,6 +60,12 @@ describe('withReadMark', () => {
     expect(withReadMark(undefined, null)).toBeUndefined();
   });
 
+  it('ignores a read mark whose date cannot be read', () => {
+    expect(withReadMark(progress('2026-09-17T10:00:00.000Z'), 'hier')).toEqual(
+      progress('2026-09-17T10:00:00.000Z'),
+    );
+  });
+
   it('turns a book marked as read after the last reading into a finished book', () => {
     expect(
       withReadMark(progress('2026-09-17T10:00:00.000Z'), '2026-09-18T08:00:00.123456Z'),

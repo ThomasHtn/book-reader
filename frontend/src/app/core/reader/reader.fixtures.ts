@@ -19,6 +19,11 @@ export class FakeReaderData {
   public readonly settings = signal<ReaderSettings | undefined>(undefined);
 
   /**
+   * Whether the settings answered or failed; settled by default, so a book opens at once.
+   */
+  public readonly settingsSettled = signal(true);
+
+  /**
    * Set by the spec to show the unreachable server screen.
    */
   public readonly unreachable = signal(false);

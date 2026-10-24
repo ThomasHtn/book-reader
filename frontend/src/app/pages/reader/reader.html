@@ -52,20 +52,12 @@
     <p class="sr-only" aria-live="polite">{{ indicator() }}</p>
     <!-- Page turns under the pages they turn, parted on the fold; an absent one leaves its half empty (spec 5.1). -->
     <footer
-      class="reader__commands grid w-full max-w-(--reading-max-width) justify-self-center px-(--reading-padding)"
-    >
-      <!-- Under the left page; no "Précédent" on the first page of the book. -->
-      <div class="flex">
-        @if (!isFirst()) {
-          <app-nav-bar direction="previous" (activate)="onBar('previous')" />
-        }
-      </div>
-      <!-- Under the right page; no "Suivant" on the last page of the book. -->
-      <div class="flex">
-        @if (!isLast()) {
-          <app-nav-bar direction="next" (activate)="onBar('next')" />
-        }
-      </div>
-    </footer>
+      app-page-turns
+      class="reader__commands w-full max-w-(--reading-max-width) justify-self-center px-(--reading-padding)"
+      [hasPrevious]="!isFirst()"
+      [hasNext]="!isLast()"
+      spaceTurnsPage
+      (turn)="onTurn($event)"
+    ></footer>
   </div>
 }
