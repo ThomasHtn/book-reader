@@ -1,11 +1,14 @@
 import {
+  afterNextRender,
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
+  DOCUMENT,
   ElementRef,
   inject,
+  Injector,
   signal,
   viewChild,
 } from '@angular/core';
@@ -24,16 +27,7 @@ import { StatusScreen } from '@shared/status-screen/status-screen';
 
 import { assignCoverTones } from './cover-tone.utils';
 import { paginateGrid, visibleRange } from './grid.utils';
-
-/**
- * Two rows of the three-column grid, so a page never shows more than six titles.
- */
-const MAX_ROWS_PER_PAGE = 2;
-
-/**
- * Books per row, as `--grid-columns` in tokens.css.
- */
-const GRID_COLUMNS = 3;
+import { GRID_COLUMNS, MAX_ROWS_PER_PAGE } from './library.constants';
 
 /**
  * Route `/livres`: three title blocks per row, paged by whole rows with the same two bars as the text.
@@ -61,6 +55,16 @@ export class Library {
    * Opens a book or the backoffice.
    */
   private readonly router = inject(Router);
+
+  /**
+   * Gives `document.fonts` and the focused element.
+   */
+  private readonly document = inject(DOCUMENT);
+
+  /**
+   * Lets a page turn run code after the render that applies it.
+   */
+  private readonly injector = inject(Injector);
 
   /**
    * Clipping box one page high; its height decides how many rows fit.
@@ -140,6 +144,8 @@ export class Library {
   constructor() {
     const observer = new ResizeObserver(() => this.resized.update((count) => count + 1));
     inject(DestroyRef).onDestroy(() => observer.disconnect());
+    // Cards first laid out in the fallback font grow when Luciole arrives: measure them again then.
+    void this.document.fonts?.ready.then(() => this.resized.update((count) => count + 1));
     afterRenderEffect(() => {
       // Read only to subscribe: each of these can change the rows.
       this.entries();
@@ -191,8 +197,24 @@ export class Library {
   private turn(command: PageCommand, repeated: boolean): void {
     const target = this.page() + (command === 'next' ? 1 : -1);
     if (target >= 0 && target < this.pages() && this.gate.accept(repeated)) {
+      const focused = this.document.activeElement;
       this.page.set(target);
+      afterNextRender(() => this.keepFocus(focused), { injector: this.injector });
     }
+  }
+
+  /**
+   * Moves the focus to the first title shown when the focused title went inert or the bar vanished,
+   * so the keyboard never falls back to the top of the document.
+   */
+  private keepFocus(focused: Element | null): void {
+    if (focused instanceof HTMLElement && focused.isConnected && !focused.closest('[inert]')) {
+      return;
+    }
+    const first = this.grid()
+      ?.nativeElement.querySelectorAll<HTMLElement>('.book-card')
+      .item(this.cardPages().indexOf(this.page()));
+    first?.focus();
   }
 
   /**

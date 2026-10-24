@@ -175,6 +175,60 @@ describe('Library', () => {
     expect(indicator()).toBe('Titres 7 à 7 sur 7');
   });
 
+  /**
+   * Seven books, three per row in a 200 px viewport, rows `rowHeight` apart; returns page helpers.
+   */
+  async function renderSevenBooks(rowHeight: () => number) {
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const cards = [...(this.closest('.library__grid')?.querySelectorAll('.book-card') ?? [])];
+      const index = cards.indexOf(this);
+      const top = index < 0 ? 0 : Math.floor(index / 3) * rowHeight();
+      return { top, height: rowHeight() - 10 } as DOMRect;
+    });
+    data.books.set(['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((id) => book(id)));
+    const fixture = TestBed.createComponent(Library);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    const indicator = () => element.querySelector('.page-head__indicator')?.textContent?.trim();
+    const cards = () => [...element.querySelectorAll<HTMLButtonElement>('button.book-card')];
+    return { fixture, indicator, cards };
+  }
+
+  it('pages the titles again once the fonts arrive, since they change the height of the cards', async () => {
+    let rowHeight = 100;
+    let fontsLoaded!: () => void;
+    Object.defineProperty(document, 'fonts', {
+      configurable: true,
+      value: { ready: new Promise<void>((resolve) => (fontsLoaded = resolve)) },
+    });
+    try {
+      const { fixture, indicator } = await renderSevenBooks(() => rowHeight);
+      expect(indicator()).toBe('Titres 1 à 6 sur 7');
+
+      rowHeight = 150;
+      fontsLoaded();
+      await document.fonts.ready;
+      await fixture.whenStable();
+
+      expect(indicator()).toBe('Titres 1 à 3 sur 7');
+    } finally {
+      Reflect.deleteProperty(document, 'fonts');
+    }
+  });
+
+  it('moves the focus to the first title of the new page when the focused one leaves the page', async () => {
+    const { fixture, cards } = await renderSevenBooks(() => 100);
+    cards()[1].focus();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', cancelable: true }));
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(cards()[6]);
+  });
+
   it('shows the unavailable screen only while the list has never loaded', async () => {
     data.unreachable.set(true);
     const element = await render();

@@ -36,7 +36,8 @@
             #grid
             [style.transform]="transform()"
           >
-            <!-- Cards off the shown page stay laid out but inert, so Tab and screen readers skip them. -->
+            <!-- Cards off the shown page stay laid out but inert, so Tab and screen readers skip them; a card not
+                 measured yet stays visible. -->
             @for (entry of entries(); track entry.book.id; let index = $index) {
               <app-book-card
                 [title]="entry.book.title"
@@ -44,7 +45,7 @@
                 [current]="entry.current"
                 [finished]="entry.finished"
                 [tone]="tones()[index]"
-                [attr.inert]="cardPages()[index] === page() ? null : ''"
+                [attr.inert]="(cardPages()[index] ?? page()) === page() ? null : ''"
                 (activate)="open(entry.book.id)"
               />
             }
